@@ -1,6 +1,10 @@
+#!/usr/bin/env -S uv run
+
+import click
+
 from safe_eth.eth import EthereumClient
 from safe_eth.safe import Safe
-from safe_eth.safe import SafeTx
+# from safe_eth.safe import SafeTx
 
 ETHEREUM_NODE_URL = "https://sepolia.drpc.org"
 
@@ -11,10 +15,13 @@ def get_safe():
     return Safe(safe_address, ethereum_client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
 
 
+@click.command()
 def main():
-    safe = get_safe()
-    safe_info = safe.retrieve_all_info()
-    print(safe_info)
+    print("hello")
+    return
+    # safe = get_safe()
+    # safe_info = safe.retrieve_all_info()
+    # print(safe_info)
 
 
 if __name__ == "__main__":
