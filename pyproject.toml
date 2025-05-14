@@ -1,0 +1,12 @@
+[project]
+name = "workspace"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "safe-cli>=1.5.0",
+    "safe-eth-py>=7.3.0",
+]
+
+[tool.pyright]
