@@ -5,7 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "click>=8.2.0",
+    "click==8.1.8",
+    "click-repl>=0.3.0",
     "safe-eth-py>=7.3.0",
 ]
 
