@@ -10,7 +10,30 @@ from click_repl import register_repl
 from safe_eth.eth import EthereumClient
 from safe_eth.safe import Safe, SafeOperationEnum
 
-from safe_eth.safe import SafeTx
+from safe_eth import safe
+from typing import (
+    Annotated,
+    Any,
+    TypedDict,
+    cast,
+)
+
+from eth_utils.address import is_checksum_address
+from pydantic import (
+    AfterValidator,
+    AnyUrl,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    HttpUrl,
+    IPvAnyAddress,
+    StringConstraints,
+    ValidationInfo,
+    model_validator,
+)
+from typing_extensions import Self
+
 
 ETHEREUM_NODE_URL = "https://sepolia.drpc.org"
 
@@ -19,6 +42,29 @@ CLICK_CONTEXT_SETTINGS = dict(
     show_default=True,
     help_option_names=["-h", "--help"],
 )
+
+# ┌───────┐
+# │ Model │
+# └───────┘
+
+
+def validate_checksum_address(address: str) -> str:
+    if not is_checksum_address(address):
+        raise ValueError("Invalid EIP-55 checksum address.")
+    return address
+
+
+ChecksumAddress = Annotated[str, AfterValidator(validate_checksum_address)]
+ChecksumAddress
+
+
+class SafeTx(BaseModel):
+    safe: ChecksumAddress
+    chain_id: int
+    nonce: int
+    to: ChecksumAddress
+    txvalue: str = Field(alias="value")
+    data: str
 
 
 # ┌──────────┐
@@ -76,11 +122,11 @@ build.add_command(build_erc20)
 
 @click.command(name="tx")
 @click.option("--safe", "-s", "safe_str", required=True, help="address of the Safe")
+@click.option("--chain-id", type=int, required=True, help="chain ID")
 @click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
 @click.option("--to", "-t", "to_str", required=True, help="destination address")
-@click.option("--chain-id", type=int, required=True, help="chain ID")
-@click.option("--data", "-d", help="optional call data payload")
 @click.option("--value", "-v", "txvalue", default="0.0", help="tx value in decimals")
+@click.option("--data", "-d", help="optional call data payload")
 def build_tx(
     safe_str: str,
     nonce: int,
@@ -94,7 +140,7 @@ def build_tx(
     safe_addr = to_checksum_address(safe_str)
     to_addr = to_checksum_address(to_str)
 
-    safetx = SafeTx(
+    safetx = safe.SafeTx(
         ethereum_client=EthereumClient(),
         safe_address=safe_addr,
         to=to_addr,

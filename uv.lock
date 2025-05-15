@@ -860,6 +860,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "click" },
     { name = "click-repl" },
+    { name = "pydantic" },
     { name = "safe-eth-py" },
 ]
 
@@ -867,6 +868,7 @@ dependencies = [
 requires-dist = [
     { name = "click", specifier = "==8.1.8" },
     { name = "click-repl", specifier = ">=0.3.0" },
+    { name = "pydantic", specifier = ">=2.11.4" },
     { name = "safe-eth-py", specifier = ">=7.3.0" },
 ]
 
