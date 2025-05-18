@@ -18,5 +18,10 @@
     uv.sync.enable = true;
   };
 
+  scripts.safe.exec = ''
+    ./safe "$@"
+  '';
+
+
   # See full reference at https://devenv.sh/reference/options/
 }
