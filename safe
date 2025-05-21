@@ -2,64 +2,38 @@
 
 import json
 import typing
-from eth_account import Account
-from click import echo
-from hexbytes import HexBytes
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt
-
+from decimal import Decimal
+from getpass import getpass
+from typing import (
+    Annotated,
+    Optional,
+)
 
 # import rich_click as click
 import click
-from decimal import Decimal
-from getpass import getpass
+import eth_typing
+from eth_account import Account
 from eth_typing import URI
-from eth_utils.address import to_checksum_address
-from click_repl import register_repl
-import sys
+from eth_utils.address import is_checksum_address, to_checksum_address
+from hexbytes import HexBytes
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+)
+from rich.console import Console
+from rich.table import Table
 
 # from eth_typing import ChecksumAddress
 from safe_eth.eth import EthereumClient
 from safe_eth.safe import Safe, SafeOperationEnum
-
 from safe_eth.safe import SafeTx as SafeTx_
-from typing import (
-    Annotated,
-    Any,
-    Optional,
-    TypedDict,
-    cast,
-)
-
-from eth_utils.address import is_checksum_address
-from pydantic import (
-    AfterValidator,
-    AnyUrl,
-    BaseModel,
-    ConfigDict,
-    EmailStr,
-    Field,
-    HttpUrl,
-    IPvAnyAddress,
-    NonNegativeInt,
-    StringConstraints,
-    ValidationInfo,
-    model_serializer,
-    model_validator,
-)
-from safe_eth.safe.safe_signature import SafeSignature, SafeSignatureEOA
+from safe_eth.safe.safe_signature import SafeSignature
 from safe_eth.safe.signatures import (
-    get_signing_address,
     signature_to_bytes,
-    signatures_to_bytes,
 )
-from typing_extensions import Self
 
-
-ETHEREUM_NODE_URL = "https://sepolia.drpc.org"
-
-# CLICK_CONTEXT_SETTINGS = {}
 CLICK_CONTEXT_SETTINGS = dict(
     show_default=True,
     help_option_names=["-h", "--help"],
@@ -76,7 +50,6 @@ def validate_checksum_address(address: str) -> str:
     return address
 
 
-import eth_typing
 
 ChecksumAddress = Annotated[
     eth_typing.ChecksumAddress, AfterValidator(validate_checksum_address)
