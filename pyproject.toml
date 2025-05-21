@@ -1,15 +1,19 @@
 [project]
 name = "safe"
 version = "0.1.0"
-description = "Add your description here"
+description = "A decentralized CLI for Safe Smart Accounts"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "click==8.1.8",
-    "click-repl>=0.3.0",
+    "click>=8.2.1",
     "pydantic>=2.11.4",
-    "rich-click>=1.8.8",
+    "rich>=14.0.0",
     "safe-eth-py>=7.3.0",
 ]
 
-[tool.pyright]
+[project.scripts]
+safe = "safe:cli.main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
