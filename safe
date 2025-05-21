@@ -1,5 +1,6 @@
 #!/usr/bin/env -S uv run --script
 
+import json
 import typing
 from eth_account import Account
 from click import echo
@@ -26,6 +27,7 @@ from safe_eth.safe import SafeTx as SafeTx_
 from typing import (
     Annotated,
     Any,
+    Optional,
     TypedDict,
     cast,
 )
@@ -46,8 +48,12 @@ from pydantic import (
     model_serializer,
     model_validator,
 )
-from safe_eth.safe.safe_signature import SafeSignatureEOA
-from safe_eth.safe.signatures import signature_to_bytes
+from safe_eth.safe.safe_signature import SafeSignature, SafeSignatureEOA
+from safe_eth.safe.signatures import (
+    get_signing_address,
+    signature_to_bytes,
+    signatures_to_bytes,
+)
 from typing_extensions import Self
 
 
@@ -85,7 +91,7 @@ class Signature(BaseModel):
 
 
 class SafeTx(BaseModel):
-    safe: ChecksumAddress
+    account: ChecksumAddress
     version: str
     chain_id: int
     nonce: int
@@ -95,20 +101,24 @@ class SafeTx(BaseModel):
 
     model_config = ConfigDict(serialize_by_alias=True)
 
-    def transform(self) -> SafeTx_:
+    def transform(
+        self,
+        client: Optional[EthereumClient] = None,
+        signatures: Optional[bytes] = None,
+    ) -> SafeTx_:
         return SafeTx_(
-            ethereum_client=EthereumClient(),
-            safe_address=self.safe,
-            to=self.to,
+            ethereum_client=client if client else EthereumClient(),
+            safe_address=to_checksum_address(self.account),
+            to=to_checksum_address(self.to),
             value=int(Decimal(self.txvalue) * 10**18),
-            data=self.data,
+            data=HexBytes(self.data),
             operation=SafeOperationEnum.CALL.value,
             safe_tx_gas=0,
             base_gas=0,
             gas_price=0,
             gas_token=None,
             refund_receiver=None,
-            signatures=None,
+            signatures=signatures,
             safe_nonce=self.nonce,
             safe_version=self.version,
             chain_id=self.chain_id,
@@ -169,7 +179,9 @@ build.add_command(build_erc20)
 
 
 @click.command(name="tx")
-@click.option("--safe", "-s", "safe_str", required=True, help="address of the Safe")
+@click.option(
+    "--account", "-a", "acc_str", required=True, help="address of Safe Account"
+)
 @click.option("--version", "-v", required=True, help="Safe Account version")
 @click.option("--chain-id", "-c", type=int, required=True, help="chain ID")
 @click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
@@ -180,7 +192,7 @@ build.add_command(build_erc20)
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )
 def build_tx(
-    safe_str: str,
+    acc_str: str,
     version: str,
     chain_id: int,
     nonce: int,
@@ -191,7 +203,7 @@ def build_tx(
 ) -> None:
     """Build a custom SafeTx."""
     safetx = SafeTx(
-        safe=to_checksum_address(safe_str),
+        account=to_checksum_address(acc_str),
         version=version,
         chain_id=chain_id,
         nonce=nonce,
@@ -214,9 +226,80 @@ def deploy():
 
 
 @click.command()
-def exec():
-    """Execute a signed SafeTx."""
-    raise NotImplementedError
+@click.option(
+    "--keyfile",
+    "-k",
+    type=click.Path(exists=True),
+    required=True,
+    help="encrypted keyfile of sender",
+)
+@click.option(
+    "--signature",
+    "-s",
+    "sigfiles",
+    type=click.Path(exists=True),
+    multiple=True,
+    required=True,
+    help="owner signature JSON",
+)
+@click.option("--rpc", "-r", required=True, help="JSON-RPC endpoint URI")
+@click.argument("txfile", type=click.File("rb"), required=False)
+def exec(
+    keyfile: str,
+    sigfiles: list[str],
+    rpc: str,
+    txfile: typing.BinaryIO | None,
+):
+    """Execute a signed SafeTx.
+
+    Use the signature option multiple times to include all required signatures.
+    """
+    # safetx
+    if not txfile:
+        txfile = click.get_binary_stream("stdin")
+    json_data = txfile.read()
+    client = EthereumClient(URI(rpc))
+    safetx = SafeTx.model_validate_json(json_data)
+    safetx_ = safetx.transform()
+    safetxhash = safetx_.safe_tx_hash
+
+    # keyfile
+    with click.open_file(keyfile) as kf:
+        keydata = kf.read()
+    password = getpass()
+    privkey = Account.decrypt(keydata, password=password)
+    account = Account.from_key(privkey)
+
+    # sigs
+    sigobjs: list[SafeSignature] = []
+    for sigfile in sigfiles:
+        with open(sigfile, "rb") as sf:
+            sigjson = json.loads(sf.read())
+        sigdata = HexBytes(sigjson["signature"])
+        sigobj = SafeSignature.parse_signature(sigdata, safetxhash)[0]
+        assert sigjson["owner"] == sigobj.owner
+        assert sigjson["safetx"] == safetxhash.to_0x_hex()
+        sigobjs.append(sigobj)
+    sigbytes = SafeSignature.export_signatures(sigobjs)
+    print(sigbytes.to_0x_hex())
+
+    # final safetx with signers
+    safetx_ = safetx.transform(client, sigbytes)
+    print(safetx_)
+
+    # send
+    safetx_.call(
+        tx_sender_address=account.address,
+        block_identifier="latest",
+    )
+    w3txhash, tx = safetx_.execute(
+        tx_sender_private_key=privkey.to_0x_hex(),
+        block_identifier="latest",
+    )
+    table = _mktable()
+    table.add_row("Web3 TxHash", w3txhash.to_0x_hex())
+    console = Console()
+    console.print(table)
 
 
 @click.command()
@@ -238,13 +321,15 @@ def hash(txfile: typing.BinaryIO | None) -> None:
 
 
 @click.command()
-@click.option("--safe", "-s", "safe_str", required=True, help="address of the Safe")
+@click.option(
+    "--account", "-a", "acc_str", required=True, help="address of Safe Account"
+)
 @click.option("--rpc", "-r", required=True, help="JSON-RPC endpoint URI")
-def inspect(safe_str: str, rpc: str):
+def inspect(acc_str: str, rpc: str):
     """Retrieve Safe info from chain."""
-    safe_addr = to_checksum_address(safe_str)
+    acc_addr = to_checksum_address(acc_str)
     client = EthereumClient(URI(rpc))
-    safe = Safe(safe_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
+    safe = Safe(acc_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
     info = safe.retrieve_all_info()
     table = _mktable()
     table.add_row("Safe Account", info.address)
@@ -304,11 +389,15 @@ def sign(
     account = Account.from_key(privkey)
     hashbytes = safetx.transform().safe_tx_hash
     sigdict = account.unsafe_sign_hash(hashbytes)
-    sigbytes = HexBytes(signature_to_bytes(*[sigdict[k] for k in ["v", "r", "s"]]))
+    v, r, s = (sigdict[k] for k in ["v", "r", "s"])
+    sigbytes = signature_to_bytes(v, r, s)
+    sigobj = SafeSignature.parse_signature(sigbytes, hashbytes)[0]
+    signature = sigobj.export_signature()
+    # print(get_signing_address(sigbytes, v, r, s), account.address)
     signature = Signature(
         safetx=hashbytes.to_0x_hex(),
         owner=account.address,
-        signature=sigbytes.to_0x_hex(),
+        signature=signature.to_0x_hex(),
     )
     if not output:
         output = click.get_text_stream("stdout")
@@ -325,7 +414,7 @@ def _serialize(model: BaseModel):
 
 
 def _mktable():
-    table = Table(show_header=False, box=False, pad_edge=False)
+    table = Table(show_header=False, box=None, pad_edge=False)
     table.add_column("Field", justify="right", style="bold", no_wrap=True)
     table.add_column("Value")
     return table
