@@ -96,15 +96,20 @@ class SafeTxWrapper(BaseModel):
         )
 
 
-# ┌──────────┐
-# │ Commands │
-# └──────────┘
+# ┌──────┐
+# │ Main │
+# └──────┘
 
 
 @click.group(context_settings=CLICK_CONTEXT_SETTINGS)
 def main():
     """CLI for Safe Smart Accounts."""
     pass
+
+
+# ┌──────────┐
+# │ Commands │
+# └──────────┘
 
 
 @main.group()
