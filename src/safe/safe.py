@@ -176,6 +176,9 @@ def exec(
 ):
     """Execute a signed SafeTx.
 
+    The Web3 tx will be signed using the keyfile account and then sent to the
+    RPC endpoint.
+
     Repeat the signature option to include all required signatures.
     """
     # safetx
@@ -233,7 +236,8 @@ def exec(
 def hash(txfile: typing.BinaryIO | None) -> None:
     """Compute SafeTxHash of a SafeTx.
 
-    TXFILE must be a SafeTx in JSON format, which can be created using the 'build' subcommand.
+    TXFILE must be a SafeTx in JSON format, which can be created using the
+    'build' subcommand.
     """
     if not txfile:
         txfile = click.get_binary_stream("stdin")
@@ -285,7 +289,8 @@ def sign(
 ):
     """Sign a SafeTx.
 
-    TXFILE must be a SafeTx in JSON format, which can be created using the 'build' subcommand.
+    TXFILE must be a SafeTx in JSON format, which can be created using the
+    'build' subcommand.
     """
     if not txfile:
         txfile = click.get_binary_stream("stdin")
