@@ -22,7 +22,6 @@ from pydantic import (
     Field,
 )
 from rich.console import Console
-from rich.table import Table
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.exceptions import EthereumClientException
 from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
@@ -33,6 +32,7 @@ from safe_eth.safe.signatures import (
 )
 
 from . import option
+from .util import mktable, serialize
 
 CLICK_CONTEXT_SETTINGS = dict(
     show_default=True,
@@ -146,7 +146,7 @@ def build_tx(
     )
     if not output:
         output = click.get_text_stream("stdout")
-    click.echo(_serialize(safetx), file=output)
+    click.echo(serialize(safetx), file=output)
 
 
 @main.command()
@@ -225,7 +225,7 @@ def exec(
         )
     except (EthereumClientException, SafeServiceException) as exc:
         raise click.ClickException(str(exc)) from exc
-    table = _mktable()
+    table = mktable()
     table.add_row("Web3 TxHash", w3txhash.to_0x_hex())
     console = Console()
     console.print(table)
@@ -244,7 +244,7 @@ def hash(txfile: typing.BinaryIO | None) -> None:
     json_data = txfile.read()
     safetx = SafeTxWrapper.model_validate_json(json_data)
     hashstr = safetx.unwrap().safe_tx_hash.to_0x_hex()
-    table = _mktable()
+    table = mktable()
     table.add_row("SafeTxHash", hashstr)
     console = Console()
     console.print(table)
@@ -262,7 +262,7 @@ def inspect(safe: str, rpc: str):
         info = safeobj.retrieve_all_info()
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
-    table = _mktable()
+    table = mktable()
     table.add_row("Safe Account", info.address)
     table.add_row("Version", info.version)
     table.add_row("Nonce", str(info.nonce))
@@ -315,23 +315,7 @@ def sign(
     )
     if not output:
         output = click.get_text_stream("stdout")
-    click.echo(_serialize(signature), file=output)
-
-
-# ┌─────────┐
-# │ Helpers │
-# └─────────┘
-
-
-def _serialize(model: BaseModel):
-    return model.model_dump_json(indent=2)
-
-
-def _mktable():
-    table = Table(show_header=False, box=None, pad_edge=False)
-    table.add_column("Field", justify="right", style="bold", no_wrap=True)
-    table.add_column("Value")
-    return table
+    click.echo(serialize(signature), file=output)
 
 
 if __name__ == "__main__":
