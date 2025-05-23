@@ -182,7 +182,7 @@ def exec(
 ):
     """Execute a signed SafeTx.
 
-    Use the signature option multiple times to include all required signatures.
+    Repeat the signature option to include all required signatures.
     """
     # safetx
     if not txfile:
@@ -205,16 +205,15 @@ def exec(
     for sigfile in sigfiles:
         with open(sigfile, "rb") as sf:
             sigjson = json.loads(sf.read())
-        sigdata = HexBytes(sigjson["signature"])
-        sigobj = SafeSignature.parse_signature(sigdata, safetxhash)[0]
-        assert sigjson["owner"] == sigobj.owner
-        assert sigjson["safetx"] == safetxhash.to_0x_hex()
-        sigobjs.append(sigobj)
-    sigbytes = SafeSignature.export_signatures(sigobjs)
-    print(sigbytes.to_0x_hex())
+        sigbytes = HexBytes(sigjson["signature"])
+        siglist = SafeSignature.parse_signature(sigbytes, safetxhash)
+        for sigobj in siglist:
+            sigobjs.append(sigobj)
+    signatures = SafeSignature.export_signatures(sigobjs)
+    print(signatures.to_0x_hex())
 
     # final safetx with signers
-    safetx_ = safetx.transform(client, sigbytes)
+    safetx_ = safetx.transform(client, signatures)
     print(safetx_)
 
     # send
@@ -222,7 +221,7 @@ def exec(
         tx_sender_address=account.address,
         block_identifier="latest",
     )
-    w3txhash, tx = safetx_.execute(
+    w3txhash, _ = safetx_.execute(
         tx_sender_private_key=privkey.to_0x_hex(),
         block_identifier="latest",
     )
