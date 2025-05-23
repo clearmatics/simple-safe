@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-safe = "safe:cli.main"
+safe = "safe:main"
 
 [build-system]
 requires = ["hatchling"]
