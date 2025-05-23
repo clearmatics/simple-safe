@@ -24,7 +24,9 @@ from pydantic import (
 from rich.console import Console
 from rich.table import Table
 from safe_eth.eth import EthereumClient
+from safe_eth.eth.exceptions import EthereumClientException
 from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
+from safe_eth.safe.exceptions import SafeServiceException
 from safe_eth.safe.safe_signature import SafeSignature
 from safe_eth.safe.signatures import (
     signature_to_bytes,
@@ -209,14 +211,17 @@ def exec(
     print(safetx_)
 
     # send
-    safetx_.call(
-        tx_sender_address=account.address,
-        block_identifier="latest",
-    )
-    w3txhash, _ = safetx_.execute(
-        tx_sender_private_key=privkey.to_0x_hex(),
-        block_identifier="latest",
-    )
+    try:
+        safetx_.call(
+            tx_sender_address=account.address,
+            block_identifier="latest",
+        )
+        w3txhash, _ = safetx_.execute(
+            tx_sender_private_key=privkey.to_0x_hex(),
+            block_identifier="latest",
+        )
+    except (EthereumClientException, SafeServiceException) as exc:
+        raise click.ClickException(str(exc)) from exc
     table = _mktable()
     table.add_row("Web3 TxHash", w3txhash.to_0x_hex())
     console = Console()
@@ -248,8 +253,11 @@ def inspect(safe: str, rpc: str):
     """Retrieve Safe info from chain."""
     acc_addr = to_checksum_address(safe)
     client = EthereumClient(URI(rpc))
-    safeobj = Safe(acc_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
-    info = safeobj.retrieve_all_info()
+    try:
+        safeobj = Safe(acc_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
+        info = safeobj.retrieve_all_info()
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
     table = _mktable()
     table.add_row("Safe Account", info.address)
     table.add_row("Version", info.version)
