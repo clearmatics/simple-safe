@@ -108,48 +108,6 @@ def build():
     pass
 
 
-@click.command(name="batch")
-def build_batch():
-    """Build a batch SafeTx.
-
-    This uses the Safe implementation of MultiSend.
-    """
-    raise NotImplementedError
-
-
-build.add_command(build_batch)
-
-
-@click.command(name="call")
-@click.option(
-    "--abi",
-    "abi_path",
-    type=click.Path(exists=True),
-    help="contract ABI file",
-)
-@click.option("--method", "-m", help="contract method to call")
-@click.argument("parameters", nargs=-1)
-def build_call(
-    abi_path: str,
-    method: str,
-    parameters: list[str],
-) -> None:
-    """Build a smart contract call SafeTx."""
-    raise NotImplementedError
-
-
-build.add_command(build_call)
-
-
-@click.command(name="erc20")
-def build_erc20():
-    """Build an ERC-20 transfer SafeTx."""
-    raise NotImplementedError
-
-
-build.add_command(build_erc20)
-
-
 @click.command(name="tx")
 @click.option(
     "--account", "-a", "acc_str", required=True, help="address of Safe Account"
@@ -318,18 +276,6 @@ def inspect(acc_str: str, rpc: str):
 
 
 @click.command()
-def manage():
-    """Manage Safe Account."""
-    raise NotImplementedError
-
-
-@click.command()
-def setup():
-    """Manage local accounts."""
-    raise NotImplementedError
-
-
-@click.command()
 @click.option(
     "--keyfile",
     "-k",
@@ -408,8 +354,6 @@ main.add_command(deploy)
 main.add_command(exec)
 main.add_command(hash)
 main.add_command(inspect)
-main.add_command(manage)
-main.add_command(setup)
 main.add_command(sign)
 
 
