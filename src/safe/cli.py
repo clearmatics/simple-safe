@@ -28,7 +28,7 @@ from rich.table import Table
 # from eth_typing import ChecksumAddress
 from safe_eth.eth import EthereumClient
 from safe_eth.safe import Safe, SafeOperationEnum
-from safe_eth.safe import SafeTx as SafeTx_
+from safe_eth.safe import SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
 from safe_eth.safe.signatures import (
     signature_to_bytes,
@@ -62,7 +62,7 @@ class Signature(BaseModel):
     signature: str
 
 
-class SafeTx(BaseModel):
+class SafeTxWrapper(BaseModel):
     account: ChecksumAddress
     version: str
     chain_id: int
@@ -73,12 +73,12 @@ class SafeTx(BaseModel):
 
     model_config = ConfigDict(serialize_by_alias=True)
 
-    def transform(
+    def unwrap(
         self,
         client: Optional[EthereumClient] = None,
         signatures: Optional[bytes] = None,
-    ) -> SafeTx_:
-        return SafeTx_(
+    ) -> SafeTx:
+        return SafeTx(
             ethereum_client=client if client else EthereumClient(),
             safe_address=to_checksum_address(self.account),
             to=to_checksum_address(self.to),
@@ -132,7 +132,7 @@ def build_tx(
     output: typing.TextIO | None,
 ) -> None:
     """Build a custom SafeTx."""
-    safetx = SafeTx(
+    safetx = SafeTxWrapper(
         account=to_checksum_address(acc_str),
         version=version,
         chain_id=chain_id,
@@ -189,8 +189,8 @@ def exec(
         txfile = click.get_binary_stream("stdin")
     json_data = txfile.read()
     client = EthereumClient(URI(rpc))
-    safetx = SafeTx.model_validate_json(json_data)
-    safetx_ = safetx.transform()
+    safetx = SafeTxWrapper.model_validate_json(json_data)
+    safetx_ = safetx.unwrap()
     safetxhash = safetx_.safe_tx_hash
 
     # keyfile
@@ -213,7 +213,7 @@ def exec(
     print(signatures.to_0x_hex())
 
     # final safetx with signers
-    safetx_ = safetx.transform(client, signatures)
+    safetx_ = safetx.unwrap(client, signatures)
     print(safetx_)
 
     # send
@@ -241,8 +241,8 @@ def hash(txfile: typing.BinaryIO | None) -> None:
     if not txfile:
         txfile = click.get_binary_stream("stdin")
     json_data = txfile.read()
-    safetx = SafeTx.model_validate_json(json_data)
-    hashstr = safetx.transform().safe_tx_hash.to_0x_hex()
+    safetx = SafeTxWrapper.model_validate_json(json_data)
+    hashstr = safetx.unwrap().safe_tx_hash.to_0x_hex()
     table = _mktable()
     table.add_row("SafeTxHash", hashstr)
     console = Console()
@@ -298,13 +298,13 @@ def sign(
     if not txfile:
         txfile = click.get_binary_stream("stdin")
     json_data = txfile.read()
-    safetx = SafeTx.model_validate_json(json_data)
+    safetx = SafeTxWrapper.model_validate_json(json_data)
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
     password = getpass()
     privkey = Account.decrypt(keydata, password=password)
     account = Account.from_key(privkey)
-    hashbytes = safetx.transform().safe_tx_hash
+    hashbytes = safetx.unwrap().safe_tx_hash
     sigdict = account.unsafe_sign_hash(hashbytes)
     v, r, s = (sigdict[k] for k in ["v", "r", "s"])
     sigbytes = signature_to_bytes(v, r, s)
