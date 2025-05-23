@@ -11,6 +11,8 @@
 
   env.UV_PYTHON = "${config.env.DEVENV_PROFILE}/bin/python";
 
+  dotenv.enable = true;
+
   languages.python = {
     enable = true;
     version = "3.12";
