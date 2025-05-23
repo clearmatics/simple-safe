@@ -30,6 +30,8 @@ from safe_eth.safe.signatures import (
     signature_to_bytes,
 )
 
+from . import options
+
 CLICK_CONTEXT_SETTINGS = dict(
     show_default=True,
     help_option_names=["-h", "--help"],
@@ -110,9 +112,7 @@ def build():
 
 
 @build.command(name="tx")
-@click.option(
-    "--account", "-a", "acc_str", required=True, help="address of Safe Account"
-)
+@options.safe
 @click.option("--version", "-v", required=True, help="Safe Account version")
 @click.option("--chain-id", "-c", type=int, required=True, help="chain ID")
 @click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
@@ -123,7 +123,7 @@ def build():
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )
 def build_tx(
-    acc_str: str,
+    safe: str,
     version: str,
     chain_id: int,
     nonce: int,
@@ -134,7 +134,7 @@ def build_tx(
 ) -> None:
     """Build a custom SafeTx."""
     safetx = SafeTxWrapper(
-        account=to_checksum_address(acc_str),
+        account=to_checksum_address(safe),
         version=version,
         chain_id=chain_id,
         nonce=nonce,
@@ -154,23 +154,17 @@ def deploy():
 
 
 @main.command()
-@click.option(
-    "--keyfile",
-    "-k",
-    type=click.Path(exists=True),
-    required=True,
-    help="encrypted keyfile of sender",
-)
+@options.keyfile
 @click.option(
     "--signature",
-    "-s",
+    "-g",
     "sigfiles",
     type=click.Path(exists=True),
     multiple=True,
     required=True,
     help="owner signature JSON",
 )
-@click.option("--rpc", "-r", required=True, help="HTTP JSON-RPC endpoint URI")
+@options.rpc
 @click.argument("txfile", type=click.File("rb"), required=False)
 def exec(
     keyfile: str,
@@ -248,16 +242,14 @@ def hash(txfile: typing.BinaryIO | None) -> None:
 
 
 @main.command()
-@click.option(
-    "--account", "-a", "acc_str", required=True, help="address of Safe Account"
-)
-@click.option("--rpc", "-r", required=True, help="JSON-RPC endpoint URI")
-def inspect(acc_str: str, rpc: str):
+@options.safe
+@options.rpc
+def inspect(safe: str, rpc: str):
     """Retrieve Safe info from chain."""
-    acc_addr = to_checksum_address(acc_str)
+    acc_addr = to_checksum_address(safe)
     client = EthereumClient(URI(rpc))
-    safe = Safe(acc_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
-    info = safe.retrieve_all_info()
+    safeobj = Safe(acc_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
+    info = safeobj.retrieve_all_info()
     table = _mktable()
     table.add_row("Safe Account", info.address)
     table.add_row("Version", info.version)
@@ -273,13 +265,7 @@ def inspect(acc_str: str, rpc: str):
 
 
 @main.command()
-@click.option(
-    "--keyfile",
-    "-k",
-    type=click.Path(exists=True),
-    required=True,
-    help="encrypted keyfile of signer",
-)
+@options.keyfile
 @click.option(
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )

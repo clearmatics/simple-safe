@@ -8,12 +8,12 @@ RPC_URI='https://sepolia.drpc.org'
 TXFILE=tx.json
 
 safe inspect \
-  --account "0xb6e46b8Ad163C68d736Ec4199F43033B43379c70" \
+  --safe "0xb6e46b8Ad163C68d736Ec4199F43033B43379c70" \
   --rpc "${RPC_URI}" \
   ;
 
 safe build tx \
-  --account "0xb6e46b8Ad163C68d736Ec4199F43033B43379c70" \
+  --safe "0xb6e46b8Ad163C68d736Ec4199F43033B43379c70" \
   --chain-id $SEPOLIA \
   --version "1.4.1" \
   --nonce 5 \
