@@ -9,7 +9,6 @@ from typing import (
     Optional,
 )
 
-# import rich_click as click
 import click
 import eth_typing
 from eth_account import Account
@@ -25,7 +24,6 @@ from pydantic import (
 from rich.console import Console
 from rich.table import Table
 
-# from eth_typing import ChecksumAddress
 from safe_eth.eth import EthereumClient
 from safe_eth.safe import Safe, SafeOperationEnum
 from safe_eth.safe import SafeTx
@@ -53,7 +51,6 @@ def validate_checksum_address(address: str) -> str:
 ChecksumAddress = Annotated[
     eth_typing.ChecksumAddress, AfterValidator(validate_checksum_address)
 ]
-# ChecksumAddress = Annotated[str, AfterValidator(validate_checksum_address)]
 
 
 class Signature(BaseModel):
