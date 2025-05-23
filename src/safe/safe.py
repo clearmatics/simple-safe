@@ -115,7 +115,7 @@ def build():
 
 @build.command(name="tx")
 @option.safe
-@click.option("--version", "-v", required=True, help="Safe Account version")
+@click.option("--version", required=True, help="Safe version")
 @click.option("--chain-id", "-c", type=int, required=True, help="chain ID")
 @click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
 @click.option("--to", "-t", "to_str", required=True, help="destination address")
