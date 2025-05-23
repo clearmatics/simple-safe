@@ -23,10 +23,8 @@ from pydantic import (
 )
 from rich.console import Console
 from rich.table import Table
-
 from safe_eth.eth import EthereumClient
-from safe_eth.safe import Safe, SafeOperationEnum
-from safe_eth.safe import SafeTx
+from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
 from safe_eth.safe.signatures import (
     signature_to_bytes,
