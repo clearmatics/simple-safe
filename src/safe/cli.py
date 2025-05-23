@@ -102,13 +102,19 @@ class SafeTxWrapper(BaseModel):
 # └──────────┘
 
 
-@click.group()
+@click.group(context_settings=CLICK_CONTEXT_SETTINGS)
+def main():
+    """CLI for Safe Smart Accounts."""
+    pass
+
+
+@main.group()
 def build():
     """Build a SafeTx for signing."""
     pass
 
 
-@click.command(name="tx")
+@build.command(name="tx")
 @click.option(
     "--account", "-a", "acc_str", required=True, help="address of Safe Account"
 )
@@ -146,16 +152,13 @@ def build_tx(
     click.echo(_serialize(safetx), file=output)
 
 
-build.add_command(build_tx)
-
-
-@click.command()
+@main.command()
 def deploy():
     """Deploy a new Safe Account."""
     raise NotImplementedError
 
 
-@click.command()
+@main.command()
 @click.option(
     "--keyfile",
     "-k",
@@ -172,7 +175,7 @@ def deploy():
     required=True,
     help="owner signature JSON",
 )
-@click.option("--rpc", "-r", required=True, help="JSON-RPC endpoint URI")
+@click.option("--rpc", "-r", required=True, help="HTTP JSON-RPC endpoint URI")
 @click.argument("txfile", type=click.File("rb"), required=False)
 def exec(
     keyfile: str,
@@ -231,7 +234,7 @@ def exec(
     console.print(table)
 
 
-@click.command()
+@main.command()
 @click.argument("txfile", type=click.File("rb"), required=False)
 def hash(txfile: typing.BinaryIO | None) -> None:
     """Compute SafeTxHash of a SafeTx.
@@ -249,7 +252,7 @@ def hash(txfile: typing.BinaryIO | None) -> None:
     console.print(table)
 
 
-@click.command()
+@main.command()
 @click.option(
     "--account", "-a", "acc_str", required=True, help="address of Safe Account"
 )
@@ -274,7 +277,7 @@ def inspect(acc_str: str, rpc: str):
     console.print(table)
 
 
-@click.command()
+@main.command()
 @click.option(
     "--keyfile",
     "-k",
@@ -336,27 +339,6 @@ def _mktable():
     table.add_column("Value")
     return table
 
-
-# ┌──────┐
-# │ main │
-# └──────┘
-
-
-@click.group(context_settings=CLICK_CONTEXT_SETTINGS)
-def main():
-    """CLI for Safe Smart Accounts."""
-    pass
-
-
-main.add_command(build)
-main.add_command(deploy)
-main.add_command(exec)
-main.add_command(hash)
-main.add_command(inspect)
-main.add_command(sign)
-
-
-# register_repl(main)
 
 if __name__ == "__main__":
     main()
