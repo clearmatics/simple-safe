@@ -32,7 +32,7 @@ from safe_eth.safe.signatures import (
     signature_to_bytes,
 )
 
-from . import options
+from . import option
 
 CLICK_CONTEXT_SETTINGS = dict(
     show_default=True,
@@ -114,7 +114,7 @@ def build():
 
 
 @build.command(name="tx")
-@options.safe
+@option.safe
 @click.option("--version", "-v", required=True, help="Safe Account version")
 @click.option("--chain-id", "-c", type=int, required=True, help="chain ID")
 @click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
@@ -156,7 +156,7 @@ def deploy():
 
 
 @main.command()
-@options.keyfile
+@option.keyfile
 @click.option(
     "--signature",
     "-g",
@@ -166,7 +166,7 @@ def deploy():
     required=True,
     help="owner signature JSON",
 )
-@options.rpc
+@option.rpc
 @click.argument("txfile", type=click.File("rb"), required=False)
 def exec(
     keyfile: str,
@@ -251,8 +251,8 @@ def hash(txfile: typing.BinaryIO | None) -> None:
 
 
 @main.command()
-@options.safe
-@options.rpc
+@option.safe
+@option.rpc
 def inspect(safe: str, rpc: str):
     """Retrieve Safe info from chain."""
     acc_addr = to_checksum_address(safe)
@@ -277,7 +277,7 @@ def inspect(safe: str, rpc: str):
 
 
 @main.command()
-@options.keyfile
+@option.keyfile
 @click.option(
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )
