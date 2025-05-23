@@ -50,7 +50,6 @@ def validate_checksum_address(address: str) -> str:
     return address
 
 
-
 ChecksumAddress = Annotated[
     eth_typing.ChecksumAddress, AfterValidator(validate_checksum_address)
 ]
