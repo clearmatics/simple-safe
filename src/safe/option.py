@@ -6,6 +6,15 @@ from click import Command
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
+account = click.option(
+    "--account",
+    "-a",
+    "account",
+    required=True,
+    help="account address",
+)
+
+
 keyfile = click.option(
     "--keyfile",
     "-k",
@@ -19,14 +28,6 @@ rpc = click.option(
     "-r",
     required=True,
     help="HTTP JSON-RPC endpoint URI",
-)
-
-safe = click.option(
-    "--safe",
-    "-s",
-    "safe",
-    required=True,
-    help="Safe Account address",
 )
 
 

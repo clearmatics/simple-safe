@@ -119,7 +119,7 @@ def build():
 
 
 @build.command(name="tx")
-@option.safe
+@option.account
 @click.option("--version", required=True, help="Safe version")
 @click.option("--chain-id", "-c", type=int, required=True, help="chain ID")
 @click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
@@ -130,7 +130,7 @@ def build():
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )
 def build_tx(
-    safe: str,
+    account: str,
     version: str,
     chain_id: int,
     nonce: int,
@@ -141,7 +141,7 @@ def build_tx(
 ) -> None:
     """Build a custom SafeTx."""
     safetx = SafeTxWrapper(
-        account=to_checksum_address(safe),
+        account=to_checksum_address(account),
         version=version,
         chain_id=chain_id,
         nonce=nonce,
@@ -256,11 +256,11 @@ def hash(txfile: typing.BinaryIO | None) -> None:
 
 
 @main.command()
-@option.safe
+@option.account
 @option.rpc
-def inspect(safe: str, rpc: str):
+def inspect(account: str, rpc: str):
     """Retrieve Safe info from chain."""
-    acc_addr = to_checksum_address(safe)
+    acc_addr = to_checksum_address(account)
     client = EthereumClient(URI(rpc))
     try:
         safeobj = Safe(acc_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
