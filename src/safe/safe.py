@@ -100,6 +100,7 @@ class SafeTxWrapper(BaseModel):
 @click.group(
     context_settings=dict(
         show_default=True,
+        max_content_width=shutil.get_terminal_size().columns,
         help_option_names=["-h", "--help"],
     )
 )
