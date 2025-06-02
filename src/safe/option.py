@@ -29,3 +29,11 @@ safe = click.option(
     help="Safe Account address",
 )
 
+
+def web3tx(f: FC) -> FC:
+    @rpc
+    @functools.wraps(f)
+    def wrapper(*args: object, **kwargs: object) -> object:
+        f(*args, **kwargs)
+
+    return cast(FC, wrapper)

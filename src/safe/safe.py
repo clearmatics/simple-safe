@@ -171,7 +171,7 @@ def deploy():
     required=True,
     help="owner signature JSON",
 )
-@option.rpc
+@option.web3tx
 @click.argument("txfile", type=click.File("rb"), required=False)
 def exec(
     keyfile: str,
