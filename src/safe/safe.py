@@ -123,11 +123,11 @@ def build():
 @build.command(name="tx")
 @option.account
 @click.option("--version", required=True, help="Safe version")
-@click.option("--chain-id", "-c", type=int, required=True, help="chain ID")
+@click.option("--chain-id", "-i", type=int, required=True, help="chain ID")
 @click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
 @click.option("--to", "-t", "to_str", required=True, help="destination address")
 @click.option("--value", "-v", "value_", default="0.0", help="tx value in decimals")
-@click.option("--data", "-d", help="optional call data payload")
+@click.option("--data", "-d", default="0x", help="optional call data payload")
 @click.option(
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )
@@ -149,7 +149,7 @@ def build_tx(
         nonce=nonce,
         to=to_checksum_address(to_str),
         value=value_,
-        data=data if data else "0x",
+        data=data,
     )
     if not output:
         output = click.get_text_stream("stdout")
