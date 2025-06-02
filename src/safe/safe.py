@@ -34,10 +34,6 @@ from safe_eth.safe.signatures import (
 from . import option
 from .util import mktable, serialize
 
-CLICK_CONTEXT_SETTINGS = dict(
-    show_default=True,
-    help_option_names=["-h", "--help"],
-)
 
 # ┌───────┐
 # │ Model │
@@ -101,7 +97,12 @@ class SafeTxWrapper(BaseModel):
 # └──────┘
 
 
-@click.group(context_settings=CLICK_CONTEXT_SETTINGS)
+@click.group(
+    context_settings=dict(
+        show_default=True,
+        help_option_names=["-h", "--help"],
+    )
+)
 def main():
     """CLI for Safe Smart Accounts."""
     pass
