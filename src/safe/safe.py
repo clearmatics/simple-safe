@@ -261,9 +261,14 @@ def deploy(
         salt_nonce_int = random.randint(0, 2**256 - 1)  # uint256
     else:
         salt_nonce_int = int(salt_nonce)
-    owner_addresses = [to_checksum_address(owner) for owner in owners]
+    owner_addresses = {to_checksum_address(owner) for owner in owners}
     if threshold <= 0:
         raise click.ClickException(f"Invalid threshold '{threshold}'.")
+    elif threshold > len(owners):
+        raise click.ClickException(
+            f"Threshold '{threshold}' exceeds number of unique owners {len(owner_addresses)}."
+        )
+
     if custom_singleton:
         if without_events:
             raise click.ClickException(
@@ -288,7 +293,7 @@ def deploy(
         safe_contract.encode_abi(
             "setup",
             [
-                owner_addresses,  # [alice]
+                list(owner_addresses),
                 threshold,
                 ADDRESS_ZERO,
                 b"",
