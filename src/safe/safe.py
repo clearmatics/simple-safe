@@ -311,6 +311,12 @@ def deploy(
         salt_nonce=salt_nonce_int,
         chain_specific=chain_specific,
     )
+    existing_code = client.w3.eth.get_code(predicted_address)
+    if existing_code != b"":
+        raise click.ClickException(
+            f"Safe Account predicted address {predicted_address} already contains code."
+        )
+
     table = mktable()
     table.add_row("Safe Account", f"{predicted_address} (predicted)")
     table.add_row("Version", DEPLOY_SAFE_VERSION)
