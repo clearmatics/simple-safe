@@ -208,7 +208,8 @@ def build_tx(
 @optgroup.option(
     "--chain-specific",
     is_flag=True,
-    help="make account address repend on ChainID",
+    default=False,
+    help="make account address repend on ChainID [default: no]",
 )
 @optgroup.option(
     "--salt-nonce",
