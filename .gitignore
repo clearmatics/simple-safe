@@ -10,3 +10,6 @@ devenv.local.nix
 
 # Python
 __pycache__/
+
+# General
+/.env
