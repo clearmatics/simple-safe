@@ -105,7 +105,7 @@ class SafeTxWrapper(BaseModel):
     )
 )
 def main():
-    """CLI for Safe Smart Accounts."""
+    """CLI for Safe Accounts."""
     pass
 
 
@@ -122,12 +122,14 @@ def build():
 
 @build.command(name="tx")
 @option.account
-@click.option("--version", required=True, help="Safe version")
-@click.option("--chain-id", "-i", type=int, required=True, help="chain ID")
-@click.option("--nonce", "-n", type=int, required=True, help="nonce of the Safe")
-@click.option("--to", "-t", "to_str", required=True, help="destination address")
-@click.option("--value", "-v", "value_", default="0.0", help="tx value in decimals")
-@click.option("--data", "-d", default="0x", help="optional call data payload")
+@click.option("--version", required=True, help="Safe Account version")
+@click.option("--chain", type=int, metavar="ID", required=True, help="chain ID")
+@click.option("--nonce", type=int, required=True, help="nonce of the Safe Account")
+@click.option(
+    "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
+)
+@click.option("--value", "value_", default="0.0", help="tx value in decimals")
+@click.option("--data", default="0x", help="optional call data payload")
 @click.option(
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )
@@ -188,7 +190,7 @@ def exec(
 
     Repeat the signature option to include all required signatures.
     """
-    # safetx
+    # SafeTx
     if not txfile:
         txfile = click.get_binary_stream("stdin")
     json_data = txfile.read()
@@ -197,14 +199,14 @@ def exec(
     safetx_ = safetx.unwrap()
     safetxhash = safetx_.safe_tx_hash
 
-    # keyfile
+    # Keyfile
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
     password = getpass()
     privkey = Account.decrypt(keydata, password=password)
     account = Account.from_key(privkey)
 
-    # sigs
+    # Sigs
     sigobjs: list[SafeSignature] = []
     for sigfile in sigfiles:
         with open(sigfile, "rb") as sf:
@@ -216,11 +218,11 @@ def exec(
     signatures = SafeSignature.export_signatures(sigobjs)
     print(signatures.to_0x_hex())
 
-    # final safetx with signers
+    # Final SafeTx with signers
     safetx_ = safetx.unwrap(client, signatures)
     print(safetx_)
 
-    # send
+    # Send
     try:
         safetx_.call(
             tx_sender_address=account.address,
@@ -258,14 +260,14 @@ def hash(txfile: typing.BinaryIO | None) -> None:
 
 
 @main.command()
-@option.account
+@click.argument("address")
 @option.rpc
-def inspect(account: str, rpc: str):
-    """Retrieve Safe info from chain."""
-    acc_addr = to_checksum_address(account)
+def inspect(rpc: str, address: str):
+    """Print the state of the Safe Account at ADDRESS."""
+    acc_addr = to_checksum_address(address)
     client = EthereumClient(URI(rpc))
     try:
-        safeobj = Safe(acc_addr, client)  # pyright: ignore[reportAbstractUsage, reportArgumentType]
+        safeobj = Safe(acc_addr, client)  # type: ignore[abstract]
         info = safeobj.retrieve_all_info()
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
@@ -273,12 +275,12 @@ def inspect(account: str, rpc: str):
     table.add_row("Safe Account", info.address)
     table.add_row("Version", info.version)
     table.add_row("Nonce", str(info.nonce))
-    table.add_row("Owners", ", ".join(info.owners))
+    table.add_row(f"Owners({len(info.owners)})", ", ".join(info.owners))
     table.add_row("Threshold", str(info.threshold))
-    table.add_row("Master Copy", info.master_copy)
+    table.add_row("Singleton", info.master_copy)
     table.add_row("Fallback Handler", info.fallback_handler)
     table.add_row("Guard", info.guard)
-    table.add_row("Modules", ", ".join(info.modules) if info.modules else "(none)")
+    table.add_row("Modules", ", ".join(info.modules) if info.modules else "<none>")
     console = Console()
     console.print(table)
 

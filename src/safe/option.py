@@ -8,10 +8,10 @@ FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
 account = click.option(
     "--account",
-    "-a",
     "account",
+    metavar="ADDRESS",
     required=True,
-    help="account address",
+    help="Safe Account address",
 )
 
 
