@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "click>=8.2.1",
+  "click-option-group>=0.5.7",
+  "devtools>=0.12.2",
   "pydantic>=2.11.4",
   "rich>=14.0.0",
   "safe-eth-py>=7.3.0",

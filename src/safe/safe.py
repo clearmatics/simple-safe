@@ -1,6 +1,8 @@
 #!/usr/bin/env -S uv run --script
 
 import json
+import random
+import shutil
 import typing
 from decimal import Decimal
 from getpass import getpass
@@ -11,6 +13,9 @@ from typing import (
 
 import click
 import eth_typing
+from click_option_group import (
+    optgroup,
+)
 from eth_account import Account
 from eth_typing import URI
 from eth_utils.address import is_checksum_address, to_checksum_address
@@ -23,17 +28,43 @@ from pydantic import (
 )
 from rich.console import Console
 from safe_eth.eth import EthereumClient
+from safe_eth.eth.contracts import (
+    get_safe_V0_0_1_contract,
+    get_safe_V1_0_0_contract,
+    get_safe_V1_1_1_contract,
+    get_safe_V1_3_0_contract,
+    get_safe_V1_4_1_contract,
+)
 from safe_eth.eth.exceptions import EthereumClientException
-from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
+from safe_eth.safe import ProxyFactory, Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.exceptions import SafeServiceException
+from safe_eth.safe.safe_deployments import default_safe_deployments
 from safe_eth.safe.safe_signature import SafeSignature
 from safe_eth.safe.signatures import (
     signature_to_bytes,
 )
+from web3.constants import ADDRESS_ZERO
 
 from . import option
-from .util import mktable, serialize
+from .util import as_checksum, mktable, serialize
 
+LATEST_SAFE_VERSION = "1.4.1"
+SALT_NONCE_SENTINEL = "random"
+DEFAULT_PROXYFACTORY_ADDRESS = as_checksum("0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67")
+DEFAULT_FALLBACK_ADDRESS = as_checksum("0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99")
+DEFAULT_SAFEL2_SINGLETON_ADDRESS = as_checksum(
+    "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
+)
+DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
+    "0x41675C099F32341bf84BFc5382aF534df5C7461a"
+)
+SAFE_CONTRACT_LOADERS = {
+    "0.0.1": get_safe_V0_0_1_contract,
+    "1.0.0": get_safe_V1_0_0_contract,
+    "1.1.1": get_safe_V1_1_1_contract,
+    "1.3.0": get_safe_V1_3_0_contract,
+    "1.4.1": get_safe_V1_4_1_contract,
+}
 
 # ┌───────┐
 # │ Model │
@@ -159,9 +190,164 @@ def build_tx(
 
 
 @main.command()
-def deploy():
-    """Deploy a new Safe Account."""
-    raise NotImplementedError
+# pyright: reportUntypedFunctionDecorator=information
+# pyright: reportUnknownMemberType=information
+@click.option(
+    "--version",
+    default=LATEST_SAFE_VERSION,
+    help="Safe version",
+)
+@option.keyfile
+@option.web3tx
+@optgroup.group(
+    "Deployment settings",
+)
+@optgroup.option(
+    "--salt-nonce",
+    type=str,
+    metavar="INTEGER",
+    default=SALT_NONCE_SENTINEL,
+    help="nonce used to generate CREATE2 salt",
+)
+@optgroup.option(
+    "--without-events",
+    is_flag=True,
+    help="use implementation that does not emit events",
+)
+@optgroup.option(
+    "--custom-singleton",
+    metavar="ADDRESS",
+    help="use non-canonical Safe Singleton address",
+)
+@optgroup.option(
+    "--custom-proxy-factory",
+    metavar="ADDRESS",
+    help="use non-canonical ProxyFactory address",
+)
+@optgroup.group(
+    "Safe configuration",
+)
+@optgroup.option(
+    "--owner",
+    "owners",
+    required=True,
+    multiple=True,
+    metavar="ADDRESS",
+    type=str,
+    help="add an owner (repeat option to add more)",
+)
+@optgroup.option(
+    "--threshold", type=int, default=1, help="number of required confirmations"
+)
+@optgroup.option(
+    "--fallback",
+    metavar="ADDRESS",
+    help="custom Fallback Handler",
+)
+def deploy(
+    version: str,
+    keyfile: str,
+    rpc: str,
+    salt_nonce: str,
+    without_events: bool,
+    owners: tuple[str],
+    threshold: int,
+    fallback: str,
+    custom_singleton: str,
+    custom_proxy_factory: str,
+):
+    """Deploy a new Safe Account.
+
+    The Safe Account is deployed using Safe's ProxyFactory, which
+    allows for initialization of the Safe as part of the same transaction.
+
+    The account uses the 'SafeL2.sol' implementation, which
+    emits events. To use the gas-saving 'Safe.sol' variant instead, pass
+    --without-events.
+
+    The deployed contract address is a function of the Chain ID to prevent
+    replaying the CREATE2 transaction on other chains.
+    """
+    client = EthereumClient(URI(rpc))
+
+    if version not in default_safe_deployments:
+        raise click.ClickException(f"Unknown or invalid Safe version '{version}'.")
+    if salt_nonce == SALT_NONCE_SENTINEL:
+        salt_nonce_int = random.randint(0, 2**256 - 1)  # uint256
+    else:
+        salt_nonce_int = int(salt_nonce)
+    owner_addresses = [to_checksum_address(owner) for owner in owners]
+    if threshold <= 0:
+        raise click.ClickException(f"Invalid threshold '{threshold}'.")
+    if custom_singleton:
+        if without_events:
+            raise click.ClickException(
+                "Option --without-events incompatible with --custom-singleton."
+            )
+        singleton_address = to_checksum_address(custom_singleton)
+    elif without_events:
+        singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
+    else:
+        singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
+    fallback_address = (
+        DEFAULT_FALLBACK_ADDRESS if not fallback else to_checksum_address(fallback)
+    )
+    proxy_factory_address = (
+        DEFAULT_PROXYFACTORY_ADDRESS
+        if not custom_proxy_factory
+        else to_checksum_address(custom_proxy_factory)
+    )
+
+    # Initializer
+    safe_contract = SAFE_CONTRACT_LOADERS[version](client.w3, singleton_address)
+    initializer = HexBytes(
+        safe_contract.encode_abi(
+            "setup",
+            [
+                owner_addresses,  # [alice]
+                threshold,
+                ADDRESS_ZERO,
+                b"",
+                fallback_address,
+                ADDRESS_ZERO,
+                0,
+                ADDRESS_ZERO,
+            ],
+        )
+    )
+
+    with click.open_file(keyfile) as kf:
+        keydata = kf.read()
+    password = getpass()
+    privkey = Account.decrypt(keydata, password=password)
+    account = Account.from_key(privkey)
+
+    # Deploy
+    proxy_factory = ProxyFactory(
+        address=proxy_factory_address, ethereum_client=client, version=version
+    )  # type: ignore[abstract]
+    expected = proxy_factory.calculate_proxy_address(
+        master_copy=singleton_address,
+        initializer=initializer,
+        salt_nonce=salt_nonce_int,
+        chain_specific=True,
+    )
+    tx = proxy_factory.deploy_proxy_contract_with_nonce(
+        deployer_account=account,
+        master_copy=singleton_address,
+        initializer=initializer,
+        salt_nonce=salt_nonce_int,
+        gas=None,
+        gas_price=None,
+        nonce=None,
+        chain_specific=True,
+    )
+    table = mktable()
+    table.add_row("Safe Account", expected)
+    table.add_row("Salt Nonce", str(salt_nonce_int))
+    table.add_row("Web3 TxHash", HexBytes(tx.tx_hash).to_0x_hex())
+    console = Console()
+    console.print(table)
 
 
 @main.command()
