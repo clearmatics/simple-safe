@@ -41,6 +41,8 @@ def authentication(f: FC) -> FC:
 rpc = click.option(
     "--rpc",
     "-r",
+    envvar="SAFE_RPC",
+    show_envvar=True,
     required=True,
     help="HTTP JSON-RPC endpoint URI",
 )
