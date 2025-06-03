@@ -183,6 +183,26 @@ def build_tx(
 @option.keyfile
 @option.web3tx
 @optgroup.group(
+    "Safe configuration",
+)
+@optgroup.option(
+    "--owner",
+    "owners",
+    required=True,
+    multiple=True,
+    metavar="ADDRESS",
+    type=str,
+    help="add an owner (repeat option to add more)",
+)
+@optgroup.option(
+    "--threshold", type=int, default=1, help="number of required confirmations"
+)
+@optgroup.option(
+    "--fallback",
+    metavar="ADDRESS",
+    help="custom Fallback Handler address",
+)
+@optgroup.group(
     "Deployment settings",
 )
 @optgroup.option(
@@ -207,34 +227,14 @@ def build_tx(
     metavar="ADDRESS",
     help="use non-canonical ProxyFactory address",
 )
-@optgroup.group(
-    "Safe configuration",
-)
-@optgroup.option(
-    "--owner",
-    "owners",
-    required=True,
-    multiple=True,
-    metavar="ADDRESS",
-    type=str,
-    help="add an owner (repeat option to add more)",
-)
-@optgroup.option(
-    "--threshold", type=int, default=1, help="number of required confirmations"
-)
-@optgroup.option(
-    "--fallback",
-    metavar="ADDRESS",
-    help="custom Fallback Handler",
-)
 def deploy(
     keyfile: str,
     rpc: str,
-    salt_nonce: str,
-    without_events: bool,
     owners: tuple[str],
     threshold: int,
     fallback: str,
+    salt_nonce: str,
+    without_events: bool,
     custom_singleton: str,
     custom_proxy_factory: str,
 ):
@@ -278,7 +278,6 @@ def deploy(
         else to_checksum_address(custom_proxy_factory)
     )
 
-    # Initializer
     safe_contract = get_safe_V1_4_1_contract(client.w3, singleton_address)
     initializer = HexBytes(
         safe_contract.encode_abi(
@@ -308,12 +307,6 @@ def deploy(
         ethereum_client=client,
         version=DEPLOY_SAFE_VERSION,
     )  # type: ignore[abstract]
-    expected = proxy_factory.calculate_proxy_address(
-        master_copy=singleton_address,
-        initializer=initializer,
-        salt_nonce=salt_nonce_int,
-        chain_specific=True,
-    )
     tx = proxy_factory.deploy_proxy_contract_with_nonce(
         deployer_account=account,
         master_copy=singleton_address,
@@ -325,7 +318,7 @@ def deploy(
         chain_specific=True,
     )
     table = mktable()
-    table.add_row("Safe Account", expected)
+    table.add_row("Safe Account", tx.contract_address)
     table.add_row("Salt Nonce", str(salt_nonce_int))
     table.add_row("Web3 TxHash", HexBytes(tx.tx_hash).to_0x_hex())
     console = Console()
