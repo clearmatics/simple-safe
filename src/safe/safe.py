@@ -180,8 +180,8 @@ def build_tx(
 @main.command()
 # pyright: reportUntypedFunctionDecorator=information
 # pyright: reportUnknownMemberType=information
-@option.keyfile
 @option.web3tx
+@option.authentication
 @optgroup.group(
     "Safe configuration",
 )
@@ -326,7 +326,7 @@ def deploy(
 
 
 @main.command()
-@option.keyfile
+@option.authentication
 @click.option(
     "--signature",
     "-g",
@@ -447,7 +447,7 @@ def inspect(rpc: str, address: str):
 
 
 @main.command()
-@option.keyfile
+@option.authentication
 @click.option(
     "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
 )
