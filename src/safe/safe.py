@@ -299,18 +299,38 @@ def deploy(
         )
     )
 
+    proxy_factory = ProxyFactory(
+        address=proxy_factory_address,
+        ethereum_client=client,
+        version=DEPLOY_SAFE_VERSION,
+    )  # type: ignore[abstract]
+
+    predicted_address = proxy_factory.calculate_proxy_address(
+        master_copy=singleton_address,
+        initializer=initializer,
+        salt_nonce=salt_nonce_int,
+        chain_specific=chain_specific,
+    )
+    table = mktable()
+    table.add_row("Safe Account", f"{predicted_address} (predicted)")
+    table.add_row("Version", DEPLOY_SAFE_VERSION)
+    table.add_row(f"Owners({len(owner_addresses)})", ", ".join(owner_addresses))
+    table.add_row("Threshold", str(threshold))
+    table.add_row("Fallback Handler", fallback_address)
+    table.add_row("Salt Nonce", str(salt_nonce_int))
+    table.add_row("Singleton", singleton_address)
+    table.add_row("Proxy Factory", proxy_factory_address)
+
+    console = Console()
+    console.print(table)
+    click.confirm("Do you want to continue?", abort=True)
+
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
     password = getpass()
     privkey = Account.decrypt(keydata, password=password)
     account = Account.from_key(privkey)
 
-    # Deploy
-    proxy_factory = ProxyFactory(
-        address=proxy_factory_address,
-        ethereum_client=client,
-        version=DEPLOY_SAFE_VERSION,
-    )  # type: ignore[abstract]
     tx = proxy_factory.deploy_proxy_contract_with_nonce(
         deployer_account=account,
         master_copy=singleton_address,
@@ -323,9 +343,7 @@ def deploy(
     )
     table = mktable()
     table.add_row("Safe Account", tx.contract_address)
-    table.add_row("Salt Nonce", str(salt_nonce_int))
     table.add_row("Web3 TxHash", HexBytes(tx.tx_hash).to_0x_hex())
-    console = Console()
     console.print(table)
 
 
@@ -442,8 +460,8 @@ def inspect(rpc: str, address: str):
     table.add_row("Nonce", str(info.nonce))
     table.add_row(f"Owners({len(info.owners)})", ", ".join(info.owners))
     table.add_row("Threshold", str(info.threshold))
-    table.add_row("Singleton", info.master_copy)
     table.add_row("Fallback Handler", info.fallback_handler)
+    table.add_row("Singleton", info.master_copy)
     table.add_row("Guard", info.guard)
     table.add_row("Modules", ", ".join(info.modules) if info.modules else "<none>")
     console = Console()
