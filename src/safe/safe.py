@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 
 import json
-import random
+import secrets
 import shutil
 import typing
 from decimal import Decimal
@@ -258,7 +258,7 @@ def deploy(
     client = EthereumClient(URI(rpc))
 
     if salt_nonce == SALT_NONCE_SENTINEL:
-        salt_nonce_int = random.randint(0, 2**256 - 1)  # uint256
+        salt_nonce_int = secrets.randbits(256)  # uint256
     else:
         salt_nonce_int = int(salt_nonce)
     owner_addresses = {to_checksum_address(owner) for owner in owners}
