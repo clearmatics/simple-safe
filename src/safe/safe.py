@@ -142,7 +142,7 @@ def build():
 @build.command(name="tx")
 @option.account
 @click.option("--version", required=True, help="Safe Account version")
-@click.option("--chain", type=int, metavar="ID", required=True, help="chain ID")
+@click.option("--chain", type=int, metavar="ID", required=True, help="ChainID")
 @click.option("--nonce", type=int, required=True, help="nonce of the Safe Account")
 @click.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
@@ -206,6 +206,11 @@ def build_tx(
     "Deployment settings",
 )
 @optgroup.option(
+    "--chain-specific",
+    is_flag=True,
+    help="make account address repend on ChainID",
+)
+@optgroup.option(
     "--salt-nonce",
     type=str,
     metavar="INTEGER",
@@ -233,22 +238,21 @@ def deploy(
     owners: tuple[str],
     threshold: int,
     fallback: str,
+    chain_specific: bool,
     salt_nonce: str,
     without_events: bool,
     custom_singleton: str,
     custom_proxy_factory: str,
 ):
-    """Deploy a new Safe Account v1.4.1.
+    """Deploy a new Safe Account.
 
-    The Safe Account is deployed using Safe's ProxyFactory, which
-    allows for initialization of the Safe as part of the same transaction.
+    The Safe Account is deployed with CREATE2, which makes it possible to
+    own the same address on different chains. If this is not desirable, pass the
+    --chain-specific option to include the ChainID in the CREATE2 salt derivation.
 
-    The account uses the 'SafeL2.sol' implementation, which
+    The account uses the 'SafeL2.sol' implementation by default, which
     emits events. To use the gas-saving 'Safe.sol' variant instead, pass
     --without-events.
-
-    The deployed contract address is a function of the Chain ID to prevent
-    replaying the CREATE2 transaction on other chains.
     """
     client = EthereumClient(URI(rpc))
 
@@ -315,7 +319,7 @@ def deploy(
         gas=None,
         gas_price=None,
         nonce=None,
-        chain_specific=True,
+        chain_specific=chain_specific,
     )
     table = mktable()
     table.add_row("Safe Account", tx.contract_address)
