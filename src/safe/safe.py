@@ -29,16 +29,11 @@ from pydantic import (
 from rich.console import Console
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.contracts import (
-    get_safe_V0_0_1_contract,
-    get_safe_V1_0_0_contract,
-    get_safe_V1_1_1_contract,
-    get_safe_V1_3_0_contract,
     get_safe_V1_4_1_contract,
 )
 from safe_eth.eth.exceptions import EthereumClientException
 from safe_eth.safe import ProxyFactory, Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.exceptions import SafeServiceException
-from safe_eth.safe.safe_deployments import default_safe_deployments
 from safe_eth.safe.safe_signature import SafeSignature
 from safe_eth.safe.signatures import (
     signature_to_bytes,
@@ -48,7 +43,7 @@ from web3.constants import ADDRESS_ZERO
 from . import option
 from .util import as_checksum, mktable, serialize
 
-LATEST_SAFE_VERSION = "1.4.1"
+DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
 DEFAULT_PROXYFACTORY_ADDRESS = as_checksum("0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67")
 DEFAULT_FALLBACK_ADDRESS = as_checksum("0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99")
@@ -58,13 +53,6 @@ DEFAULT_SAFEL2_SINGLETON_ADDRESS = as_checksum(
 DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
     "0x41675C099F32341bf84BFc5382aF534df5C7461a"
 )
-SAFE_CONTRACT_LOADERS = {
-    "0.0.1": get_safe_V0_0_1_contract,
-    "1.0.0": get_safe_V1_0_0_contract,
-    "1.1.1": get_safe_V1_1_1_contract,
-    "1.3.0": get_safe_V1_3_0_contract,
-    "1.4.1": get_safe_V1_4_1_contract,
-}
 
 # ┌───────┐
 # │ Model │
@@ -192,11 +180,6 @@ def build_tx(
 @main.command()
 # pyright: reportUntypedFunctionDecorator=information
 # pyright: reportUnknownMemberType=information
-@click.option(
-    "--version",
-    default=LATEST_SAFE_VERSION,
-    help="Safe version",
-)
 @option.keyfile
 @option.web3tx
 @optgroup.group(
@@ -245,7 +228,6 @@ def build_tx(
     help="custom Fallback Handler",
 )
 def deploy(
-    version: str,
     keyfile: str,
     rpc: str,
     salt_nonce: str,
@@ -256,7 +238,7 @@ def deploy(
     custom_singleton: str,
     custom_proxy_factory: str,
 ):
-    """Deploy a new Safe Account.
+    """Deploy a new Safe Account v1.4.1.
 
     The Safe Account is deployed using Safe's ProxyFactory, which
     allows for initialization of the Safe as part of the same transaction.
@@ -270,8 +252,6 @@ def deploy(
     """
     client = EthereumClient(URI(rpc))
 
-    if version not in default_safe_deployments:
-        raise click.ClickException(f"Unknown or invalid Safe version '{version}'.")
     if salt_nonce == SALT_NONCE_SENTINEL:
         salt_nonce_int = random.randint(0, 2**256 - 1)  # uint256
     else:
@@ -299,7 +279,7 @@ def deploy(
     )
 
     # Initializer
-    safe_contract = SAFE_CONTRACT_LOADERS[version](client.w3, singleton_address)
+    safe_contract = get_safe_V1_4_1_contract(client.w3, singleton_address)
     initializer = HexBytes(
         safe_contract.encode_abi(
             "setup",
@@ -324,7 +304,9 @@ def deploy(
 
     # Deploy
     proxy_factory = ProxyFactory(
-        address=proxy_factory_address, ethereum_client=client, version=version
+        address=proxy_factory_address,
+        ethereum_client=client,
+        version=DEPLOY_SAFE_VERSION,
     )  # type: ignore[abstract]
     expected = proxy_factory.calculate_proxy_address(
         master_copy=singleton_address,
