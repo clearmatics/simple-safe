@@ -53,6 +53,7 @@ DEFAULT_SAFEL2_SINGLETON_ADDRESS = as_checksum(
 DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
     "0x41675C099F32341bf84BFc5382aF534df5C7461a"
 )
+console = Console()
 
 # ┌───────┐
 # │ Model │
@@ -333,7 +334,6 @@ def deploy(
     table.add_row("Singleton", singleton_address)
     table.add_row("Proxy Factory", proxy_factory_address)
 
-    console = Console()
     console.print(table)
     click.confirm("Do you want to continue?", abort=True)
 
@@ -431,7 +431,6 @@ def exec(
         raise click.ClickException(str(exc)) from exc
     table = mktable()
     table.add_row("Web3 TxHash", w3txhash.to_0x_hex())
-    console = Console()
     console.print(table)
 
 
@@ -450,7 +449,6 @@ def hash(txfile: typing.BinaryIO | None) -> None:
     hashstr = safetx.unwrap().safe_tx_hash.to_0x_hex()
     table = mktable()
     table.add_row("SafeTxHash", hashstr)
-    console = Console()
     console.print(table)
 
 
@@ -476,7 +474,6 @@ def inspect(rpc: str, address: str):
     table.add_row("Singleton", info.master_copy)
     table.add_row("Guard", info.guard)
     table.add_row("Modules", ", ".join(info.modules) if info.modules else "<none>")
-    console = Console()
     console.print(table)
 
 
