@@ -17,9 +17,13 @@ from click_option_group import (
     optgroup,
 )
 from eth_account import Account
-from eth_typing import URI
+from eth_typing import (
+    URI,
+)
 from eth_utils.address import is_checksum_address, to_checksum_address
-from hexbytes import HexBytes
+from hexbytes import (
+    HexBytes,
+)
 from pydantic import (
     AfterValidator,
     BaseModel,
@@ -43,8 +47,15 @@ from web3.constants import ADDRESS_ZERO
 from web3.providers.auto import load_provider_from_uri
 
 from . import option
-from .util import as_checksum, normalize_tx_params, serialize
-from .ui import console, print_kvtable
+from .console import (
+    console,
+    print_safe_configuration,
+    print_safe_deployment_params,
+    print_web3_call_data,
+    print_web3_tx_params,
+    print_web3_tx_receipt,
+)
+from .util import as_checksum, serialize
 
 DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
@@ -56,6 +67,7 @@ DEFAULT_SAFEL2_SINGLETON_ADDRESS = as_checksum(
 DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
     "0x41675C099F32341bf84BFc5382aF534df5C7461a"
 )
+
 
 # ┌───────┐
 # │ Model │
@@ -145,7 +157,7 @@ def build():
 @build.command(name="tx")
 @option.account
 @click.option("--version", required=True, help="Safe Account version")
-@click.option("--chain", type=int, metavar="ID", required=True, help="ChainID")
+@click.option("--chain-id", type=int, metavar="ID", required=True, help="ChainID")
 @click.option("--nonce", type=int, required=True, help="nonce of the Safe Account")
 @click.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
@@ -317,16 +329,9 @@ def deploy(
         else proxy_factory_contract.functions.createChainSpecificProxyWithNonce
     )
 
-    with click.open_file(keyfile) as kf:
-        keydata = kf.read()
-    deployer_address = to_checksum_address(json.loads(keydata)["address"])
-
     deployment_call = proxy_factory_method(
         singleton_address, initializer, salt_nonce_int
     )
-    unsigned_tx = deployment_call.build_transaction({
-        "nonce": w3.eth.get_transaction_count(deployer_address)
-    })
     predicted_address = deployment_call.call()
 
     existing_code = w3.eth.get_code(predicted_address)
@@ -335,47 +340,50 @@ def deploy(
             f"Safe Account predicted address {predicted_address} already contains code."
         )
 
-    console.print()
-    print_kvtable(
-        "Safe Deployment",
-        {
-            "Safe Account": f"{predicted_address} (predicted)",
-            "Version": DEPLOY_SAFE_VERSION,
-            f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
-            "Threshold": str(threshold),
-            "Fallback Handler": fallback_address,
-            "Salt Nonce": str(salt_nonce_int),
-            "Singleton": singleton_address,
-            "Proxy Factory": proxy_factory_address,
-        },
+    console.line()
+    print_safe_deployment_params(
+        account=predicted_address,
+        version=DEPLOY_SAFE_VERSION,
+        owners=owner_addresses,
+        threshold=threshold,
+        fallback=fallback_address,
+        salt_nonce=salt_nonce_int,
+        singleton=singleton_address,
+        proxy_factory=proxy_factory_address,
     )
-    unsigned_tx["from"] = deployer_address
-    print_kvtable(
-        "Web3 TX Parameters",
-        normalize_tx_params(unsigned_tx),
-    )
+    console.line()
+    click.confirm("Prepare Web3 transaction?", abort=True)
 
-    click.confirm("Execute transaction?", abort=True)
+    with click.open_file(keyfile) as kf:
+        keydata = kf.read()
+    deployer_address = to_checksum_address(json.loads(keydata)["address"])
+    unsigned_tx = deployment_call.build_transaction({
+        "nonce": w3.eth.get_transaction_count(deployer_address)
+    })
+    unsigned_tx["from"] = deployer_address
+
+    console.line()
+    print_web3_call_data(
+        address=proxy_factory_address,
+        function=deployment_call,
+    )
+    console.line()
+    print_web3_tx_params(unsigned_tx)
+    console.line()
+    click.confirm("Execute Web3 transaction?", abort=True)
 
     password = getpass()
     privkey = Account.decrypt(keydata, password=password)
     deployer_account = Account.from_key(privkey)
 
-    signed_tx = deployer_account.sign_transaction(unsigned_tx)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    with console.status("Executing transaction..."):
+        signed_tx = deployer_account.sign_transaction(unsigned_tx)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+    with console.status("Waiting for transaction receipt..."):
+        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
-    console.print()
-    print_kvtable(
-        "Web3 TX Receipt",
-        {
-            "Web3 TxHash": tx_receipt["transactionHash"].to_0x_hex(),
-            "Block": str(tx_receipt["blockNumber"]),
-            "Gas Used": str(tx_receipt["gasUsed"]),
-            "Effective Gas Price": str(tx_receipt["effectiveGasPrice"]),
-            "Status": str(tx_receipt["status"]),
-        },
-    )
+    console.line()
+    print_web3_tx_receipt(tx_receipt)
 
 
 @main.command()
@@ -448,12 +456,12 @@ def exec(
         )
     except (EthereumClientException, SafeServiceException) as exc:
         raise click.ClickException(str(exc)) from exc
-    print_kvtable(
-        "Web3 Sent Transaction",
-        {
-            "Web3 TxHash": w3txhash.to_0x_hex(),
-        },
-    )
+
+    # Wait
+    with console.status("Waiting for transaction receipt..."):
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(w3txhash)
+    console.line()
+    print_web3_tx_receipt(tx_receipt)
 
 
 @main.command()
@@ -469,12 +477,8 @@ def hash(txfile: typing.BinaryIO | None) -> None:
     json_data = txfile.read()
     safetx = SafeTxWrapper.model_validate_json(json_data)
     hashstr = safetx.unwrap().safe_tx_hash.to_0x_hex()
-    print_kvtable(
-        "Result",
-        {
-            "SafeTxHash": hashstr,
-        },
-    )
+    console.line()
+    console.print(hashstr)
 
 
 @main.command()
@@ -489,31 +493,15 @@ def inspect(rpc: str, address: str):
         info = safeobj.retrieve_all_info()
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
-    print_kvtable(
-        "Safe Configuration",
-        {
-            "Safe Account": info.address,
-            "Version": info.version,
-            "Nonce": str(info.nonce),
-            f"Owners({len(info.owners)})": ", ".join(info.owners),
-            "Threshold": str(info.threshold),
-            "Fallback Handler": info.fallback_handler,
-            "Singleton": info.master_copy,
-            "Guard": info.guard,
-            "Modules": ", ".join(info.modules) if info.modules else "<none>",
-        },
-    )
+    console.line()
+    print_safe_configuration(info)
 
 
 @main.command()
 @option.authentication
-@click.option(
-    "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
-)
 @click.argument("txfile", type=click.File("rb"), required=False)
 def sign(
     keyfile: str,
-    output: typing.TextIO | None,
     txfile: typing.BinaryIO | None,
 ):
     """Sign a SafeTx.
@@ -536,15 +524,8 @@ def sign(
     sigbytes = signature_to_bytes(v, r, s)
     sigobj = SafeSignature.parse_signature(sigbytes, hashbytes)[0]
     signature = sigobj.export_signature()
-    # print(get_signing_address(sigbytes, v, r, s), account.address)
-    signature = Signature(
-        safetx=hashbytes.to_0x_hex(),
-        owner=account.address,
-        signature=signature.to_0x_hex(),
-    )
-    if not output:
-        output = click.get_text_stream("stdout")
-    click.echo(serialize(signature), file=output)
+    console.line()
+    console.print(signature.to_0x_hex())
 
 
 if __name__ == "__main__":
