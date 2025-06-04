@@ -26,7 +26,6 @@ from pydantic import (
     ConfigDict,
     Field,
 )
-from rich.console import Console
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.contracts import (
     get_proxy_factory_V1_4_1_contract,
@@ -44,7 +43,8 @@ from web3.constants import ADDRESS_ZERO
 from web3.providers.auto import load_provider_from_uri
 
 from . import option
-from .util import as_checksum, mktable, overflow, serialize
+from .util import as_checksum, normalize_tx_params, serialize
+from .ui import console, print_kvtable
 
 DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
@@ -56,7 +56,6 @@ DEFAULT_SAFEL2_SINGLETON_ADDRESS = as_checksum(
 DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
     "0x41675C099F32341bf84BFc5382aF534df5C7461a"
 )
-console = Console()
 
 # ┌───────┐
 # │ Model │
@@ -337,28 +336,24 @@ def deploy(
         )
 
     console.print()
-    table = mktable("Safe Deployment")
-    table.add_row("Safe Account", f"{predicted_address} (predicted)")
-    table.add_row("Version", DEPLOY_SAFE_VERSION)
-    table.add_row(f"Owners({len(owner_addresses)})", ", ".join(owner_addresses))
-    table.add_row("Threshold", str(threshold))
-    table.add_row("Fallback Handler", fallback_address)
-    table.add_row("Salt Nonce", overflow(str(salt_nonce_int)))
-    table.add_row("Singleton", singleton_address)
-    table.add_row("Proxy Factory", proxy_factory_address)
-    console.print(table)
-
-    table = mktable("Web3 TX Parameters")
-    table.add_row("From", deployer_address)
-    table.add_row("Chain ID", str(unsigned_tx["chainId"]))
-    table.add_row("Nonce", str(unsigned_tx["nonce"]))
-    table.add_row("To", unsigned_tx["to"])
-    table.add_row("Value", str(unsigned_tx["value"]))
-    table.add_row("Estimated Gas", str(unsigned_tx["gas"]))
-    table.add_row("Max Fee", str(unsigned_tx["maxFeePerGas"]))
-    table.add_row("Max Priority Fee", str(unsigned_tx["maxPriorityFeePerGas"]))
-    table.add_row("Data Payload", overflow(unsigned_tx["data"]))
-    console.print(table)
+    print_kvtable(
+        "Safe Deployment",
+        {
+            "Safe Account": f"{predicted_address} (predicted)",
+            "Version": DEPLOY_SAFE_VERSION,
+            f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
+            "Threshold": str(threshold),
+            "Fallback Handler": fallback_address,
+            "Salt Nonce": str(salt_nonce_int),
+            "Singleton": singleton_address,
+            "Proxy Factory": proxy_factory_address,
+        },
+    )
+    unsigned_tx["from"] = deployer_address
+    print_kvtable(
+        "Web3 TX Parameters",
+        normalize_tx_params(unsigned_tx),
+    )
 
     click.confirm("Execute transaction?", abort=True)
 
@@ -371,13 +366,16 @@ def deploy(
     tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
     console.print()
-    table = mktable("Web3 TX Receipt")
-    table.add_row("Web3 TxHash", overflow(tx_receipt["transactionHash"].to_0x_hex()))
-    table.add_row("Block", str(tx_receipt["blockNumber"]))
-    table.add_row("Gas Used", str(tx_receipt["gasUsed"]))
-    table.add_row("Effective Gas Price", str(tx_receipt["effectiveGasPrice"]))
-    table.add_row("Status", str(tx_receipt["status"]))
-    console.print(table)
+    print_kvtable(
+        "Web3 TX Receipt",
+        {
+            "Web3 TxHash": tx_receipt["transactionHash"].to_0x_hex(),
+            "Block": str(tx_receipt["blockNumber"]),
+            "Gas Used": str(tx_receipt["gasUsed"]),
+            "Effective Gas Price": str(tx_receipt["effectiveGasPrice"]),
+            "Status": str(tx_receipt["status"]),
+        },
+    )
 
 
 @main.command()
@@ -450,9 +448,12 @@ def exec(
         )
     except (EthereumClientException, SafeServiceException) as exc:
         raise click.ClickException(str(exc)) from exc
-    table = mktable("Web3 Sent Transaction")
-    table.add_row("Web3 TxHash", w3txhash.to_0x_hex())
-    console.print(table)
+    print_kvtable(
+        "Web3 Sent Transaction",
+        {
+            "Web3 TxHash": w3txhash.to_0x_hex(),
+        },
+    )
 
 
 @main.command()
@@ -468,9 +469,12 @@ def hash(txfile: typing.BinaryIO | None) -> None:
     json_data = txfile.read()
     safetx = SafeTxWrapper.model_validate_json(json_data)
     hashstr = safetx.unwrap().safe_tx_hash.to_0x_hex()
-    table = mktable("Result")
-    table.add_row("SafeTxHash", hashstr)
-    console.print(table)
+    print_kvtable(
+        "Result",
+        {
+            "SafeTxHash": hashstr,
+        },
+    )
 
 
 @main.command()
@@ -485,17 +489,20 @@ def inspect(rpc: str, address: str):
         info = safeobj.retrieve_all_info()
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
-    table = mktable("Safe Configuration")
-    table.add_row("Safe Account", info.address)
-    table.add_row("Version", info.version)
-    table.add_row("Nonce", str(info.nonce))
-    table.add_row(f"Owners({len(info.owners)})", ", ".join(info.owners))
-    table.add_row("Threshold", str(info.threshold))
-    table.add_row("Fallback Handler", info.fallback_handler)
-    table.add_row("Singleton", info.master_copy)
-    table.add_row("Guard", info.guard)
-    table.add_row("Modules", ", ".join(info.modules) if info.modules else "<none>")
-    console.print(table)
+    print_kvtable(
+        "Safe Configuration",
+        {
+            "Safe Account": info.address,
+            "Version": info.version,
+            "Nonce": str(info.nonce),
+            f"Owners({len(info.owners)})": ", ".join(info.owners),
+            "Threshold": str(info.threshold),
+            "Fallback Handler": info.fallback_handler,
+            "Singleton": info.master_copy,
+            "Guard": info.guard,
+            "Modules": ", ".join(info.modules) if info.modules else "<none>",
+        },
+    )
 
 
 @main.command()

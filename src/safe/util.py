@@ -2,43 +2,38 @@ from typing import cast
 
 from eth_typing import ChecksumAddress
 from pydantic import BaseModel
-from rich import box
-from rich.padding import Padding
-from rich.table import Table
-from rich.text import Text
-
-RICH_TABLE_BOX: box.Box = box.Box(
-    " ── \n"  # top
-    "    \n"  # head
-    " ── \n"  # head_row
-    "    \n"  # mid
-    "    \n"  # row
-    "    \n"  # foot_row
-    "    \n"  # foot
-    "    \n"  # bottom
-)
+from web3.types import TxParams
 
 
 def as_checksum(checksum_str: str) -> ChecksumAddress:
     return cast(ChecksumAddress, checksum_str)
 
 
+def normalize_txparams(txparams: TxParams) -> dict[str, str]:
+    # Address Pyright 'reportTypedDictNotRequiredAccess' error due to TxParams
+    # fields being optional
+    assert "from" in txparams
+    assert "chainId" in txparams
+    assert "nonce" in txparams
+    assert "to" in txparams
+    assert "value" in txparams
+    assert "gas" in txparams
+    assert "maxFeePerGas" in txparams
+    assert "maxPriorityFeePerGas" in txparams
+    assert "data" in txparams
+    normalized: dict[str, str] = {
+        "From": str(txparams["from"]),
+        "Chain ID": str(txparams["chainId"]),
+        "Nonce": str(txparams["nonce"]),
+        "To": str(txparams["to"]),
+        "Value": str(txparams["value"]),
+        "Estimated Gas": str(txparams["gas"]),
+        "Max Fee": str(txparams["maxFeePerGas"]),
+        "Max Priority Fee": str(txparams["maxPriorityFeePerGas"]),
+        "Data": str(txparams["data"]),
+    }
+    return normalized
+
+
 def serialize(model: BaseModel):
     return model.model_dump_json(indent=2)
-
-
-def mktable(title: str):
-    table = Table(
-        title=Padding(title, (0, 0, 0, 1)),
-        title_justify="full",
-        show_header=False,
-        box=RICH_TABLE_BOX,
-        pad_edge=False,
-    )
-    table.add_column("Field", justify="right", style="bold", no_wrap=True)
-    table.add_column("Value", no_wrap=False)
-    return table
-
-
-def overflow(text: str) -> Text:
-    return Text(text, overflow="fold")
