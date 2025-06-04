@@ -1,4 +1,4 @@
-A simple interface for Safe Smart Accounts.
+A simple interface to Safe Smart Accounts.
 
 Benefits:
 
@@ -25,4 +25,5 @@ Pre-requisites:
 
 Limitations:
 
-- Only deploys Safe Account v1.4.1 (latest version).
+- Only deploys Safe Accounts version 1.4.1 (latest).
+- Not all Safe functionality is implemented yet.
