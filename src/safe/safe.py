@@ -29,16 +29,19 @@ from pydantic import (
 from rich.console import Console
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.contracts import (
+    get_proxy_factory_V1_4_1_contract,
     get_safe_V1_4_1_contract,
 )
 from safe_eth.eth.exceptions import EthereumClientException
-from safe_eth.safe import ProxyFactory, Safe, SafeOperationEnum, SafeTx
+from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.exceptions import SafeServiceException
 from safe_eth.safe.safe_signature import SafeSignature
 from safe_eth.safe.signatures import (
     signature_to_bytes,
 )
+from web3 import Web3
 from web3.constants import ADDRESS_ZERO
+from web3.providers.auto import load_provider_from_uri
 
 from . import option
 from .util import as_checksum, mktable, serialize
@@ -256,7 +259,7 @@ def deploy(
     emits events. To use the gas-saving 'Safe.sol' variant instead, pass
     --without-events.
     """
-    client = EthereumClient(URI(rpc))
+    w3 = Web3(load_provider_from_uri(URI(rpc)))
 
     if salt_nonce == SALT_NONCE_SENTINEL:
         salt_nonce_int = secrets.randbits(256)  # uint256
@@ -289,7 +292,7 @@ def deploy(
         else to_checksum_address(custom_proxy_factory)
     )
 
-    safe_contract = get_safe_V1_4_1_contract(client.w3, singleton_address)
+    safe_contract = get_safe_V1_4_1_contract(w3, singleton_address)
     initializer = HexBytes(
         safe_contract.encode_abi(
             "setup",
@@ -306,19 +309,28 @@ def deploy(
         )
     )
 
-    proxy_factory = ProxyFactory(
-        address=proxy_factory_address,
-        ethereum_client=client,
-        version=DEPLOY_SAFE_VERSION,
-    )  # type: ignore[abstract]
-
-    predicted_address = proxy_factory.calculate_proxy_address(
-        master_copy=singleton_address,
-        initializer=initializer,
-        salt_nonce=salt_nonce_int,
-        chain_specific=chain_specific,
+    proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
+        w3, proxy_factory_address
     )
-    existing_code = client.w3.eth.get_code(predicted_address)
+    proxy_factory_method = (
+        proxy_factory_contract.functions.createProxyWithNonce
+        if not chain_specific
+        else proxy_factory_contract.functions.createChainSpecificProxyWithNonce
+    )
+
+    with click.open_file(keyfile) as kf:
+        keydata = kf.read()
+    deployer_address = to_checksum_address(json.loads(keydata)["address"])
+
+    deployment_call = proxy_factory_method(
+        singleton_address, initializer, salt_nonce_int
+    )
+    unsigned_tx = deployment_call.build_transaction({
+        "nonce": w3.eth.get_transaction_count(deployer_address)
+    })
+    predicted_address = deployment_call.call()
+
+    existing_code = w3.eth.get_code(predicted_address)
     if existing_code != b"":
         raise click.ClickException(
             f"Safe Account predicted address {predicted_address} already contains code."
@@ -335,27 +347,19 @@ def deploy(
     table.add_row("Proxy Factory", proxy_factory_address)
 
     console.print(table)
-    click.confirm("Do you want to continue?", abort=True)
 
-    with click.open_file(keyfile) as kf:
-        keydata = kf.read()
+    click.confirm("Sign and send transaction", abort=True)
+
     password = getpass()
     privkey = Account.decrypt(keydata, password=password)
-    account = Account.from_key(privkey)
+    deployer_account = Account.from_key(privkey)
 
-    tx = proxy_factory.deploy_proxy_contract_with_nonce(
-        deployer_account=account,
-        master_copy=singleton_address,
-        initializer=initializer,
-        salt_nonce=salt_nonce_int,
-        gas=None,
-        gas_price=None,
-        nonce=None,
-        chain_specific=chain_specific,
-    )
+    signed_tx = deployer_account.sign_transaction(unsigned_tx)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+
+    console.print()
     table = mktable()
-    table.add_row("Safe Account", tx.contract_address)
-    table.add_row("Web3 TxHash", HexBytes(tx.tx_hash).to_0x_hex())
+    table.add_row("Web3 TxHash", tx_hash.to_0x_hex())
     console.print(table)
 
 
