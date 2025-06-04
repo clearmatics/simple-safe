@@ -368,10 +368,15 @@ def deploy(
 
     signed_tx = deployer_account.sign_transaction(unsigned_tx)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
     console.print()
     table = mktable("Web3 TX Receipt")
-    table.add_row("Web3 TxHash", overflow(tx_hash.to_0x_hex()))
+    table.add_row("Web3 TxHash", overflow(tx_receipt["transactionHash"].to_0x_hex()))
+    table.add_row("Block", str(tx_receipt["blockNumber"]))
+    table.add_row("Gas Used", str(tx_receipt["gasUsed"]))
+    table.add_row("Effective Gas Price", str(tx_receipt["effectiveGasPrice"]))
+    table.add_row("Status", str(tx_receipt["status"]))
     console.print(table)
 
 
