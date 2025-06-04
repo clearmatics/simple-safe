@@ -44,7 +44,7 @@ from web3.constants import ADDRESS_ZERO
 from web3.providers.auto import load_provider_from_uri
 
 from . import option
-from .util import as_checksum, mktable, serialize
+from .util import as_checksum, mktable, overflow, serialize
 
 DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
@@ -336,19 +336,31 @@ def deploy(
             f"Safe Account predicted address {predicted_address} already contains code."
         )
 
-    table = mktable()
+    console.print()
+    table = mktable("Safe Deployment")
     table.add_row("Safe Account", f"{predicted_address} (predicted)")
     table.add_row("Version", DEPLOY_SAFE_VERSION)
     table.add_row(f"Owners({len(owner_addresses)})", ", ".join(owner_addresses))
     table.add_row("Threshold", str(threshold))
     table.add_row("Fallback Handler", fallback_address)
-    table.add_row("Salt Nonce", str(salt_nonce_int))
+    table.add_row("Salt Nonce", overflow(str(salt_nonce_int)))
     table.add_row("Singleton", singleton_address)
     table.add_row("Proxy Factory", proxy_factory_address)
-
     console.print(table)
 
-    click.confirm("Sign and send transaction", abort=True)
+    table = mktable("Web3 TX Parameters")
+    table.add_row("From", deployer_address)
+    table.add_row("Chain ID", str(unsigned_tx["chainId"]))
+    table.add_row("Nonce", str(unsigned_tx["nonce"]))
+    table.add_row("To", unsigned_tx["to"])
+    table.add_row("Value", str(unsigned_tx["value"]))
+    table.add_row("Estimated Gas", str(unsigned_tx["gas"]))
+    table.add_row("Max Fee", str(unsigned_tx["maxFeePerGas"]))
+    table.add_row("Max Priority Fee", str(unsigned_tx["maxPriorityFeePerGas"]))
+    table.add_row("Data Payload", overflow(unsigned_tx["data"]))
+    console.print(table)
+
+    click.confirm("Execute transaction?", abort=True)
 
     password = getpass()
     privkey = Account.decrypt(keydata, password=password)
@@ -358,8 +370,8 @@ def deploy(
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
     console.print()
-    table = mktable()
-    table.add_row("Web3 TxHash", tx_hash.to_0x_hex())
+    table = mktable("Web3 TX Receipt")
+    table.add_row("Web3 TxHash", overflow(tx_hash.to_0x_hex()))
     console.print(table)
 
 
@@ -433,7 +445,7 @@ def exec(
         )
     except (EthereumClientException, SafeServiceException) as exc:
         raise click.ClickException(str(exc)) from exc
-    table = mktable()
+    table = mktable("Web3 Sent Transaction")
     table.add_row("Web3 TxHash", w3txhash.to_0x_hex())
     console.print(table)
 
@@ -451,7 +463,7 @@ def hash(txfile: typing.BinaryIO | None) -> None:
     json_data = txfile.read()
     safetx = SafeTxWrapper.model_validate_json(json_data)
     hashstr = safetx.unwrap().safe_tx_hash.to_0x_hex()
-    table = mktable()
+    table = mktable("Result")
     table.add_row("SafeTxHash", hashstr)
     console.print(table)
 
@@ -468,7 +480,7 @@ def inspect(rpc: str, address: str):
         info = safeobj.retrieve_all_info()
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
-    table = mktable()
+    table = mktable("Safe Configuration")
     table.add_row("Safe Account", info.address)
     table.add_row("Version", info.version)
     table.add_row("Nonce", str(info.nonce))
