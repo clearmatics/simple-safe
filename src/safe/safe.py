@@ -41,8 +41,7 @@ from web3.providers.auto import load_provider_from_uri
 from . import option
 from .console import (
     console,
-    print_safe_configuration,
-    print_safe_deployment_params,
+    print_kvtable,
     print_web3_call_data,
     print_web3_tx_params,
     print_web3_tx_receipt,
@@ -295,15 +294,19 @@ def deploy(
         )
 
     console.line()
-    print_safe_deployment_params(
-        account=predicted_address,
-        version=DEPLOY_SAFE_VERSION,
-        owners=owner_addresses,
-        threshold=threshold,
-        fallback=fallback_address,
-        salt_nonce=salt_nonce_int,
-        singleton=singleton_address,
-        proxy_factory=proxy_factory_address,
+    print_kvtable(
+        "Safe Deployment Parameters",
+        "",
+        {
+            "Safe Account": f"{predicted_address} (predicted)",
+            "Version": DEPLOY_SAFE_VERSION,
+            f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
+            "Threshold": str(threshold),
+            "Fallback Handler": fallback_address,
+            "Salt Nonce": str(salt_nonce_int),
+            "Singleton": singleton_address,
+            "Proxy Factory": proxy_factory_address,
+        },
     )
     console.line()
     click.confirm("Prepare Web3 transaction?", abort=True)
@@ -433,16 +436,37 @@ def hash(txfile: typing.BinaryIO | None) -> None:
 @click.argument("address")
 @option.rpc
 def inspect(rpc: str, address: str):
-    """Print the state of the Safe Account at ADDRESS."""
-    acc_addr = to_checksum_address(address)
+    """Query Safe Account state."""
+    checksum_addr = to_checksum_address(address)
     client = EthereumClient(URI(rpc))
     try:
-        safeobj = Safe(acc_addr, client)  # type: ignore[abstract]
+        safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
         info = safeobj.retrieve_all_info()
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
+    # FIXME: batch the two requests so results are atomic
+    block = client.w3.eth.block_number
+    balance = client.w3.eth.get_balance(checksum_addr)
     console.line()
-    print_safe_configuration(info)
+    print_kvtable(
+        "Safe Account",
+        f"Block {str(block)}",
+        {
+            "Safe Account": info.address,
+            "Version": info.version,
+            f"Owners({len(info.owners)})": ", ".join(info.owners),
+            "Threshold": str(info.threshold),
+            "Fallback Handler": info.fallback_handler,
+            "Singleton": info.master_copy,
+            "Guard": info.guard,
+            "Modules": ", ".join(info.modules) if info.modules else "<none>",
+        },
+        {
+            "Nonce": str(info.nonce),
+            "Balance": str(balance),
+        },
+    )
+    console.line()
 
 
 @main.command()
