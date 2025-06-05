@@ -125,6 +125,9 @@ class SafeTxWrapper(BaseModel):
             chain_id=self.chain_id,
         )
 
+# Silence logs from `safe_eth` library.
+logging.getLogger("safe_eth").setLevel(logging.CRITICAL)
+
 
 # ┌──────┐
 # │ Main │
