@@ -157,8 +157,8 @@ def build():
 @build.command(name="tx")
 @option.account
 @click.option("--version", required=True, help="Safe Account version")
-@click.option("--chain-id", type=int, metavar="ID", required=True, help="ChainID")
-@click.option("--nonce", type=int, required=True, help="nonce of the Safe Account")
+@click.option("--chain-id", type=int, metavar="ID", help="Chain ID")
+@click.option("--nonce", type=int, help="nonce of the Safe Account")
 @click.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
 )
@@ -224,7 +224,7 @@ def build_tx(
     "--chain-specific",
     is_flag=True,
     default=False,
-    help="make account address repend on ChainID [default: no]",
+    help="make account address repend on Chain ID [default: no]",
 )
 @optgroup.option(
     "--salt-nonce",
@@ -264,7 +264,7 @@ def deploy(
 
     The Safe Account is deployed with CREATE2, which makes it possible to
     own the same address on different chains. If this is not desirable, pass the
-    --chain-specific option to include the ChainID in the CREATE2 salt derivation.
+    --chain-specific option to include the Chain ID in the CREATE2 salt derivation.
 
     The account uses the 'SafeL2.sol' implementation by default, which
     emits events. To use the gas-saving 'Safe.sol' variant instead, pass
