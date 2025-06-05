@@ -49,7 +49,7 @@ from .console import (
 from .util import (
     as_checksum,
     eip712_data_to_safetx,
-    eip712_json_encoder,
+    hexbytes_json_encoder,
     hash_eip712_data,
 )
 
@@ -145,7 +145,7 @@ def build_tx(
     output_console = Console(file=output) if output else console
     output_console.print(
         JSON.from_data(
-            safetx.eip712_structured_data, default=eip712_json_encoder, indent=2
+            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
         )
     )
 

@@ -15,7 +15,7 @@ def as_checksum(checksum_str: str) -> ChecksumAddress:
     return cast(ChecksumAddress, checksum_str)
 
 
-def eip712_json_encoder(obj: Any):
+def hexbytes_json_encoder(obj: Any):
     if isinstance(obj, HexBytes):
         return obj.to_0x_hex()
     raise TypeError(f"Cannot serialize object of {type(obj)}")
