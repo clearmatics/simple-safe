@@ -18,8 +18,8 @@ account = click.option(
 )
 
 
-# pyright: reportUntypedFunctionDecorator=information
-# pyright: reportUnknownMemberType=information
+# pyright: reportUntypedFunctionDecorator=false
+# pyright: reportUnknownMemberType=false
 def authentication(f: FC) -> FC:
     @optgroup.group(
         "Authentication",

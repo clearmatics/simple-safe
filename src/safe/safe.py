@@ -193,8 +193,8 @@ def build_tx(
 
 
 @main.command()
-# pyright: reportUntypedFunctionDecorator=information
-# pyright: reportUnknownMemberType=information
+# pyright: reportUntypedFunctionDecorator=false
+# pyright: reportUnknownMemberType=false
 @option.web3tx
 @option.authentication
 @optgroup.group(
