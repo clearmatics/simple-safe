@@ -390,13 +390,13 @@ def deploy(
 @main.command()
 @option.authentication
 @click.option(
-    "--signature",
+    "--sigfile",
     "-g",
     "sigfiles",
     type=click.Path(exists=True),
     multiple=True,
     required=True,
-    help="owner signature JSON",
+    help="owner signature file",
 )
 @option.web3tx
 @click.argument("txfile", type=click.File("rb"), required=False)
