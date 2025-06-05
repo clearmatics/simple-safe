@@ -25,5 +25,6 @@ Pre-requisites:
 
 Limitations:
 
-- Only deploys Safe Accounts version 1.4.1 (latest).
+- Only deploys Safe Smart Account v1.4.1 (latest).
+- Only tested with v1.4.1 Safes on Linux OS.
 - Not all Safe functionality is implemented yet.

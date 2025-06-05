@@ -139,7 +139,7 @@ class SafeTxWrapper(BaseModel):
     )
 )
 def main():
-    """CLI for Safe Accounts."""
+    """A simple inteface to Safe Smart Accounts."""
     pass
 
 
