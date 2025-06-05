@@ -98,8 +98,8 @@ def build():
 
 @build.command(name="tx")
 @option.account
-@click.option("--version", required=True, help="Safe Account version")
 @option.rpc
+@click.option("--version", help="Safe Account version")
 @click.option("--chain", "chain_id", type=int, metavar="ID", help="Chain ID")
 @click.option("--nonce", type=int, help="nonce of the Safe Account")
 @click.option(
@@ -110,16 +110,20 @@ def build():
 @option.output_file
 def build_tx(
     account: str,
-    version: str,
-    chain_id: int,
-    nonce: int,
+    version: Optional[str],
+    chain_id: Optional[int],
+    nonce: Optional[int],
     to_str: str,
     value_: str,
     data: str,
     output: typing.TextIO | None,
     rpc: str,
 ) -> None:
-    """Build a custom SafeTx."""
+    """Build a custom SafeTx.
+
+    If the Chain ID, Safe version, or Safe nonce are not specified, the values
+    will be fetched from the network.
+    """
     client = EthereumClient(URI(rpc))
     safetx = SafeTx(
         ethereum_client=client,
