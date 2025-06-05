@@ -93,7 +93,7 @@ def print_web3_tx_params(value: TxParams) -> None:
         {
             "From": str(value["from"]),
             "Chain ID": str(value["chainId"]),
-            "Nonce": str(value["nonce"]),
+            "Web3 Nonce": str(value["nonce"]),
             "To": str(value["to"]),
             "Value": str(value["value"]),
             "Gas": str(value["gas"]),

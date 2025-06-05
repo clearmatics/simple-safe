@@ -469,7 +469,7 @@ def inspect(rpc: str, address: str):
             "Modules": ", ".join(info.modules) if info.modules else "<none>",
         },
         {
-            "Nonce": str(info.nonce),
+            "Safe Nonce": str(info.nonce),
             "Balance": str(balance),
         },
     )
