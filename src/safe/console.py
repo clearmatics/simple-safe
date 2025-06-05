@@ -1,0 +1,119 @@
+import eth_typing
+from rich.box import Box
+from rich.console import Console, RenderableType
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from web3.contract.contract import ContractFunction
+from web3.types import TxParams, TxReceipt
+
+console = Console()
+
+
+CUSTOM_BOX: Box = Box(
+    "    \n"  # top
+    "    \n"  # head
+    "    \n"  # head_row
+    "    \n"  # mid
+    " ── \n"  # row
+    "    \n"  # foot_row
+    "    \n"  # foot
+    "    \n"  # bottom
+)
+
+
+def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -> None:
+    table = Table(
+        title_style="bold",
+        show_header=False,
+        box=CUSTOM_BOX,
+        pad_edge=False,
+    )
+    table.add_column("Field", justify="right", style="bold", no_wrap=True)
+    table.add_column("Value", no_wrap=False)
+    for idx, arg in enumerate(args):
+        for key, val in arg.items():
+            # Wrap all strings in a Text with overflow.
+            if isinstance(val, str):
+                table.add_row(key, Text(val, overflow="fold"))
+            else:
+                table.add_row(key, val)
+        if len(args) > 1 and idx < len(args) - 1:
+            table.add_section()
+    panel = Panel.fit(
+        table,
+        title=title,
+        title_align="left",
+        subtitle=subtitle,
+        subtitle_align="right",
+        border_style="bold",
+    )
+    console.print(panel)
+
+
+def print_web3_call_data(
+    address: eth_typing.ChecksumAddress, function: ContractFunction
+) -> None:
+    argdata: dict[str, RenderableType] = {}
+    for i, arg in enumerate(function.arguments):
+        if function.argument_types[i] == "bytes":
+            arg_str = arg.to_0x_hex()
+        else:
+            arg_str = str(arg)
+        argdata[function.argument_names[i]] = arg_str
+
+    print_kvtable(
+        "Web3 Call Data",
+        "",
+        {
+            "Contract": address,
+            "Function": function.signature,
+            "Selector": function.selector,
+            # "ABI": json.dumps(function.abi),
+        },
+        argdata,
+    )
+
+
+def print_web3_tx_params(value: TxParams) -> None:
+    # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
+    # TxParams fields being optional.
+    assert "from" in value
+    assert "chainId" in value
+    assert "nonce" in value
+    assert "to" in value
+    assert "value" in value
+    assert "gas" in value
+    assert "maxFeePerGas" in value
+    assert "maxPriorityFeePerGas" in value
+    assert "data" in value
+    print_kvtable(
+        "Web3 Transaction Parameters",
+        "",
+        {
+            "From": str(value["from"]),
+            "Chain ID": str(value["chainId"]),
+            "Nonce": str(value["nonce"]),
+            "To": str(value["to"]),
+            "Value": str(value["value"]),
+            "Gas": str(value["gas"]),
+            "Max Fee": str(value["maxFeePerGas"]),
+            "Max Priority Fee": str(value["maxPriorityFeePerGas"]),
+            "Data": str(value["data"]),
+        },
+        {},
+    )
+
+
+def print_web3_tx_receipt(txreceipt: TxReceipt) -> None:
+    print_kvtable(
+        "Web3 Transaction Receipt",
+        "",
+        {
+            "Web3 TxHash": txreceipt["transactionHash"].to_0x_hex(),
+            "Block": str(txreceipt["blockNumber"]),
+            "Gas Used": str(txreceipt["gasUsed"]),
+            "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
+            "Status": str(txreceipt["status"]),
+        },
+    )
