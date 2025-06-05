@@ -168,7 +168,10 @@ def build_tx(
     help="add an owner (repeat option to add more)",
 )
 @optgroup.option(
-    "--threshold", type=int, default=1, help="number of required confirmations"
+    "--threshold",
+    type=int,
+    default=1,
+    help="number of required confirmations",
 )
 @optgroup.option(
     "--fallback",
