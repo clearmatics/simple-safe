@@ -164,9 +164,7 @@ def build():
 )
 @click.option("--value", "value_", default="0.0", help="tx value in decimals")
 @click.option("--data", default="0x", help="optional call data payload")
-@click.option(
-    "--output", "-o", type=click.File(mode="w"), help="write JSON to output FILENAME"
-)
+@option.output_file
 def build_tx(
     account: str,
     version: str,
@@ -499,9 +497,11 @@ def inspect(rpc: str, address: str):
 
 @main.command()
 @option.authentication
+@option.output_file
 @click.argument("txfile", type=click.File("rb"), required=False)
 def sign(
     keyfile: str,
+    output: typing.TextIO | None,
     txfile: typing.BinaryIO | None,
 ):
     """Sign a SafeTx.
@@ -524,8 +524,9 @@ def sign(
     sigbytes = signature_to_bytes(v, r, s)
     sigobj = SafeSignature.parse_signature(sigbytes, hashbytes)[0]
     signature = sigobj.export_signature()
-    console.line()
-    console.print(signature.to_0x_hex())
+
+    output_console = Console(file=output) if output else console
+    output_console.print(signature.to_0x_hex())
 
 
 if __name__ == "__main__":

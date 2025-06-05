@@ -38,6 +38,11 @@ def authentication(f: FC) -> FC:
     return cast(FC, wrapper)
 
 
+output_file = click.option(
+    "--output", "-o", type=click.File(mode="w"), help="write to output FILENAME"
+)
+
+
 rpc = click.option(
     "--rpc",
     "-r",
