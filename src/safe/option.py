@@ -44,6 +44,8 @@ rpc = click.option(
     envvar="SAFE_RPC",
     show_envvar=True,
     required=True,
+    prompt="RPC",
+    prompt_required=False,
     help="HTTP JSON-RPC endpoint URI",
 )
 
