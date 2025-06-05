@@ -4,6 +4,7 @@ from typing import Any, Callable, TypeVar, cast
 import click
 from click import Command
 from click_option_group import (
+    RequiredAnyOptionGroup,
     optgroup,
 )
 
@@ -23,13 +24,13 @@ account = click.option(
 def authentication(f: FC) -> FC:
     @optgroup.group(
         "Authentication",
+        cls=RequiredAnyOptionGroup,
     )
     @optgroup.option(
         "--keyfile",
         "-k",
         type=click.Path(exists=True),
-        required=True,
-        help="Ethereum Keyfile",
+        help="local Ethereum Keyfile",
     )
     @functools.wraps(f)
     def wrapper(*args: object, **kwargs: object) -> object:
