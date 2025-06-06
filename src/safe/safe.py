@@ -343,11 +343,16 @@ def deploy(
     with console.status("Executing transaction..."):
         signed_tx = deployer_account.sign_transaction(unsigned_tx)
         tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+
     with console.status("Waiting for transaction receipt..."):
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    timestamp = w3.eth.get_block(
+        tx_receipt["blockNumber"], full_transactions=False
+    ).get("timestamp")
 
     console.line()
-    print_web3_tx_receipt(tx_receipt)
+    print_web3_tx_receipt(timestamp, tx_receipt)
+    console.line()
 
 
 @main.command()
@@ -419,8 +424,12 @@ def exec(
         tx_receipt = safetx.ethereum_client.w3.eth.wait_for_transaction_receipt(
             w3txhash
         )
+    timestamp = safetx.ethereum_client.w3.eth.get_block(
+        tx_receipt["blockNumber"], full_transactions=False
+    ).get("timestamp")
+
     console.line()
-    print_web3_tx_receipt(tx_receipt)
+    print_web3_tx_receipt(timestamp, tx_receipt)
 
 
 @main.command()

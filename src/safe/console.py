@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+from typing import Optional
+
 import eth_typing
 from rich.box import Box
 from rich.console import Console, RenderableType
@@ -104,13 +107,19 @@ def print_web3_tx_params(value: TxParams) -> None:
     )
 
 
-def print_web3_tx_receipt(txreceipt: TxReceipt) -> None:
+def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) -> None:
+    timestamp_str = (
+        datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+        if timestamp
+        else ""
+    )
     print_kvtable(
         "Web3 Transaction Receipt",
         "",
         {
             "Web3 TxHash": txreceipt["transactionHash"].to_0x_hex(),
             "Block": str(txreceipt["blockNumber"]),
+            "Timestamp": timestamp_str,
             "Gas Used": str(txreceipt["gasUsed"]),
             "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
             "Status": str(txreceipt["status"]),
