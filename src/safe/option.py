@@ -56,6 +56,7 @@ rpc = click.option(
     "--rpc",
     "-r",
     envvar="SAFE_RPC",
+    metavar="URI",
     show_envvar=True,
     required=True,
     prompt="RPC",

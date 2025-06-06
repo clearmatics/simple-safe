@@ -367,11 +367,7 @@ def exec(
 @main.command()
 @click.argument("txfile", type=click.File("r"), required=True)
 def hash(txfile: typing.TextIO) -> None:
-    """Compute SafeTxHash of a SafeTx.
-
-    TXFILE contains a SafeTx represented as an EIP-712 message, which can be
-    created using the `build` command.
-    """
+    """Compute hash of a SafeTx."""
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx_hash = hash_eip712_data(safetx_data)
@@ -428,11 +424,7 @@ def sign(
     txfile: typing.TextIO,
     force: bool,
 ):
-    """Sign a SafeTx.
-
-    TXFILE contains a SafeTx represented as an EIP-712 message, which can be
-    created using the `build` command.
-    """
+    """Sign a SafeTx."""
     client = EthereumClient(URI(rpc))
     safetxdata = reconstruct_safetx(client, txfile)
 
