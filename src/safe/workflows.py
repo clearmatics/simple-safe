@@ -4,6 +4,7 @@ from getpass import getpass
 import click
 from eth_account import Account
 from eth_utils.address import to_checksum_address
+from rich.prompt import Confirm
 from web3 import Web3
 from web3.contract.contract import ContractFunction
 from web3.types import TxParams
@@ -16,7 +17,7 @@ from .console import (
 )
 
 
-def execute_tx(w3: Web3, tx: TxParams, keyfile: str):
+def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
     sender_address = to_checksum_address(json.loads(keydata)["address"])
@@ -27,7 +28,8 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str):
     console.line()
     print_web3_tx_params(tx)
     console.line()
-    click.confirm("Execute Web3 transaction?", abort=True)
+    if not force and not Confirm.ask("Execute this Web3 Transaction?", default=False):
+        raise click.Abort()
 
     password = getpass()
     privkey = Account.decrypt(keydata, password=password)
@@ -48,8 +50,8 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str):
     console.line()
 
 
-def execute_calltx(w3: Web3, contractfn: ContractFunction, keyfile: str):
+def execute_calltx(w3: Web3, contractfn: ContractFunction, keyfile: str, force: bool):
     tx: TxParams = contractfn.build_transaction()
     console.line()
     print_web3_call_data(contractfn)
-    execute_tx(w3, tx, keyfile)
+    execute_tx(w3, tx, keyfile, force)

@@ -204,6 +204,7 @@ def build_tx(
     metavar="ADDRESS",
     help="use non-canonical ProxyFactory address",
 )
+@option.force
 def deploy(
     keyfile: str,
     rpc: str,
@@ -215,6 +216,7 @@ def deploy(
     without_events: bool,
     custom_singleton: str,
     custom_proxy_factory: str,
+    force: bool,
 ):
     """Deploy a new Safe Account.
 
@@ -308,9 +310,10 @@ def deploy(
         },
     )
     console.line()
-    click.confirm("Prepare a Web3 Transaction?", abort=True)
+    if not force and not Confirm.ask("Prepare a Web3 Transaction?", default=False):
+        raise click.Abort()
 
-    execute_calltx(w3, deployment_call, keyfile)
+    execute_calltx(w3, deployment_call, keyfile, force)
 
 
 @main.command()
@@ -325,11 +328,13 @@ def deploy(
     help="owner signature file",
 )
 @option.web3tx
+@option.force
 @click.argument("txfile", type=click.File("r"), required=True)
 def exec(
     keyfile: str,
     sigfiles: list[str],
     rpc: str,
+    force: bool,
     txfile: typing.TextIO,
 ):
     """Execute a signed Safe Transaction.
@@ -355,9 +360,10 @@ def exec(
     safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
 
     console.line()
-    click.confirm("Prepare a Web3 Transaction?", abort=True)
+    if not force and not Confirm.ask("Prepare a Web3 Transaction?", default=False):
+        raise click.Abort()
 
-    execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile)
+    execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
 
 
 @main.command()
@@ -444,7 +450,7 @@ def sign(
     print_safetx(safetxdata)
     console.line()
 
-    if not force and not Confirm.ask("Sign this Safe Transaction?"):
+    if not force and not Confirm.ask("Sign this Safe Transaction?", default=False):
         raise click.Abort()
 
     with click.open_file(keyfile) as kf:
