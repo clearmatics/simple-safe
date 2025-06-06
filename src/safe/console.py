@@ -1,10 +1,10 @@
 import json
-import sys
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+import rich
 from rich.box import Box
-from rich.console import Console, Group, RenderableType
+from rich.console import Group, RenderableType
 from rich.highlighter import JSONHighlighter
 from rich.padding import Padding
 from rich.panel import Panel
@@ -18,7 +18,8 @@ from web3.types import Timestamp, TxParams, TxReceipt
 from .util import SafeTxData, hexbytes_json_encoder
 
 
-console = Console()
+rich.reconfigure(stderr=True)
+console = rich.get_console()
 
 
 CUSTOM_BOX: Box = Box(

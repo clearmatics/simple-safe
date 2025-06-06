@@ -39,8 +39,16 @@ def authentication(f: FC) -> FC:
     return cast(FC, wrapper)
 
 
+force = click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="execute without confirmation prompts",
+)
+
 output_file = click.option(
-    "--output", "-o", type=click.File(mode="w"), help="write to output FILENAME"
+    "--output", "-o", type=click.File(mode="w"), help="write output to FILENAME"
 )
 
 

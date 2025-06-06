@@ -4,6 +4,7 @@ import json
 import logging
 import secrets
 import shutil
+import sys
 import typing
 from decimal import Decimal
 from getpass import getpass
@@ -328,12 +329,12 @@ def deploy(
     help="owner signature file",
 )
 @option.web3tx
-@click.argument("txfile", type=str, required=True)
+@click.argument("txfile", type=click.File("r"), required=True)
 def exec(
     keyfile: str,
     sigfiles: list[str],
     rpc: str,
-    txfile: str,
+    txfile: typing.TextIO,
 ):
     """Execute a signed SafeTx.
 
@@ -364,15 +365,13 @@ def exec(
 
 
 @main.command()
-@click.argument("txfile", type=str, required=True)
-def hash(txfile: typing.BinaryIO | None) -> None:
+@click.argument("txfile", type=click.File("r"), required=True)
+def hash(txfile: typing.TextIO) -> None:
     """Compute SafeTxHash of a SafeTx.
 
     TXFILE contains a SafeTx represented as an EIP-712 message, which can be
     created using the `build` command.
     """
-    if not txfile:
-        txfile = click.get_binary_stream("stdin")
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx_hash = hash_eip712_data(safetx_data)
@@ -420,12 +419,14 @@ def inspect(rpc: str, address: str):
 @option.rpc
 @option.authentication
 @option.output_file
-@click.argument("txfile", type=str, required=True)
+@option.force
+@click.argument("txfile", type=click.File("r"), required=True)
 def sign(
     keyfile: str,
     output: typing.TextIO | None,
     rpc: str,
-    txfile: str,
+    txfile: typing.TextIO,
+    force: bool,
 ):
     """Sign a SafeTx.
 
@@ -438,11 +439,12 @@ def sign(
     console.line()
     print_safetx(safetxdata)
     console.line()
-    click.confirm("Sign Safe transaction?", abort=True)
+    if not force:
+        click.confirm("Sign Safe transaction?", abort=True)
 
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
-    password = getpass()
+    password = getpass(stream=sys.stderr)
     privkey = Account.decrypt(keydata, password=password)
     account = Account.from_key(privkey)
 
@@ -450,7 +452,8 @@ def sign(
     sigobj = SafeSignature.parse_signature(signedmsg.signature, safetxdata.hash)[0]
     signature = sigobj.export_signature()
 
-    output_console = Console(file=output) if output else console
+    output_file = output if output else sys.stdout
+    output_console = Console(file=output_file)
     output_console.print(signature.to_0x_hex())
 
 

@@ -2,6 +2,7 @@ import json
 from typing import (
     Any,
     NamedTuple,
+    TextIO,
     cast,
 )
 
@@ -61,9 +62,8 @@ def eip712_data_to_safetx(
     )
 
 
-def reconstruct_safetx(client: EthereumClient, txfile: str) -> SafeTxData:
-    with open(txfile, "r") as f:
-        safetx_json = json.loads(f.read())
+def reconstruct_safetx(client: EthereumClient, txfile: TextIO) -> SafeTxData:
+    safetx_json = json.loads(txfile.read())
     safetx = eip712_data_to_safetx(client, safetx_json)
     return SafeTxData(
         safetx=safetx,
