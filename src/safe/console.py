@@ -130,7 +130,7 @@ def print_web3_call_data(function: ContractFunction) -> None:
             "Contract": function.address,
             "Function": function.signature,
             "Selector": function.selector,
-            # "ABI": json.dumps(function.abi),
+            "ABI": get_json_data_renderable(dict(function.abi)),
         },
         argdata,
     )
