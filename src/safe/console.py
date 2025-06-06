@@ -47,7 +47,7 @@ def get_kvtable(*args: dict[str, RenderableType]) -> Table:
 
 def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -> None:
     table = get_kvtable(*args)
-    panel = Panel.fit(
+    panel = Panel(
         table,
         title=title,
         title_align="left",
