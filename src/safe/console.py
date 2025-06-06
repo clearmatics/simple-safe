@@ -160,7 +160,7 @@ def print_web3_tx_params(value: TxParams) -> None:
             "Value": str(value["value"]),
             "Gas": str(value["gas"]),
             "Max Fee": str(value["maxFeePerGas"]),
-            "Max Priority Fee": str(value["maxPriorityFeePerGas"]),
+            "Max Pri Fee": str(value["maxPriorityFeePerGas"]),
             "Data": str(value["data"]),
         },
         {},
@@ -177,7 +177,7 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
         "Web3 Transaction Receipt",
         "",
         {
-            "Web3 TxHash": txreceipt["transactionHash"].to_0x_hex(),
+            "Web3Tx Hash": txreceipt["transactionHash"].to_0x_hex(),
             "Block": str(txreceipt["blockNumber"]),
             "Timestamp": timestamp_str,
             "Gas Used": str(txreceipt["gasUsed"]),
