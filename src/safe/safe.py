@@ -42,8 +42,6 @@ from . import option
 from .console import (
     console,
     print_kvtable,
-    print_web3_call_data,
-    print_web3_tx_params,
     print_web3_tx_receipt,
 )
 from .util import (
