@@ -52,7 +52,3 @@ def eip712_data_to_safetx(
         safe_version=version if version else None,
         chain_id=message["domain"].get("chainId"),
     )
-
-
-def serialize(model: BaseModel):
-    return model.model_dump_json(indent=2)
