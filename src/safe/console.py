@@ -1,14 +1,22 @@
+import json
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
-import eth_typing
+from hexbytes import HexBytes
 from rich.box import Box
-from rich.console import Console, RenderableType
+from rich.console import Console, Group, RenderableType
+from rich.highlighter import JSONHighlighter
+from rich.padding import Padding
 from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
+from safe_eth.safe import SafeOperationEnum, SafeTx
 from web3.contract.contract import ContractFunction
-from web3.types import TxParams, TxReceipt
+from web3.types import Timestamp, TxParams, TxReceipt
+
+from .util import hexbytes_json_encoder
+
 
 console = Console()
 
@@ -23,6 +31,18 @@ CUSTOM_BOX: Box = Box(
     "    \n"  # foot
     "    \n"  # bottom
 )
+
+
+def get_json_data_renderable(
+    data: dict[str, Any], indent: Optional[int] = None
+) -> Text:
+    return JSONHighlighter()(
+        json.dumps(
+            data,
+            default=hexbytes_json_encoder,
+            indent=indent,
+        )
+    )
 
 
 def get_kvtable(*args: dict[str, RenderableType]) -> Table:
@@ -58,7 +78,43 @@ def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -
     console.print(panel)
 
 
+def print_safetx(
+    safetx: SafeTx,
+    safetx_hash: HexBytes,
+    safetx_preimage: HexBytes,
+    payload: dict[str, Any],
 ) -> None:
+    table = get_kvtable(
+        {
+            "Safe Account": safetx.safe_address,
+            "Chain ID": str(safetx.chain_id),
+            "Safe Nonce": str(safetx.safe_nonce),
+            "To": str(safetx.to),
+            "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
+            "Value": str(safetx.value),
+            "Gas": str(safetx.safe_tx_gas),
+            "Data": safetx.data.to_0x_hex(),
+        },
+        {f"Signature[{i}]": signer for (i, signer) in enumerate(safetx.signers)},
+        {
+            "SafeTx Preimage": safetx_preimage.to_0x_hex(),
+            "SafeTx Hash": safetx_hash.to_0x_hex(),
+        },
+    )
+    group = Group(
+        Padding(get_json_data_renderable(payload), (1, 0)),
+        Rule(style="default on default"),
+        table,
+    )
+    panel = Panel(
+        group,
+        title="Safe Transaction",
+        title_align="left",
+        border_style="bold",
+    )
+    console.print(panel)
+
+
 def print_web3_call_data(function: ContractFunction) -> None:
     argdata: dict[str, RenderableType] = {}
     for i, arg in enumerate(function.arguments):

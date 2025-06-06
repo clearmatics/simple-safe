@@ -36,12 +36,14 @@ from safe_eth.safe.exceptions import SafeServiceException
 from safe_eth.safe.safe_signature import SafeSignature
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
+from web3.contract.contract import ContractFunction
 from web3.providers.auto import load_provider_from_uri
 
 from . import option
 from .console import (
     console,
     print_kvtable,
+    print_safetx,
     print_web3_tx_receipt,
 )
 from .util import (
@@ -50,6 +52,7 @@ from .util import (
     hash_eip712_data,
     hexbytes_json_encoder,
 )
+from .workflows import execute_calltx
 
 DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
@@ -347,16 +350,11 @@ def exec(
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx = eip712_data_to_safetx(safetx_data, rpc)
-
-    with click.open_file(keyfile) as kf:
-        keydata = kf.read()
-    password = getpass()
-    privkey = Account.decrypt(keydata, password=password)
-    account = Account.from_key(privkey)
+    safetx_hash = safetx.safe_tx_hash
+    safetx_preimage = safetx.safe_tx_hash_preimage
+    payload = safetx.eip712_structured_data
 
     sigobjs: list[SafeSignature] = []
-    safetx_preimage = safetx.safe_tx_hash_preimage
-    safetx_hash = safetx.safe_tx_hash
     for sigfile in sigfiles:
         with open(sigfile, "r") as sf:
             sigtext = sf.read().rstrip()
@@ -366,34 +364,12 @@ def exec(
             sigobjs.append(sigobj)
     safetx.signatures = SafeSignature.export_signatures(sigobjs)
 
-    try:
-        safetx.call(
-            tx_sender_address=account.address,
-            block_identifier="latest",
-        )
-        w3txhash, _ = safetx.execute(
-            tx_sender_private_key=privkey.to_0x_hex(),
-            block_identifier="latest",
-        )
-    except InvalidMultisigTx as exc:
-        errormsg = (
-            str(exc)
-            + " <https://github.com/safe-global/safe-smart-account/blob/main/docs/error_codes.md>"
-        )
-        raise click.ClickException(errormsg) from exc
-    except (EthereumClientException, SafeServiceException) as exc:
-        raise click.ClickException(str(exc)) from exc
-
-    with console.status("Waiting for transaction receipt..."):
-        tx_receipt = safetx.ethereum_client.w3.eth.wait_for_transaction_receipt(
-            w3txhash
-        )
-    timestamp = safetx.ethereum_client.w3.eth.get_block(
-        tx_receipt["blockNumber"], full_transactions=False
-    ).get("timestamp")
-
     console.line()
-    print_web3_tx_receipt(timestamp, tx_receipt)
+    print_safetx(safetx, safetx_hash, safetx_preimage, payload)
+    console.line()
+    click.confirm("Prepare Web3 transaction?", abort=True)
+
+    execute_calltx(safetx.ethereum_client.w3, safetx.w3_tx, keyfile)
 
 
 @main.command()
