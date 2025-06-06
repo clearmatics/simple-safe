@@ -318,38 +318,7 @@ def deploy(
     console.line()
     click.confirm("Prepare Web3 transaction?", abort=True)
 
-    with click.open_file(keyfile) as kf:
-        keydata = kf.read()
-    deployer_address = to_checksum_address(json.loads(keydata)["address"])
-    unsigned_tx = deployment_call.build_transaction({
-        "nonce": w3.eth.get_transaction_count(deployer_address)
-    })
-    unsigned_tx["from"] = deployer_address
-
-    console.line()
-    print_web3_call_data(deployment_call)
-    console.line()
-    print_web3_tx_params(unsigned_tx)
-    console.line()
-    click.confirm("Execute Web3 transaction?", abort=True)
-
-    password = getpass()
-    privkey = Account.decrypt(keydata, password=password)
-    deployer_account = Account.from_key(privkey)
-
-    with console.status("Executing transaction..."):
-        signed_tx = deployer_account.sign_transaction(unsigned_tx)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-
-    with console.status("Waiting for transaction receipt..."):
-        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-    timestamp = w3.eth.get_block(
-        tx_receipt["blockNumber"], full_transactions=False
-    ).get("timestamp")
-
-    console.line()
-    print_web3_tx_receipt(timestamp, tx_receipt)
-    console.line()
+    execute_calltx(w3, deployment_call, keyfile)
 
 
 @main.command()
