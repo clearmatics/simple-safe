@@ -47,8 +47,8 @@ from .console import (
 from .util import (
     as_checksum,
     eip712_data_to_safetx,
-    hexbytes_json_encoder,
     hash_eip712_data,
+    hexbytes_json_encoder,
 )
 
 DEPLOY_SAFE_VERSION = "1.4.1"
