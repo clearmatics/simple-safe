@@ -327,10 +327,7 @@ def deploy(
     unsigned_tx["from"] = deployer_address
 
     console.line()
-    print_web3_call_data(
-        address=proxy_factory_address,
-        function=deployment_call,
-    )
+    print_web3_call_data(deployment_call)
     console.line()
     print_web3_tx_params(unsigned_tx)
     console.line()

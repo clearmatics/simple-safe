@@ -58,9 +58,8 @@ def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -
     console.print(panel)
 
 
-def print_web3_call_data(
-    address: eth_typing.ChecksumAddress, function: ContractFunction
 ) -> None:
+def print_web3_call_data(function: ContractFunction) -> None:
     argdata: dict[str, RenderableType] = {}
     for i, arg in enumerate(function.arguments):
         if function.argument_types[i] == "bytes":
@@ -73,7 +72,7 @@ def print_web3_call_data(
         "Web3 Call Data",
         "",
         {
-            "Contract": address,
+            "Contract": function.address,
             "Function": function.signature,
             "Selector": function.selector,
             # "ABI": json.dumps(function.abi),
