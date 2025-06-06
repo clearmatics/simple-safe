@@ -372,7 +372,8 @@ def hash(txfile: typing.TextIO) -> None:
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx_hash = hash_eip712_data(safetx_data)
-    console.print(safetx_hash.to_0x_hex())
+    output_console = Console(file=sys.stdout)
+    output_console.print(safetx_hash.to_0x_hex())
 
 
 @main.command()
