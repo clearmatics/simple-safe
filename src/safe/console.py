@@ -25,7 +25,7 @@ CUSTOM_BOX: Box = Box(
 )
 
 
-def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -> None:
+def get_kvtable(*args: dict[str, RenderableType]) -> Table:
     table = Table(
         title_style="bold",
         show_header=False,
@@ -42,6 +42,11 @@ def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -
                 table.add_row(key, val)
         if len(args) > 1 and idx < len(args) - 1:
             table.add_section()
+    return table
+
+
+def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -> None:
+    table = get_kvtable(*args)
     panel = Panel.fit(
         table,
         title=title,
