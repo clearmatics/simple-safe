@@ -26,6 +26,7 @@ from hexbytes import (
 )
 from rich.console import Console
 from rich.json import JSON
+from rich.prompt import Confirm
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.contracts import (
     get_proxy_factory_V1_4_1_contract,
@@ -431,8 +432,9 @@ def sign(
     console.line()
     print_safetx(safetxdata)
     console.line()
-    if not force:
-        click.confirm("Sign Safe transaction?", abort=True)
+
+    if not force and not Confirm.ask("Sign Safe transaction?"):
+        raise click.Abort()
 
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
