@@ -279,7 +279,6 @@ def deploy(
             ],
         )
     )
-
     proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
         w3, proxy_factory_address
     )
@@ -288,7 +287,6 @@ def deploy(
         if not chain_specific
         else proxy_factory_contract.functions.createChainSpecificProxyWithNonce
     )
-
     deployment_call = proxy_factory_method(
         singleton_address, initializer, salt_nonce_int
     )
