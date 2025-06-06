@@ -36,7 +36,6 @@ from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
-from web3.contract.contract import ContractFunction
 from web3.providers.auto import load_provider_from_uri
 
 from . import option
