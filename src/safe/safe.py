@@ -362,7 +362,7 @@ def deploy(
     help="owner signature file",
 )
 @option.web3tx
-@click.argument("txfile", type=click.File("rb"), required=False)
+@click.argument("txfile", type=click.File("r"), required=False)
 def exec(
     keyfile: str,
     sigfiles: list[str],
@@ -424,7 +424,7 @@ def exec(
 
 
 @main.command()
-@click.argument("txfile", type=click.File("rb"), required=False)
+@click.argument("txfile", type=click.File("r"), required=False)
 def hash(txfile: typing.BinaryIO | None) -> None:
     """Compute SafeTxHash of a SafeTx.
 
@@ -479,7 +479,7 @@ def inspect(rpc: str, address: str):
 @main.command()
 @option.authentication
 @option.output_file
-@click.argument("txfile", type=click.File("rb"), required=False)
+@click.argument("txfile", type=click.File("r"), required=False)
 def sign(
     keyfile: str,
     output: typing.TextIO | None,
