@@ -263,8 +263,7 @@ def deploy(
         if not custom_proxy_factory
         else to_checksum_address(custom_proxy_factory)
     )
-
-    safe_contract = get_safe_V1_4_1_contract(w3, singleton_address)
+    safe_contract = get_safe_V1_4_1_contract(w3)
     initializer = HexBytes(
         safe_contract.encode_abi(
             "setup",
