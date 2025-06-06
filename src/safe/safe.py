@@ -415,6 +415,21 @@ def inspect(rpc: str, address: str):
 
 @main.command()
 @option.rpc
+@click.argument("txfile", type=click.File("r"), required=True)
+def preview(
+    rpc: str,
+    txfile: typing.TextIO,
+):
+    """Preview SafeTx details."""
+    client = EthereumClient(URI(rpc))
+    safetxdata = reconstruct_safetx(client, txfile)
+    console.line()
+    print_safetx(safetxdata)
+    console.line()
+
+
+@main.command()
+@option.rpc
 @option.authentication
 @option.output_file
 @option.force
