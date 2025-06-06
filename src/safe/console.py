@@ -27,7 +27,6 @@ def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -
         title_style="bold",
         show_header=False,
         box=CUSTOM_BOX,
-        pad_edge=False,
     )
     table.add_column("Field", justify="right", style="bold", no_wrap=True)
     table.add_column("Value", no_wrap=False)
