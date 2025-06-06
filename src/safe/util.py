@@ -1,14 +1,27 @@
-from typing import Any, cast
+import json
+from typing import (
+    Any,
+    NamedTuple,
+    cast,
+)
 
 from eth_account.messages import (
     _hash_eip191_message,  # pyright: ignore[reportPrivateUsage]
     encode_typed_data,
 )
-from eth_typing import URI, ChecksumAddress
-from hexbytes import HexBytes
-from pydantic import BaseModel
+from eth_typing import ChecksumAddress
+from hexbytes import (
+    HexBytes,
+)
 from safe_eth.eth import EthereumClient
 from safe_eth.safe import SafeTx
+
+
+class SafeTxData(NamedTuple):
+    safetx: SafeTx
+    payload: dict[str, Any]
+    preimage: HexBytes
+    hash: HexBytes
 
 
 def as_checksum(checksum_str: str) -> ChecksumAddress:
@@ -27,14 +40,8 @@ def hash_eip712_data(data: Any) -> HexBytes:  # using eth_account
 
 
 def eip712_data_to_safetx(
-    message: Any, rpc: str | None = None, version: str | None = None
+    client: EthereumClient, message: Any, version: str | None = None
 ) -> SafeTx:
-    if not (rpc or version):
-        raise RuntimeError("eip712_data_to_safetx: 'rpc' or 'version' required")
-    elif rpc:
-        client = EthereumClient(URI(rpc))
-    else:
-        client = EthereumClient()
     return SafeTx(
         ethereum_client=client,
         safe_address=message["domain"]["verifyingContract"],
@@ -51,4 +58,16 @@ def eip712_data_to_safetx(
         safe_nonce=message["message"]["nonce"],
         safe_version=version if version else None,
         chain_id=message["domain"].get("chainId"),
+    )
+
+
+def reconstruct_safetx(client: EthereumClient, txfile: str) -> SafeTxData:
+    with open(txfile, "r") as f:
+        safetx_json = json.loads(f.read())
+    safetx = eip712_data_to_safetx(client, safetx_json)
+    return SafeTxData(
+        safetx=safetx,
+        payload=safetx.eip712_structured_data,
+        preimage=safetx.safe_tx_hash_preimage,
+        hash=safetx.safe_tx_hash,
     )

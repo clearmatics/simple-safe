@@ -1,8 +1,8 @@
 import json
+import sys
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from hexbytes import HexBytes
 from rich.box import Box
 from rich.console import Console, Group, RenderableType
 from rich.highlighter import JSONHighlighter
@@ -11,11 +11,11 @@ from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
-from safe_eth.safe import SafeOperationEnum, SafeTx
+from safe_eth.safe import SafeOperationEnum
 from web3.contract.contract import ContractFunction
 from web3.types import Timestamp, TxParams, TxReceipt
 
-from .util import hexbytes_json_encoder
+from .util import SafeTxData, hexbytes_json_encoder
 
 
 console = Console()
@@ -78,31 +78,29 @@ def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -
     console.print(panel)
 
 
-def print_safetx(
-    safetx: SafeTx,
-    safetx_hash: HexBytes,
-    safetx_preimage: HexBytes,
-    payload: dict[str, Any],
-) -> None:
+def print_safetx(safetxdata: SafeTxData) -> None:
     table = get_kvtable(
         {
-            "Safe Account": safetx.safe_address,
-            "Chain ID": str(safetx.chain_id),
-            "Safe Nonce": str(safetx.safe_nonce),
-            "To": str(safetx.to),
-            "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
-            "Value": str(safetx.value),
-            "Gas": str(safetx.safe_tx_gas),
-            "Data": safetx.data.to_0x_hex(),
+            "Safe Account": safetxdata.safetx.safe_address,
+            "Chain ID": str(safetxdata.safetx.chain_id),
+            "Safe Nonce": str(safetxdata.safetx.safe_nonce),
+            "To": str(safetxdata.safetx.to),
+            "Operation": f"{safetxdata.safetx.operation} ({SafeOperationEnum(safetxdata.safetx.operation).name})",
+            "Value": str(safetxdata.safetx.value),
+            "Gas": str(safetxdata.safetx.safe_tx_gas),
+            "Data": safetxdata.safetx.data.to_0x_hex(),
         },
-        {f"Signature[{i}]": signer for (i, signer) in enumerate(safetx.signers)},
         {
-            "SafeTx Preimage": safetx_preimage.to_0x_hex(),
-            "SafeTx Hash": safetx_hash.to_0x_hex(),
+            f"Signature[{i}]": signer
+            for (i, signer) in enumerate(safetxdata.safetx.signers)
+        },
+        {
+            "SafeTx Preimage": safetxdata.preimage.to_0x_hex(),
+            "SafeTx Hash": safetxdata.hash.to_0x_hex(),
         },
     )
     group = Group(
-        Padding(get_json_data_renderable(payload), (1, 0)),
+        Padding(get_json_data_renderable(safetxdata.payload), (1, 0)),
         Rule(style="default on default"),
         table,
     )

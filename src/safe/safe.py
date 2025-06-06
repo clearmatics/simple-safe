@@ -30,9 +30,7 @@ from safe_eth.eth.contracts import (
     get_proxy_factory_V1_4_1_contract,
     get_safe_V1_4_1_contract,
 )
-from safe_eth.eth.exceptions import EthereumClientException
-from safe_eth.safe import InvalidMultisigTx, Safe, SafeOperationEnum, SafeTx
-from safe_eth.safe.exceptions import SafeServiceException
+from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
@@ -44,13 +42,12 @@ from .console import (
     console,
     print_kvtable,
     print_safetx,
-    print_web3_tx_receipt,
 )
 from .util import (
     as_checksum,
-    eip712_data_to_safetx,
     hash_eip712_data,
     hexbytes_json_encoder,
+    reconstruct_safetx,
 )
 from .workflows import execute_calltx
 
@@ -331,46 +328,43 @@ def deploy(
     help="owner signature file",
 )
 @option.web3tx
-@click.argument("txfile", type=click.File("r"), required=False)
+@click.argument("txfile", type=str, required=True)
 def exec(
     keyfile: str,
     sigfiles: list[str],
     rpc: str,
-    txfile: typing.BinaryIO | None,
+    txfile: str,
 ):
     """Execute a signed SafeTx.
 
     Repeat the signature option to include all required signatures.
     """
-    if not txfile:
-        txfile = click.get_binary_stream("stdin")
-    safetx_json = txfile.read()
-    safetx_data = json.loads(safetx_json)
-    safetx = eip712_data_to_safetx(safetx_data, rpc)
-    safetx_hash = safetx.safe_tx_hash
-    safetx_preimage = safetx.safe_tx_hash_preimage
-    payload = safetx.eip712_structured_data
+    client = EthereumClient(URI(rpc))
+    safetxdata = reconstruct_safetx(client, txfile)
+
+    console.line()
+    print_safetx(safetxdata)
 
     sigobjs: list[SafeSignature] = []
     for sigfile in sigfiles:
         with open(sigfile, "r") as sf:
             sigtext = sf.read().rstrip()
             sigbytes = HexBytes(sigtext)
-        siglist = SafeSignature.parse_signature(sigbytes, safetx_hash, safetx_preimage)
+        siglist = SafeSignature.parse_signature(
+            sigbytes, safetxdata.hash, safetxdata.preimage
+        )
         for sigobj in siglist:
             sigobjs.append(sigobj)
-    safetx.signatures = SafeSignature.export_signatures(sigobjs)
+    safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
 
-    console.line()
-    print_safetx(safetx, safetx_hash, safetx_preimage, payload)
     console.line()
     click.confirm("Prepare Web3 transaction?", abort=True)
 
-    execute_calltx(safetx.ethereum_client.w3, safetx.w3_tx, keyfile)
+    execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile)
 
 
 @main.command()
-@click.argument("txfile", type=click.File("r"), required=False)
+@click.argument("txfile", type=str, required=True)
 def hash(txfile: typing.BinaryIO | None) -> None:
     """Compute SafeTxHash of a SafeTx.
 
@@ -423,24 +417,28 @@ def inspect(rpc: str, address: str):
 
 
 @main.command()
+@option.rpc
 @option.authentication
 @option.output_file
-@click.argument("txfile", type=click.File("r"), required=False)
+@click.argument("txfile", type=str, required=True)
 def sign(
     keyfile: str,
     output: typing.TextIO | None,
-    txfile: typing.BinaryIO | None,
+    rpc: str,
+    txfile: str,
 ):
     """Sign a SafeTx.
 
     TXFILE contains a SafeTx represented as an EIP-712 message, which can be
     created using the `build` command.
     """
-    if not txfile:
-        txfile = click.get_binary_stream("stdin")
-    safetx_json = txfile.read()
-    safetx_data = json.loads(safetx_json)
-    safetx_hash = hash_eip712_data(safetx_data)
+    client = EthereumClient(URI(rpc))
+    safetxdata = reconstruct_safetx(client, txfile)
+
+    console.line()
+    print_safetx(safetxdata)
+    console.line()
+    click.confirm("Sign Safe transaction?", abort=True)
 
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
@@ -448,8 +446,8 @@ def sign(
     privkey = Account.decrypt(keydata, password=password)
     account = Account.from_key(privkey)
 
-    signedmsg = account.sign_typed_data(full_message=safetx_data)
-    sigobj = SafeSignature.parse_signature(signedmsg.signature, safetx_hash)[0]
+    signedmsg = account.sign_typed_data(full_message=safetxdata.payload)
+    sigobj = SafeSignature.parse_signature(signedmsg.signature, safetxdata.hash)[0]
     signature = sigobj.export_signature()
 
     output_console = Console(file=output) if output else console
