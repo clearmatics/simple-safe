@@ -81,7 +81,7 @@ logging.getLogger("safe_eth").setLevel(logging.CRITICAL)
     )
 )
 def main():
-    """A simple inteface to Safe Smart Accounts."""
+    """A simple interface to Safe Smart Accounts."""
     pass
 
 
@@ -92,7 +92,7 @@ def main():
 
 @main.group()
 def build():
-    """Build a SafeTx for signing."""
+    """Build a Safe Transaction."""
     pass
 
 
@@ -119,11 +119,7 @@ def build_tx(
     output: typing.TextIO | None,
     rpc: str,
 ) -> None:
-    """Build a custom SafeTx.
-
-    If the Chain ID, Safe version, or Safe nonce are not specified, the values
-    will be fetched from the network.
-    """
+    """Build a custom Safe Transaction."""
     client = EthereumClient(URI(rpc))
     safetx = SafeTx(
         ethereum_client=client,
@@ -313,7 +309,7 @@ def deploy(
         },
     )
     console.line()
-    click.confirm("Prepare Web3 transaction?", abort=True)
+    click.confirm("Prepare a Web3 Transaction?", abort=True)
 
     execute_calltx(w3, deployment_call, keyfile)
 
@@ -337,7 +333,7 @@ def exec(
     rpc: str,
     txfile: typing.TextIO,
 ):
-    """Execute a signed SafeTx.
+    """Execute a signed Safe Transaction.
 
     Repeat the signature option to include all required signatures.
     """
@@ -360,7 +356,7 @@ def exec(
     safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
 
     console.line()
-    click.confirm("Prepare Web3 transaction?", abort=True)
+    click.confirm("Prepare a Web3 Transaction?", abort=True)
 
     execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile)
 
@@ -368,7 +364,7 @@ def exec(
 @main.command()
 @click.argument("txfile", type=click.File("r"), required=True)
 def hash(txfile: typing.TextIO) -> None:
-    """Compute hash of a SafeTx."""
+    """Compute hash of Safe Transaction."""
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx_hash = hash_eip712_data(safetx_data)
@@ -380,7 +376,7 @@ def hash(txfile: typing.TextIO) -> None:
 @click.argument("address")
 @option.rpc
 def inspect(rpc: str, address: str):
-    """Query Safe Account state."""
+    """Inspect state of a Safe Account."""
     checksum_addr = to_checksum_address(address)
     client = EthereumClient(URI(rpc))
     try:
@@ -420,7 +416,7 @@ def preview(
     rpc: str,
     txfile: typing.TextIO,
 ):
-    """Preview SafeTx details."""
+    """Preview details of a Safe Transaction."""
     client = EthereumClient(URI(rpc))
     safetxdata = reconstruct_safetx(client, txfile)
     console.line()
@@ -441,7 +437,7 @@ def sign(
     txfile: typing.TextIO,
     force: bool,
 ):
-    """Sign a SafeTx."""
+    """Sign a Safe Transaction."""
     client = EthereumClient(URI(rpc))
     safetxdata = reconstruct_safetx(client, txfile)
 
@@ -449,7 +445,7 @@ def sign(
     print_safetx(safetxdata)
     console.line()
 
-    if not force and not Confirm.ask("Sign Safe transaction?"):
+    if not force and not Confirm.ask("Sign this Safe Transaction?"):
         raise click.Abort()
 
     with click.open_file(keyfile) as kf:
