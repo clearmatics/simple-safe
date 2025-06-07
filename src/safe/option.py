@@ -68,7 +68,7 @@ rpc = click.option(
 def safetx(f: FC) -> FC:
     @click.option("--version", help="Safe Account version")
     @click.option("--chain", "chain_id", type=int, metavar="ID", help="Chain ID")
-    @click.option("--safe-nonce", type=int, help="Safe nonce")
+    @click.option("--safe-nonce", type=int, help="Safe Nonce")
     @click.option(
         "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
     )

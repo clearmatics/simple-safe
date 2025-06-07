@@ -292,7 +292,7 @@ def deploy(
         "Safe Deployment Parameters",
         "",
         {
-            "Safe Account": f"{predicted_address} (predicted)",
+            "Address": f"{predicted_address} (predicted)",
             "Version": DEPLOY_SAFE_VERSION,
             f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
             "Threshold": str(threshold),
@@ -375,7 +375,7 @@ def hash(txfile: typing.TextIO) -> None:
 @click.argument("address")
 @option.rpc
 def inspect(rpc: str, address: str):
-    """Inspect state of a Safe Account."""
+    """Inspect a Safe Account."""
     checksum_addr = to_checksum_address(address)
     client = EthereumClient(URI(rpc))
     try:
@@ -391,7 +391,7 @@ def inspect(rpc: str, address: str):
         "Safe Account",
         f"Block {str(block)}",
         {
-            "Safe Account": info.address,
+            "Address": info.address,
             "Version": info.version,
             f"Owners({len(info.owners)})": ", ".join(info.owners),
             "Threshold": str(info.threshold),
@@ -415,7 +415,7 @@ def preview(
     rpc: str,
     txfile: typing.TextIO,
 ):
-    """Preview details of a Safe Transaction."""
+    """Preview a Safe Transaction."""
     client = EthereumClient(URI(rpc))
     safetxdata = reconstruct_safetx(client, txfile)
     console.line()

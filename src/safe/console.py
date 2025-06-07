@@ -82,7 +82,7 @@ def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -
 def print_safetx(safetxdata: SafeTxData) -> None:
     table = get_kvtable(
         {
-            "Safe Account": safetxdata.safetx.safe_address,
+            "Address": safetxdata.safetx.safe_address,
             "Chain ID": str(safetxdata.safetx.chain_id),
             "Safe Nonce": str(safetxdata.safetx.safe_nonce),
             "To": str(safetxdata.safetx.to),
