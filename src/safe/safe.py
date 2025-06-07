@@ -96,12 +96,12 @@ def build():
 
 
 @build.command(name="tx")
-@option.account
+@option.safe
 @option.rpc
 @option.safetx_custom
 @option.output_file
 def build_tx(
-    account: str,
+    safe: str,
     version: Optional[str],
     chain_id: Optional[int],
     safe_nonce: Optional[int],
@@ -115,7 +115,7 @@ def build_tx(
     client = EthereumClient(URI(rpc))
     safetx = SafeTx(
         ethereum_client=client,
-        safe_address=to_checksum_address(account),
+        safe_address=to_checksum_address(safe),
         to=to_checksum_address(to_checksum_address(to_str)),
         value=int(Decimal(value_) * 10**18),
         data=HexBytes(data),

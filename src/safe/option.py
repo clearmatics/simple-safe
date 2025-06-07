@@ -10,15 +10,6 @@ from click_option_group import (
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
-account = click.option(
-    "--account",
-    "account",
-    metavar="ADDRESS",
-    required=True,
-    help="Safe Account address",
-)
-
-
 # pyright: reportUntypedFunctionDecorator=false
 # pyright: reportUnknownMemberType=false
 def authentication(f: FC) -> FC:
@@ -49,6 +40,15 @@ force = click.option(
 
 output_file = click.option(
     "--output", "-o", type=click.File(mode="w"), help="write output to FILENAME"
+)
+
+
+safe = click.option(
+    "--safe",
+    "safe",
+    metavar="ADDRESS",
+    required=True,
+    help="Safe Account address",
 )
 
 
