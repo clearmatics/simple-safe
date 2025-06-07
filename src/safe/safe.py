@@ -359,9 +359,10 @@ def exec(
             sigobjs.append(sigobj)
     safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
 
-    console.line()
-    if not force and not Confirm.ask("Prepare a Web3 Transaction?", default=False):
-        raise click.Abort()
+    if not force:
+        console.line()
+        if not Confirm.ask("Prepare a Web3 Transaction?", default=False):
+            raise click.Abort()
 
     execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
 
