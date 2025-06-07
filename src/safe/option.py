@@ -65,6 +65,31 @@ rpc = click.option(
 )
 
 
+def safetx(f: FC) -> FC:
+    @click.option("--version", help="Safe Account version")
+    @click.option("--chain", "chain_id", type=int, metavar="ID", help="Chain ID")
+    @click.option("--safe-nonce", type=int, help="Safe nonce")
+    @click.option(
+        "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
+    )
+    @click.option("--value", "value_", default="0.0", help="tx value in decimals")
+    @functools.wraps(f)
+    def wrapper(*args: object, **kwargs: object) -> object:
+        f(*args, **kwargs)
+
+    return cast(FC, wrapper)
+
+
+def safetx_custom(f: FC) -> FC:
+    @safetx
+    @click.option("--data", default="0x", help="call data payload")
+    @functools.wraps(f)
+    def wrapper(*args: object, **kwargs: object) -> object:
+        f(*args, **kwargs)
+
+    return cast(FC, wrapper)
+
+
 def web3tx(f: FC) -> FC:
     @rpc
     @functools.wraps(f)

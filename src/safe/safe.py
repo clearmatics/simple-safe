@@ -98,20 +98,13 @@ def build():
 @build.command(name="tx")
 @option.account
 @option.rpc
-@click.option("--version", help="Safe Account version")
-@click.option("--chain", "chain_id", type=int, metavar="ID", help="Chain ID")
-@click.option("--nonce", type=int, help="nonce of the Safe Account")
-@click.option(
-    "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
-)
-@click.option("--value", "value_", default="0.0", help="tx value in decimals")
-@click.option("--data", default="0x", help="optional call data payload")
+@option.safetx_custom
 @option.output_file
 def build_tx(
     account: str,
     version: Optional[str],
     chain_id: Optional[int],
-    nonce: Optional[int],
+    safe_nonce: Optional[int],
     to_str: str,
     value_: str,
     data: str,
@@ -133,7 +126,7 @@ def build_tx(
         gas_token=None,
         refund_receiver=None,
         signatures=None,
-        safe_nonce=nonce,
+        safe_nonce=safe_nonce,
         safe_version=version,
         chain_id=chain_id,
     )
