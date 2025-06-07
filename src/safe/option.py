@@ -59,7 +59,7 @@ rpc = click.option(
     metavar="URI",
     show_envvar=True,
     required=True,
-    prompt="RPC",
+    prompt="RPC URI",
     prompt_required=False,
     help="HTTP JSON-RPC endpoint",
 )

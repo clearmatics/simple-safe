@@ -26,6 +26,7 @@ class SafeTxData(NamedTuple):
 
 
 def as_checksum(checksum_str: str) -> ChecksumAddress:
+    """Cast to satisfy type checker."""
     return cast(ChecksumAddress, checksum_str)
 
 
