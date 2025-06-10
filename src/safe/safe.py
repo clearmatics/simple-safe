@@ -311,15 +311,7 @@ def deploy(
 
 @main.command()
 @option.authentication
-@click.option(
-    "--sigfile",
-    "-g",
-    "sigfiles",
-    type=click.Path(exists=True),
-    multiple=True,
-    required=True,
-    help="owner signature file",
-)
+@option.signature
 @option.web3tx
 @option.force
 @click.argument("txfile", type=click.File("r"), required=True)

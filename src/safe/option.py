@@ -90,6 +90,16 @@ def safetx_custom(f: FC) -> FC:
     return cast(FC, wrapper)
 
 
+signature = click.option(
+    "--sigfile",
+    "-g",
+    "sigfiles",
+    type=click.Path(exists=True),
+    multiple=True,
+    help="owner signature file",
+)
+
+
 def web3tx(f: FC) -> FC:
     @rpc
     @functools.wraps(f)
