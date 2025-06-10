@@ -10,6 +10,7 @@ from click_option_group import (
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
+
 # pyright: reportUntypedFunctionDecorator=false
 # pyright: reportUnknownMemberType=false
 def authentication(f: FC) -> FC:

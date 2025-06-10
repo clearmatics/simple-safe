@@ -251,7 +251,8 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
         "Timestamp": timestamp_str,
         "Gas Used": str(txreceipt["gasUsed"]),
         "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
-        "Status": "[ok]SUCCESS[/ok]" if success else "[danger]ERROR[/danger]",
+        "Status": str(txreceipt["status"])
+        + (" ([ok]OK[/ok])" if success else " ([danger]ERROR[/danger])"),
     })
     panel = get_panel(
         "Web3 Transaction Receipt",
