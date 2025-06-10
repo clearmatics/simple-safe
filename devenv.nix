@@ -20,7 +20,9 @@
     uv.sync.enable = true;
   };
 
-  scripts.safe.exec = "uv run safe";
+  scripts.safe.exec = ''
+    uv run safe "$*";
+  '';
 
   # See full reference at https://devenv.sh/reference/options/
 }
