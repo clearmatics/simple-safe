@@ -175,7 +175,7 @@ def build_tx(
     "--chain-specific",
     is_flag=True,
     default=False,
-    help="account address will depend on Chain ID [default: no]",
+    help="account address will depend on Chain ID",
 )
 @optgroup.option(
     "--salt-nonce",
