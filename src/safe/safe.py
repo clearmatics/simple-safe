@@ -420,13 +420,13 @@ def preview(
     console.line()
     print_safetx(safetxdata)
 
-    console.line()
     safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
     if sigfiles:
         owners = safe.retrieve_owners()
         sigdata = parse_signatures(owners, safetxdata, sigfiles)
-        print_signatures(safetxdata.safetx, sigdata, safe.retrieve_threshold())
         console.line()
+        print_signatures(safetxdata.safetx, sigdata, safe.retrieve_threshold())
+    console.line()
 
 
 @main.command()
