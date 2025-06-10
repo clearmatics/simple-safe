@@ -333,21 +333,26 @@ def exec(
 
     client = EthereumClient(URI(rpc))
     safetxdata = reconstruct_safetx(client, txfile)
+    safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
+    owners = safe.retrieve_owners()
+    threshold = safe.retrieve_threshold()
+    sigdata = parse_signatures(owners, safetxdata, sigfiles)
 
     console.line()
     print_safetx(safetxdata)
+    console.line()
+    print_signatures(safetxdata.safetx, sigdata, threshold)
 
-    sigobjs: list[SafeSignature] = []
-    for sigfile in sigfiles:
-        with open(sigfile, "r") as sf:
-            sigtext = sf.read().rstrip()
-            sigbytes = HexBytes(sigtext)
-        siglist = SafeSignature.parse_signature(
-            sigbytes, safetxdata.hash, safetxdata.preimage
-        )
-        for sigobj in siglist:
-            sigobjs.append(sigobj)
-    safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
+    good: list[SafeSignature] = []
+    for sd in sigdata:
+        if not isinstance(sd.sig, SafeSignature):
+            continue
+        if sd.valid and sd.is_owner:
+            good.append(sd.sig)
+    if len(good) < threshold:
+        raise click.ClickException("Insufficient valid owner signatures to execute.")
+
+    safetxdata.safetx.signatures = SafeSignature.export_signatures(good)
 
     if not force:
         console.line()
