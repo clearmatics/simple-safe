@@ -162,7 +162,6 @@ def print_web3_tx_params(value: TxParams) -> None:
             "Max Pri Fee": str(value["maxPriorityFeePerGas"]),
             "Data": str(value["data"]),
         },
-        {},
     )
 
 
