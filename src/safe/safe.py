@@ -328,6 +328,9 @@ def exec(
 
     Repeat the signature option to include all required signatures.
     """
+    if not sigfiles:
+        raise click.ClickException("Cannot execute SafeTx without signatures.")
+
     client = EthereumClient(URI(rpc))
     safetxdata = reconstruct_safetx(client, txfile)
 
