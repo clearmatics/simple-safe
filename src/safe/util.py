@@ -2,6 +2,7 @@ import json
 from typing import (
     Any,
     NamedTuple,
+    Optional,
     TextIO,
     cast,
 )
@@ -11,11 +12,14 @@ from eth_account.messages import (
     encode_typed_data,
 )
 from eth_typing import ChecksumAddress
+from eth_utils.address import to_checksum_address
 from hexbytes import (
     HexBytes,
 )
 from safe_eth.eth import EthereumClient
+from safe_eth.eth.constants import NULL_ADDRESS
 from safe_eth.safe import SafeTx
+from safe_eth.safe.safe_signature import SafeSignature
 
 
 class SafeTxData(NamedTuple):
@@ -23,6 +27,17 @@ class SafeTxData(NamedTuple):
     payload: dict[str, Any]
     preimage: HexBytes
     hash: HexBytes
+
+
+class SignatureData(NamedTuple):
+    sigbytes: HexBytes
+    path: str
+    valid: bool
+    is_owner: bool
+    # Invalid signature may not have these fields.
+    sig: Optional[SafeSignature]
+    sigtype: Optional[str]
+    address: Optional[ChecksumAddress]
 
 
 def as_checksum(checksum_str: str) -> ChecksumAddress:
@@ -72,3 +87,49 @@ def reconstruct_safetx(client: EthereumClient, txfile: TextIO) -> SafeTxData:
         preimage=safetx.safe_tx_hash_preimage,
         hash=safetx.safe_tx_hash,
     )
+
+
+def parse_signatures(
+    owners: list[str], safetxdata: SafeTxData, sigfiles: list[str]
+) -> list[SignatureData]:
+    sigdata: list[SignatureData] = []
+    for sigfile in sigfiles:
+        with open(sigfile, "r") as sf:
+            sigtext = sf.read().rstrip()
+            sigbytes = HexBytes(sigtext)
+        siglist = SafeSignature.parse_signature(
+            sigbytes, safetxdata.hash, safetxdata.preimage
+        )
+        if len(siglist) != 1:
+            address = None
+            sigtype = None
+            valid = False
+            sig = None
+            is_owner = False
+        else:
+            sig = siglist[0]
+            sigtype = sig.__class__.__name__
+            owner = sig.owner  # pyright: ignore
+            is_owner = owner in owners
+            if owner == NULL_ADDRESS:
+                valid = False
+                address = None
+            else:
+                valid = sig.is_valid(
+                    safetxdata.safetx.ethereum_client, safetxdata.safetx.safe_address
+                )
+                address = to_checksum_address(owner)  # pyright: ignore
+        sigdata.append(
+            SignatureData(
+                sig=sig,
+                path=sigfile,
+                sigbytes=sigbytes,
+                address=address,
+                sigtype=sigtype,
+                is_owner=is_owner,
+                valid=valid,
+            )
+        )
+    #     sigobjs.append(siglist[0])
+    # safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
+    return sigdata

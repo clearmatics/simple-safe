@@ -3,22 +3,31 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 import rich
-from rich.box import Box
+from rich.box import ROUNDED, Box
 from rich.console import Group, RenderableType
 from rich.highlighter import JSONHighlighter
-from rich.padding import Padding
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
-from safe_eth.safe import SafeOperationEnum
+from rich.theme import Theme
+from safe_eth.safe import SafeOperationEnum, SafeTx
 from web3.contract.contract import ContractFunction
 from web3.types import Timestamp, TxParams, TxReceipt
 
-from .util import SafeTxData, hexbytes_json_encoder
+from safe.characters import CHECK, CROSS
 
+from .util import SafeTxData, SignatureData, hexbytes_json_encoder
 
-rich.reconfigure(stderr=True)
+custom_theme = Theme({
+    "ok": "green",
+    "info": "dim cyan",
+    "important": "cyan bold",
+    "warning": "magenta",
+    "danger": "bold red",
+})
+
+rich.reconfigure(stderr=True, theme=custom_theme)
 console = rich.get_console()
 
 
@@ -46,9 +55,10 @@ def get_json_data_renderable(
     )
 
 
-def get_kvtable(*args: dict[str, RenderableType]) -> Table:
+def get_kvtable(*args: dict[str, RenderableType], draw_divider: bool = True) -> Table:
     table = Table(
         title_style="bold",
+        show_edge=False,
         show_header=False,
         box=CUSTOM_BOX,
     )
@@ -58,25 +68,40 @@ def get_kvtable(*args: dict[str, RenderableType]) -> Table:
         for key, val in arg.items():
             # Wrap all strings in a Text with overflow.
             if isinstance(val, str):
-                table.add_row(key, Text(val, overflow="fold"))
+                table.add_row(key, Text.from_markup(val, overflow="fold"))
             else:
                 table.add_row(key, val)
         if len(args) > 1 and idx < len(args) - 1:
-            table.add_section()
+            if draw_divider:
+                table.add_section()
+            else:
+                table.add_row("", "")
     return table
 
 
-def print_kvtable(title: str, subtitle: str, *args: dict[str, RenderableType]) -> None:
-    table = get_kvtable(*args)
-    panel = Panel(
-        table,
+def get_panel(
+    title: str, subtitle: str, renderable: RenderableType, **kwargs: Any
+) -> Panel:
+    base_config = dict(
         title=title,
         title_align="left",
         subtitle=subtitle,
         subtitle_align="right",
         border_style="bold",
+        padding=(1, 1),
     )
-    console.print(panel)
+    base_config.update(**kwargs)
+    return Panel(renderable, ROUNDED, **base_config)
+
+
+def print_kvtable(
+    title: str,
+    subtitle: str,
+    *args: dict[str, RenderableType],
+    draw_divider: bool = True,
+) -> None:
+    table = get_kvtable(*args, draw_divider=draw_divider)
+    console.print(get_panel(title, subtitle, table))
 
 
 def print_safetx(safetxdata: SafeTxData) -> None:
@@ -92,26 +117,74 @@ def print_safetx(safetxdata: SafeTxData) -> None:
             "Data": safetxdata.safetx.data.to_0x_hex(),
         },
         {
-            f"Signature[{i}]": signer
-            for (i, signer) in enumerate(safetxdata.safetx.signers)
-        },
-        {
             "SafeTx Preimage": safetxdata.preimage.to_0x_hex(),
             "SafeTx Hash": safetxdata.hash.to_0x_hex(),
         },
     )
     group = Group(
-        Padding(get_json_data_renderable(safetxdata.payload), (1, 0)),
+        get_json_data_renderable(safetxdata.payload),
         Rule(style="default on default"),
+        # Rule(characters=" "),
         table,
     )
-    panel = Panel(
-        group,
-        title="Safe Transaction",
-        title_align="left",
-        border_style="bold",
+    console.print(get_panel("Safe Transaction", "", group))
+
+
+def print_signatures(
+    safetx: SafeTx,
+    sigdata: list[SignatureData],
+    threshold: int,
+) -> None:
+    sigout: list[dict[str, RenderableType]] = []
+    num_invalid = 0
+    num_unknown = 0
+    for sig in sigdata:
+        row: dict[str, RenderableType] = {}
+        row["File"] = sig.path
+        if sig.sigtype:
+            row["Type"] = sig.sigtype.lstrip("SafeSignature") + " Signature"
+        row["Signature"] = sig.sigbytes.to_0x_hex() + (
+            f" [ok]{CHECK} VALID[/ok]"
+            if sig.valid
+            else f" [danger]{CROSS} INVALID[/danger]"
+        )
+        if sig.address:
+            row["Account"] = f"{sig.address}" + (
+                f" [ok]{CHECK} OWNER[/ok]"
+                if sig.is_owner
+                else f" [danger]{CROSS} OWNER[/danger]"
+            )
+        if not sig.valid:
+            num_invalid += 1
+        if not sig.is_owner:
+            num_unknown += 1
+        sigout.append(row)
+    sigtable = get_kvtable(
+        *sigout,
+        draw_divider=True,
     )
-    console.print(panel)
+    executable = len(sigdata) >= threshold and num_invalid == 0 and num_unknown == 0
+    summary = ""
+    if executable:
+        summary = f"[{CHECK} EXECUTABLE]"
+    elif num_invalid == 1:
+        summary = f"[{CROSS} INVALID SIGNATURE]"
+    elif num_invalid > 1:
+        summary = f"[{CROSS} INVALID SIGNATURES]"
+    elif num_unknown == 1:
+        summary = f"[{CROSS} UNKNOWN SIGNATURE]"
+    elif num_unknown > 1:
+        summary = f"[{CROSS} UNKNOWN SIGNATURES]"
+    else:
+        summary = f"[{CROSS} INSUFFICIENT SIGNATURES]"
+    console.print(
+        get_panel(
+            "Signatures",
+            summary,
+            sigtable,
+            border_style="ok" if executable else "danger",
+        )
+    )
 
 
 def print_web3_call_data(function: ContractFunction) -> None:

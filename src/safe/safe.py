@@ -43,11 +43,13 @@ from .console import (
     console,
     print_kvtable,
     print_safetx,
+    print_signatures,
 )
 from .util import (
     as_checksum,
     hash_eip712_data,
     hexbytes_json_encoder,
+    parse_signatures,
     reconstruct_safetx,
 )
 from .workflows import execute_calltx
@@ -401,9 +403,11 @@ def inspect(rpc: str, address: str):
 
 
 @main.command()
+@option.signature
 @option.rpc
 @click.argument("txfile", type=click.File("r"), required=True)
 def preview(
+    sigfiles: list[str],
     rpc: str,
     txfile: typing.TextIO,
 ):
@@ -412,7 +416,14 @@ def preview(
     safetxdata = reconstruct_safetx(client, txfile)
     console.line()
     print_safetx(safetxdata)
+
     console.line()
+    safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
+    if sigfiles:
+        owners = safe.retrieve_owners()
+        sigdata = parse_signatures(owners, safetxdata, sigfiles)
+        print_signatures(safetxdata.safetx, sigdata, safe.retrieve_threshold())
+        console.line()
 
 
 @main.command()
