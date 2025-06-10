@@ -395,19 +395,19 @@ def inspect(rpc: str, address: str):
     console.line()
     print_kvtable(
         "Safe Account",
-        f"Block {str(block)}",
+        f"[Block {str(block)}]",
         {
             "Address": info.address,
             "Version": info.version,
             f"Owners({len(info.owners)})": ", ".join(info.owners),
             "Threshold": str(info.threshold),
+            "Safe Nonce": str(info.nonce),
             "Fallback Handler": info.fallback_handler,
             "Singleton": info.master_copy,
             "Guard": info.guard,
             "Modules": ", ".join(info.modules) if info.modules else "<none>",
         },
         {
-            "Safe Nonce": str(info.nonce),
             "Balance": str(balance),
         },
     )
