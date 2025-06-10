@@ -136,8 +136,7 @@ def print_signatures(
     threshold: int,
 ) -> None:
     sigout: list[dict[str, RenderableType]] = []
-    num_invalid = 0
-    num_unknown = 0
+    num_good, num_invalid, num_unknown = 0, 0, 0
     for sig in sigdata:
         row: dict[str, RenderableType] = {}
         row["File"] = sig.path
@@ -154,17 +153,18 @@ def print_signatures(
                 if sig.is_owner
                 else f" [danger]{CROSS} OWNER[/danger]"
             )
+        if sig.valid and sig.is_owner:
+            num_good += 1
         if not sig.valid:
             num_invalid += 1
-        if not sig.is_owner:
+        elif not sig.is_owner:
             num_unknown += 1
         sigout.append(row)
     sigtable = get_kvtable(
         *sigout,
         draw_divider=True,
     )
-    executable = len(sigdata) >= threshold and num_invalid == 0 and num_unknown == 0
-    summary = ""
+    executable = num_good >= threshold and num_good == len(sigdata)
     if executable:
         summary = f"[{CHECK} EXECUTABLE]"
     elif num_invalid == 1:
