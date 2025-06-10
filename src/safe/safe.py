@@ -80,7 +80,7 @@ logging.getLogger("safe_eth").setLevel(logging.CRITICAL)
     )
 )
 def main():
-    """A simple interface to Safe Smart Accounts."""
+    """A simple and decentralized CLI for Safe Accounts."""
     pass
 
 
