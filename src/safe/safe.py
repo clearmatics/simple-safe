@@ -426,15 +426,17 @@ def preview(
     """Preview a Safe Transaction."""
     client = EthereumClient(URI(rpc))
     safetxdata = reconstruct_safetx(client, txfile)
+
     console.line()
     print_safetx(safetxdata)
 
-    safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
     if sigfiles:
+        safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
         owners = safe.retrieve_owners()
+        threshold = safe.retrieve_threshold()
         sigdata = parse_signatures(owners, safetxdata, sigfiles)
         console.line()
-        print_signatures(safetxdata.safetx, sigdata, safe.retrieve_threshold())
+        print_signatures(safetxdata.safetx, sigdata, threshold)
     console.line()
 
 
