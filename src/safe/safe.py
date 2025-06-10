@@ -349,7 +349,11 @@ def exec(
             continue
         if sd.valid and sd.is_owner:
             good.append(sd.sig)
-    if len(good) < threshold:
+    if len(good) < len(sigdata):
+        raise click.ClickException(
+            "Cannot include invalid or non-owner signatures along with SafeTx."
+        )
+    elif len(good) < threshold:
         raise click.ClickException("Insufficient valid owner signatures to execute.")
 
     safetxdata.safetx.signatures = SafeSignature.export_signatures(good)
