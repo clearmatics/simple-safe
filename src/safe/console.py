@@ -244,15 +244,19 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
         if timestamp
         else ""
     )
-    print_kvtable(
+    success = txreceipt["status"] == 1
+    table = get_kvtable({
+        "Web3Tx Hash": txreceipt["transactionHash"].to_0x_hex(),
+        "Block": str(txreceipt["blockNumber"]),
+        "Timestamp": timestamp_str,
+        "Gas Used": str(txreceipt["gasUsed"]),
+        "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
+        "Status": "[ok]SUCCESS[/ok]" if success else "[danger]ERROR[/danger]",
+    })
+    panel = get_panel(
         "Web3 Transaction Receipt",
         "",
-        {
-            "Web3Tx Hash": txreceipt["transactionHash"].to_0x_hex(),
-            "Block": str(txreceipt["blockNumber"]),
-            "Timestamp": timestamp_str,
-            "Gas Used": str(txreceipt["gasUsed"]),
-            "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
-            "Status": str(txreceipt["status"]),
-        },
+        table,
+        border_style="ok" if success else "danger",
     )
+    console.print(panel)
