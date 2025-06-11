@@ -1,5 +1,6 @@
 import json
 from getpass import getpass
+from typing import Sequence
 
 import click
 from eth_account import Account
@@ -9,8 +10,11 @@ from web3 import Web3
 from web3.contract.contract import ContractFunction
 from web3.types import TxParams
 
+from safe.abi import Function
+
 from .console import (
     console,
+    print_function_matches,
     print_web3_call_data,
     print_web3_tx_params,
     print_web3_tx_receipt,
@@ -55,3 +59,19 @@ def execute_calltx(w3: Web3, contractfn: ContractFunction, keyfile: str, force: 
     console.line()
     print_web3_call_data(contractfn)
     execute_tx(w3, tx, keyfile, force)
+
+
+def handle_function_match_failure(
+    abi_file: str, identifier: str, matches: Sequence[Function]
+) -> None:
+    if len(matches) == 0:
+        raise click.ClickException(
+            f"No matches for function '{identifier}' in '{abi_file}'."
+        )
+    if len(matches) > 1:
+        console.line()
+        print_function_matches(matches)
+        console.line()
+        raise click.ClickException(
+            "Matched multiple function identifiers. Please use unique identifier."
+        )

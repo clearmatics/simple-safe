@@ -38,6 +38,8 @@ from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.providers.auto import load_provider_from_uri
 
+from safe.abi import find_function, parse_args
+
 from . import option
 from .console import (
     console,
@@ -52,7 +54,7 @@ from .util import (
     parse_signatures,
     reconstruct_safetx,
 )
-from .workflows import execute_calltx
+from .workflows import execute_calltx, handle_function_match_failure
 
 DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
@@ -93,7 +95,7 @@ def main():
 
 @main.group()
 def build():
-    """Build a Safe Transaction."""
+    """Build transaction data."""
     pass
 
 
@@ -138,6 +140,45 @@ def build_tx(
             safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
         )
     )
+
+
+@build.command(name="calldata")
+@click.option(
+    "--abi",
+    "abi_file",
+    type=click.Path(exists=True),
+    required=True,
+    help="contract ABI in JSON format",
+)
+@option.output_file
+@click.argument("identifier", metavar="FUNCTION")
+@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+def build_calldata(
+    abi_file: str,
+    output: typing.TextIO | None,
+    identifier: str,
+    str_args: list[str],
+) -> None:
+    """Encode smart contract call data.
+
+    FUNCTION should be the unambiguous function identifier in the context of the
+    ABI. The 4-byte selector and full signature string are always unique. The
+    function's name may be used if it is not overloaded.
+    """
+    with open(abi_file, "r") as f:
+        abi = json.load(f)
+    matches = find_function(abi, identifier)
+    if len(matches) != 1:
+        handle_function_match_failure(abi_file, identifier, matches)
+
+    w3 = Web3()
+    fn_info = matches[0]
+    Contract = w3.eth.contract(abi=abi)
+    fn_obj = Contract.get_function_by_selector(fn_info.selector)
+    args = parse_args(fn_obj.abi, str_args)
+    calldata = Contract.encode_abi(fn_info.sig, args)
+    output_console = Console(file=output if output else sys.stdout)
+    output_console.print(calldata)
 
 
 @main.command()

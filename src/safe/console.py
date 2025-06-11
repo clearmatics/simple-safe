@@ -17,6 +17,7 @@ from safe_eth.safe import SafeOperationEnum, SafeTx
 from web3.contract.contract import ContractFunction
 from web3.types import Timestamp, TxParams, TxReceipt
 
+from safe.abi import Function
 from safe.characters import CHECK, CROSS
 
 from .util import SafeTxData, SignatureData, hexbytes_json_encoder
@@ -95,6 +96,30 @@ def get_panel(
     )
     base_config.update(**kwargs)
     return Panel(renderable, box=ROUNDED, **base_config)
+
+
+def print_function_matches(matches: Sequence[Function]):
+    table = Table(
+        show_edge=False,
+        show_header=True,
+        header_style="default",
+        box=HORIZONTALS,
+    )
+    table.add_column("Selector", justify="left", no_wrap=True)
+    table.add_column("Signature")
+    table.add_column("Arguments")
+    for match in matches:
+        arguments = [
+            arg if arg else "<unnamed>"
+            for arg in get_abi_input_names(cast(ABIElement, match.abi))
+        ]
+        table.add_row(
+            match.selector.to_0x_hex(),
+            match.sig,
+            ", ".join(arguments),
+        )
+    panel = get_panel("ABI Function Matches", f"[ matches={len(matches)} ]", table)
+    console.print(panel)
 
 
 def print_kvtable(
