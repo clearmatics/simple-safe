@@ -417,7 +417,7 @@ def deploy(
         },
     )
     console.line()
-    if not force and not Confirm.ask("Prepare a Web3 Transaction?", default=False):
+    if not force and not Confirm.ask("Prepare Web3 Transaction?", default=False):
         raise click.Abort()
 
     execute_calltx(w3, deployment_call, keyfile, force)
@@ -473,7 +473,7 @@ def exec(
 
     if not force:
         console.line()
-        if not Confirm.ask("Prepare a Web3 Transaction?", default=False):
+        if not Confirm.ask("Prepare Web3 Transaction?", default=False):
             raise click.Abort()
 
     execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
@@ -574,7 +574,7 @@ def sign(
     print_safetx(safetxdata)
     console.line()
 
-    if not force and not Confirm.ask("Sign this Safe Transaction?", default=False):
+    if not force and not Confirm.ask("Sign Safe Transaction?", default=False):
         raise click.Abort()
 
     with click.open_file(keyfile) as kf:
