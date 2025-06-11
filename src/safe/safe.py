@@ -98,9 +98,9 @@ def build():
 
 
 @build.command(name="tx")
+@option.safetx_custom
 @option.safe
 @option.rpc
-@option.safetx_custom
 @option.output_file
 def build_tx(
     safe: str,
@@ -132,7 +132,7 @@ def build_tx(
         safe_version=version,
         chain_id=chain_id,
     )
-    output_console = Console(file=output) if output else console
+    output_console = Console(file=output if output else sys.stdout)
     output_console.print(
         JSON.from_data(
             safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
@@ -143,8 +143,6 @@ def build_tx(
 @main.command()
 # pyright: reportUntypedFunctionDecorator=false
 # pyright: reportUnknownMemberType=false
-@option.web3tx
-@option.authentication
 @optgroup.group(
     "Safe configuration",
 )
@@ -199,6 +197,8 @@ def build_tx(
     metavar="ADDRESS",
     help="use non-canonical ProxyFactory address",
 )
+@option.authentication
+@option.rpc
 @option.force
 def deploy(
     keyfile: str,
@@ -312,9 +312,10 @@ def deploy(
 
 
 @main.command()
-@option.authentication
 @option.signature
 @option.web3tx
+@option.authentication
+@option.rpc
 @option.force
 @click.argument("txfile", type=click.File("r"), required=True)
 def exec(
@@ -441,8 +442,8 @@ def preview(
 
 
 @main.command()
-@option.rpc
 @option.authentication
+@option.rpc
 @option.output_file
 @option.force
 @click.argument("txfile", type=click.File("r"), required=True)
@@ -474,8 +475,7 @@ def sign(
     sigobj = SafeSignature.parse_signature(signedmsg.signature, safetxdata.hash)[0]
     signature = sigobj.export_signature()
 
-    output_file = output if output else sys.stdout
-    output_console = Console(file=output_file)
+    output_console = Console(file=output if output else sys.stdout)
     output_console.print(signature.to_0x_hex())
 
 

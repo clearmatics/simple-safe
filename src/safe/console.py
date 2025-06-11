@@ -1,9 +1,11 @@
 import json
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Optional, Sequence, cast
 
 import rich
-from rich.box import ROUNDED, Box
+from eth_typing.abi import ABIElement
+from eth_utils.abi import get_abi_input_names
+from rich.box import HORIZONTALS, ROUNDED, Box
 from rich.console import Group, RenderableType
 from rich.highlighter import JSONHighlighter
 from rich.panel import Panel
@@ -21,10 +23,12 @@ from .util import SafeTxData, SignatureData, hexbytes_json_encoder
 
 custom_theme = Theme({
     "ok": "green",
+    "panel_ok": "green bold italic",
     "info": "dim cyan",
     "important": "cyan bold",
     "warning": "magenta",
     "danger": "bold red",
+    "panel_danger": "red bold italic",
 })
 
 rich.reconfigure(stderr=True, theme=custom_theme)
@@ -57,7 +61,6 @@ def get_json_data_renderable(
 
 def get_kvtable(*args: dict[str, RenderableType], draw_divider: bool = True) -> Table:
     table = Table(
-        title_style="bold",
         show_edge=False,
         show_header=False,
         box=CUSTOM_BOX,
@@ -87,11 +90,11 @@ def get_panel(
         title_align="left",
         subtitle=subtitle,
         subtitle_align="right",
-        border_style="bold",
+        border_style="bold italic",
         padding=(1, 1),
     )
     base_config.update(**kwargs)
-    return Panel(renderable, ROUNDED, **base_config)
+    return Panel(renderable, box=ROUNDED, **base_config)
 
 
 def print_kvtable(
@@ -182,7 +185,7 @@ def print_signatures(
             "Signatures",
             summary,
             sigtable,
-            border_style="ok" if executable else "danger",
+            border_style="panel_ok" if executable else "panel_danger",
         )
     )
 
@@ -252,12 +255,12 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
         "Gas Used": str(txreceipt["gasUsed"]),
         "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
         "Status": str(txreceipt["status"])
-        + (" ([ok]OK[/ok])" if success else " ([danger]ERROR[/danger])"),
+        + (" [[ok]OK[/ok]]" if success else " [[danger]ERROR[/danger]]"),
     })
     panel = get_panel(
         "Web3 Transaction Receipt",
         "",
         table,
-        border_style="ok" if success else "danger",
+        border_style="panel_ok" if success else "panel_danger",
     )
     console.print(panel)
