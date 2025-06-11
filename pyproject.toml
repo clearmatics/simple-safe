@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-safe = "safe:main"
+safe = "simple_safe:main"
 
 [build-system]
 requires = ["hatchling"]

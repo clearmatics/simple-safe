@@ -10,8 +10,7 @@ from web3 import Web3
 from web3.contract.contract import ContractFunction
 from web3.types import TxParams
 
-from safe.abi import Function
-
+from .abi import Function
 from .console import (
     console,
     print_function_matches,

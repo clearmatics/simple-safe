@@ -38,9 +38,8 @@ from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.providers.auto import load_provider_from_uri
 
-from safe.abi import find_function, parse_args
-
 from . import option
+from .abi import find_function, parse_args
 from .console import (
     console,
     print_kvtable,

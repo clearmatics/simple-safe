@@ -6,7 +6,7 @@ import pytest
 from eth_account.account import Account
 from safe_eth.eth.constants import NULL_ADDRESS
 
-from safe.abi import find_function, parse_abi_type, parse_args
+from simple_safe.abi import find_function, parse_abi_type, parse_args
 
 
 def test_find_function():

@@ -17,9 +17,8 @@ from safe_eth.safe import SafeOperationEnum, SafeTx
 from web3.contract.contract import ContractFunction
 from web3.types import Timestamp, TxParams, TxReceipt
 
-from safe.abi import Function
-from safe.characters import CHECK, CROSS
-
+from .abi import Function
+from .characters import CHECK, CROSS
 from .util import SafeTxData, SignatureData, hexbytes_json_encoder
 
 custom_theme = Theme({
