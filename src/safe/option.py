@@ -71,10 +71,22 @@ def safetx(f: FC) -> FC:
     @click.option("--version", help="Safe Account version")
     @click.option("--chain", "chain_id", type=int, metavar="ID", help="Chain ID")
     @click.option("--safe-nonce", type=int, help="Safe Nonce")
+    @functools.wraps(f)
+    def wrapper(*args: object, **kwargs: object) -> object:
+        f(*args, **kwargs)
+
+    return cast(FC, wrapper)
+
+
+def safetx_call(f: FC) -> FC:
     @click.option(
-        "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
+        "--contract",
+        "contract_str",
+        metavar="ADDRESS",
+        required=True,
+        help="contract address",
     )
-    @click.option("--value", "value_", default="0.0", help="tx value in decimals")
+    @safetx
     @functools.wraps(f)
     def wrapper(*args: object, **kwargs: object) -> object:
         f(*args, **kwargs)

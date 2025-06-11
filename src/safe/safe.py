@@ -142,6 +142,78 @@ def build_tx(
     )
 
 
+@build.command(name="call")
+@click.option(
+    "--abi",
+    "abi_file",
+    type=click.Path(exists=True),
+    required=True,
+    help="contract ABI in JSON format",
+)
+@option.safetx_call
+@option.safe
+@option.rpc
+@option.output_file
+@click.argument("identifier", metavar="FUNCTION")
+@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+def build_call(
+    abi_file: str,
+    contract_str: str,
+    safe: str,
+    version: Optional[str],
+    chain_id: Optional[int],
+    safe_nonce: Optional[int],
+    value_: str,
+    output: typing.TextIO | None,
+    rpc: str,
+    identifier: str,
+    str_args: list[str],
+) -> None:
+    """Build a smart contract call Safe Transaction.
+
+    FUNCTION should be the unambiguous function identifier in the context of the
+    ABI. The 4-byte selector and full signature string are always unique. The
+    function's name may be used if it is not overloaded.
+    """
+    with open(abi_file, "r") as f:
+        abi = json.load(f)
+    matches = find_function(abi, identifier)
+    if len(matches) != 1:
+        handle_function_match_failure(abi_file, identifier, matches)
+
+    client = EthereumClient(URI(rpc))
+    fn_info = matches[0]
+    contract = to_checksum_address(contract_str)
+    Contract = client.w3.eth.contract(address=to_checksum_address(contract), abi=abi)
+    fn_obj = Contract.get_function_by_selector(matches[0].selector)
+    args = parse_args(fn_obj.abi, str_args)
+    calldata = HexBytes(Contract.encode_abi(fn_info.sig, args))
+
+    safetx = SafeTx(
+        ethereum_client=client,
+        safe_address=to_checksum_address(safe),
+        to=contract,
+        value=int(Decimal(value_) * 10**18),
+        data=calldata,
+        operation=SafeOperationEnum.CALL.value,
+        safe_tx_gas=0,
+        base_gas=0,
+        gas_price=0,
+        gas_token=None,
+        refund_receiver=None,
+        signatures=None,
+        safe_nonce=safe_nonce,
+        safe_version=version,
+        chain_id=chain_id,
+    )
+    output_console = Console(file=output if output else sys.stdout)
+    output_console.print(
+        JSON.from_data(
+            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
+        )
+    )
+
+
 @build.command(name="calldata")
 @click.option(
     "--abi",
