@@ -1,7 +1,7 @@
 [project]
-name = "safe"
+name = "simple-safe"
 version = "0.1.0"
-description = "A decentralized CLI for Safe Smart Accounts"
+description = "A simple & decentralized CLI for Safe Accounts"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
