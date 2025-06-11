@@ -24,5 +24,7 @@
     uv run safe "$*";
   '';
 
+  scripts.run-tests.exec = "uv run pytest -s -v --no-header --disable-warnings ./test";
+
   # See full reference at https://devenv.sh/reference/options/
 }
