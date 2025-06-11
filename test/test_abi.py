@@ -54,7 +54,6 @@ def test_find_function():
       "stateMutability": "nonpayable"
     }
     """
-    
 
     abi = [json.loads(f) for f in (f1, f2, f3)]
     funcs = find_function(abi, "f")
@@ -63,15 +62,15 @@ def test_find_function():
 
     for func in funcs:
         res = find_function(abi, func.selector.to_0x_hex())
-        assert len(res)==1
+        assert len(res) == 1
         assert res[0].selector == func.selector
 
     abi: list[Any] = []
     for i, f in enumerate((f1, f2, f3)):
         abi.append(json.loads(f))
-        assert len(find_function(abi, "f")) == i+1
+        assert len(find_function(abi, "f")) == i + 1
 
-    
+
 def test_parse_args_struct_values():
     fn_abi_str = """
     {
