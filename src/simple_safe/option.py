@@ -36,7 +36,7 @@ force = click.option(
     "-f",
     is_flag=True,
     default=False,
-    help="execute without confirmation prompts",
+    help="skip confirmation prompts",
 )
 
 output_file = click.option(
