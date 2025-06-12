@@ -406,13 +406,15 @@ def deploy(
         "Safe Deployment Parameters",
         "",
         {
-            "Address": f"{predicted_address} (predicted)",
+            "Safe Address": f"{predicted_address} (predicted)",
             "Version": DEPLOY_SAFE_VERSION,
             f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
             "Threshold": str(threshold),
             "Fallback Handler": fallback_address,
             "Salt Nonce": str(salt_nonce_int),
             "Singleton": singleton_address,
+        },
+        {
             "Proxy Factory": proxy_factory_address,
         },
     )
@@ -464,7 +466,7 @@ def exec(
             good.append(sd.sig)
     if len(good) < len(sigdata):
         raise click.ClickException(
-            "Cannot include invalid or non-owner signatures along with SafeTx."
+            "Cannot execute SafeTx with invalid or non-owner signatures."
         )
     elif len(good) < threshold:
         raise click.ClickException("Insufficient valid owner signatures to execute.")
@@ -510,7 +512,7 @@ def inspect(rpc: str, address: str):
         "Safe Account",
         f"[Block {str(block)}]",
         {
-            "Address": info.address,
+            "Safe Address": info.address,
             "Version": info.version,
             f"Owners({len(info.owners)})": ", ".join(info.owners),
             "Threshold": str(info.threshold),

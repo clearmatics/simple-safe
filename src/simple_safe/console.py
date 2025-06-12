@@ -135,10 +135,10 @@ def print_safetx(safetxdata: SafeTxData) -> None:
     safetx = safetxdata.safetx
     table_data = [
         {
-            "Address": safetx.safe_address,
+            "Safe Address": safetx.safe_address,
             "Chain ID": str(safetx.chain_id),
             "Safe Nonce": str(safetx.safe_nonce),
-            "To": str(safetx.to),
+            "To Address": str(safetx.to),
             "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
             "Value": str(safetx.value),
             "SafeTx Gas": str(safetx.safe_tx_gas),
@@ -183,7 +183,7 @@ def print_signatures(
             else f" [danger]{CROSS} INVALID[/danger]"
         )
         if sig.address:
-            row["Account"] = f"{sig.address}" + (
+            row["ECRecover"] = f"{sig.address}" + (
                 f" [ok]{CHECK} OWNER[/ok]"
                 if sig.is_owner
                 else f" [danger]{CROSS} OWNER[/danger]"
