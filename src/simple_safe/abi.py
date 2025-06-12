@@ -25,21 +25,30 @@ class Function(NamedTuple):
 
 
 def find_function(abi: ABI, fn_identifier: str) -> Sequence[Function]:
-    matches: list[Function] = []
+    """Find a function by an identifier in the Contract ABI."""
+    exact_matches: list[Function] = []
+    partial_matches: list[Function] = []
     for fn_abi in chain(
         filter_abi_by_type("fallback", abi), get_all_function_abis(abi)
     ):
         signature = abi_to_signature(fn_abi)
         selector = HexBytes(function_signature_to_4byte_selector(signature))
-        if fn_identifier == selector.to_0x_hex() or signature.startswith(fn_identifier):
-            matches.append(
-                Function(
-                    name=fn_abi["name"] if fn_abi["type"] != "fallback" else "fallback",
+        name = fn_abi["name"] if fn_abi["type"] != "fallback" else "fallback"
+        match =  Function(
+                    name=name,
                     abi=fn_abi,
                     sig=signature,
                     selector=selector,
                 )
-            )
+        if fn_identifier == selector.to_0x_hex() or fn_identifier == signature:   return [match]
+        elif fn_identifier.split("(")[0] == name:
+            exact_matches.append(match)
+        elif signature.startswith(fn_identifier):
+            partial_matches.append(match)
+    if len(exact_matches) > 0:
+        matches = exact_matches
+    else:
+        matches = partial_matches
     return sorted(matches, key=lambda fn: fn.sig)
 
 

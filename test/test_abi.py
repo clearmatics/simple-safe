@@ -10,19 +10,27 @@ from simple_safe.abi import find_function, parse_abi_type, parse_args
 
 
 def test_find_function():
-    f1 = """
+    foo = """
     {
       "type": "function",
-      "name": "f",
+      "name": "foo",
       "inputs": [],
       "outputs": [],
       "stateMutability": "nonpayable"
     }
     """
-    f2 = """
+    fox = """
     {
       "type": "function",
-      "name": "f",
+      "name": "fox",
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+    """
+    foobar1 = """
+    {
+      "type": "function",
+      "name": "foobar",
       "inputs": [
         {
           "name": "a",
@@ -34,10 +42,10 @@ def test_find_function():
       "stateMutability": "nonpayable"
     }
     """
-    f3 = """
+    foobar2 = """
     {
       "type": "function",
-      "name": "f",
+      "name": "foobar",
       "inputs": [
         {
           "name": "a",
@@ -55,18 +63,24 @@ def test_find_function():
     }
     """
 
-    abi = [json.loads(f) for f in (f1, f2, f3)]
-    funcs = find_function(abi, "f")
+    abi = [json.loads(f) for f in (foo, fox, foobar1, foobar2)]
 
-    assert len(find_function(abi, "x")) == 0
+    allfuncs = find_function(abi, "")
+    assert len(allfuncs) == 4
 
-    for func in funcs:
+    for func in allfuncs:
         res = find_function(abi, func.selector.to_0x_hex())
         assert len(res) == 1
         assert res[0].selector == func.selector
 
+    assert len(find_function(abi, "x")) == 0
+    assert len(find_function(abi, "fo")) == 4
+    assert len(find_function(abi, "foo")) == 1
+    assert len(find_function(abi, "fox")) == 1
+    assert len(find_function(abi, "foobar")) == 2
+
     abi: list[Any] = []
-    for i, f in enumerate((f1, f2, f3)):
+    for i, f in enumerate((foo, fox, foobar1, foobar2)):
         abi.append(json.loads(f))
         assert len(find_function(abi, "f")) == i + 1
 
