@@ -115,24 +115,25 @@ def build_tx(
     rpc: str,
 ) -> None:
     """Build a custom Safe Transaction."""
-    client = EthereumClient(URI(rpc))
-    safetx = SafeTx(
-        ethereum_client=client,
-        safe_address=to_checksum_address(safe),
-        to=to_checksum_address(to_checksum_address(to_str)),
-        value=int(Decimal(value_) * 10**18),
-        data=HexBytes(data),
-        operation=SafeOperationEnum.CALL.value,
-        safe_tx_gas=0,
-        base_gas=0,
-        gas_price=0,
-        gas_token=None,
-        refund_receiver=None,
-        signatures=None,
-        safe_nonce=safe_nonce,
-        safe_version=version,
-        chain_id=chain_id,
-    )
+    with console.status("Building Safe transaction..."):
+        client = EthereumClient(URI(rpc))
+        safetx = SafeTx(
+            ethereum_client=client,
+            safe_address=to_checksum_address(safe),
+            to=to_checksum_address(to_checksum_address(to_str)),
+            value=int(Decimal(value_) * 10**18),
+            data=HexBytes(data),
+            operation=SafeOperationEnum.CALL.value,
+            safe_tx_gas=0,
+            base_gas=0,
+            gas_price=0,
+            gas_token=None,
+            refund_receiver=None,
+            signatures=None,
+            safe_nonce=safe_nonce,
+            safe_version=version,
+            chain_id=chain_id,
+        )
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(
         JSON.from_data(
@@ -174,37 +175,39 @@ def build_call(
     ABI. The 4-byte selector and full signature string are always unique. The
     function's name may be used if it is not overloaded.
     """
-    with open(abi_file, "r") as f:
-        abi = json.load(f)
-    matches = find_function(abi, identifier)
-    if len(matches) != 1:
-        handle_function_match_failure(abi_file, identifier, matches)
+    with console.status("Building Safe transaction..."):
+        with open(abi_file, "r") as f:
+            abi = json.load(f)
+        matches = find_function(abi, identifier)
+        if len(matches) != 1:
+            handle_function_match_failure(abi_file, identifier, matches)
 
-    client = EthereumClient(URI(rpc))
-    fn_info = matches[0]
-    contract = to_checksum_address(contract_str)
-    Contract = client.w3.eth.contract(address=to_checksum_address(contract), abi=abi)
-    fn_obj = Contract.get_function_by_selector(matches[0].selector)
-    args = parse_args(fn_obj.abi, str_args)
-    calldata = HexBytes(Contract.encode_abi(fn_info.sig, args))
-
-    safetx = SafeTx(
-        ethereum_client=client,
-        safe_address=to_checksum_address(safe),
-        to=contract,
-        value=int(Decimal(value_) * 10**18),
-        data=calldata,
-        operation=SafeOperationEnum.CALL.value,
-        safe_tx_gas=0,
-        base_gas=0,
-        gas_price=0,
-        gas_token=None,
-        refund_receiver=None,
-        signatures=None,
-        safe_nonce=safe_nonce,
-        safe_version=version,
-        chain_id=chain_id,
-    )
+        client = EthereumClient(URI(rpc))
+        fn_info = matches[0]
+        contract = to_checksum_address(contract_str)
+        Contract = client.w3.eth.contract(
+            address=to_checksum_address(contract), abi=abi
+        )
+        fn_obj = Contract.get_function_by_selector(matches[0].selector)
+        args = parse_args(fn_obj.abi, str_args)
+        calldata = HexBytes(Contract.encode_abi(fn_info.sig, args))
+        safetx = SafeTx(
+            ethereum_client=client,
+            safe_address=to_checksum_address(safe),
+            to=contract,
+            value=int(Decimal(value_) * 10**18),
+            data=calldata,
+            operation=SafeOperationEnum.CALL.value,
+            safe_tx_gas=0,
+            base_gas=0,
+            gas_price=0,
+            gas_token=None,
+            refund_receiver=None,
+            signatures=None,
+            safe_nonce=safe_nonce,
+            safe_version=version,
+            chain_id=chain_id,
+        )
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(
         JSON.from_data(
@@ -236,18 +239,19 @@ def build_calldata(
     ABI. The 4-byte selector and full signature string are always unique. The
     function's name may be used if it is not overloaded.
     """
-    with open(abi_file, "r") as f:
-        abi = json.load(f)
-    matches = find_function(abi, identifier)
-    if len(matches) != 1:
-        handle_function_match_failure(abi_file, identifier, matches)
+    with console.status("Building call data..."):
+        with open(abi_file, "r") as f:
+            abi = json.load(f)
+        matches = find_function(abi, identifier)
+        if len(matches) != 1:
+            handle_function_match_failure(abi_file, identifier, matches)
 
-    w3 = Web3()
-    fn_info = matches[0]
-    Contract = w3.eth.contract(abi=abi)
-    fn_obj = Contract.get_function_by_selector(fn_info.selector)
-    args = parse_args(fn_obj.abi, str_args)
-    calldata = Contract.encode_abi(fn_info.sig, args)
+        w3 = Web3()
+        fn_info = matches[0]
+        Contract = w3.eth.contract(abi=abi)
+        fn_obj = Contract.get_function_by_selector(fn_info.selector)
+        args = parse_args(fn_obj.abi, str_args)
+        calldata = Contract.encode_abi(fn_info.sig, args)
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(calldata)
 
@@ -335,71 +339,72 @@ def deploy(
     emits events. To use the gas-saving 'Safe.sol' variant instead, pass
     --without-events.
     """
-    w3 = Web3(load_provider_from_uri(URI(rpc)))
+    with console.status("Preparing Safe deployment parameters..."):
+        w3 = Web3(load_provider_from_uri(URI(rpc)))
 
-    if salt_nonce == SALT_NONCE_SENTINEL:
-        salt_nonce_int = secrets.randbits(256)  # uint256
-    else:
-        salt_nonce_int = int(salt_nonce)
-    owner_addresses = {to_checksum_address(owner) for owner in owners}
-    if threshold <= 0:
-        raise click.ClickException(f"Invalid threshold '{threshold}'.")
-    elif threshold > len(owners):
-        raise click.ClickException(
-            f"Threshold '{threshold}' exceeds number of unique owners {len(owner_addresses)}."
-        )
-    if custom_singleton:
-        if without_events:
+        if salt_nonce == SALT_NONCE_SENTINEL:
+            salt_nonce_int = secrets.randbits(256)  # uint256
+        else:
+            salt_nonce_int = int(salt_nonce)
+        owner_addresses = {to_checksum_address(owner) for owner in owners}
+        if threshold <= 0:
+            raise click.ClickException(f"Invalid threshold '{threshold}'.")
+        elif threshold > len(owners):
             raise click.ClickException(
-                "Option --without-events incompatible with --custom-singleton."
+                f"Threshold '{threshold}' exceeds number of unique owners {len(owner_addresses)}."
             )
-        singleton_address = to_checksum_address(custom_singleton)
-    elif without_events:
-        singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
-    else:
-        singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
-    fallback_address = (
-        DEFAULT_FALLBACK_ADDRESS if not fallback else to_checksum_address(fallback)
-    )
-    proxy_factory_address = (
-        DEFAULT_PROXYFACTORY_ADDRESS
-        if not custom_proxy_factory
-        else to_checksum_address(custom_proxy_factory)
-    )
-    safe_contract = get_safe_V1_4_1_contract(w3)
-    initializer = HexBytes(
-        safe_contract.encode_abi(
-            "setup",
-            [
-                list(owner_addresses),
-                threshold,
-                ADDRESS_ZERO,
-                b"",
-                fallback_address,
-                ADDRESS_ZERO,
-                0,
-                ADDRESS_ZERO,
-            ],
+        if custom_singleton:
+            if without_events:
+                raise click.ClickException(
+                    "Option --without-events incompatible with --custom-singleton."
+                )
+            singleton_address = to_checksum_address(custom_singleton)
+        elif without_events:
+            singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
+        else:
+            singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
+        fallback_address = (
+            DEFAULT_FALLBACK_ADDRESS if not fallback else to_checksum_address(fallback)
         )
-    )
-    proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
-        w3, proxy_factory_address
-    )
-    proxy_factory_method = (
-        proxy_factory_contract.functions.createProxyWithNonce
-        if not chain_specific
-        else proxy_factory_contract.functions.createChainSpecificProxyWithNonce
-    )
-    deployment_call = proxy_factory_method(
-        singleton_address, initializer, salt_nonce_int
-    )
-    predicted_address = deployment_call.call()
+        proxy_factory_address = (
+            DEFAULT_PROXYFACTORY_ADDRESS
+            if not custom_proxy_factory
+            else to_checksum_address(custom_proxy_factory)
+        )
+        safe_contract = get_safe_V1_4_1_contract(w3)
+        initializer = HexBytes(
+            safe_contract.encode_abi(
+                "setup",
+                [
+                    list(owner_addresses),
+                    threshold,
+                    ADDRESS_ZERO,
+                    b"",
+                    fallback_address,
+                    ADDRESS_ZERO,
+                    0,
+                    ADDRESS_ZERO,
+                ],
+            )
+        )
+        proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
+            w3, proxy_factory_address
+        )
+        proxy_factory_method = (
+            proxy_factory_contract.functions.createProxyWithNonce
+            if not chain_specific
+            else proxy_factory_contract.functions.createChainSpecificProxyWithNonce
+        )
+        deployment_call = proxy_factory_method(
+            singleton_address, initializer, salt_nonce_int
+        )
+        predicted_address = deployment_call.call()
 
-    existing_code = w3.eth.get_code(predicted_address)
-    if existing_code != b"":
-        raise click.ClickException(
-            f"Safe Account predicted address {predicted_address} already contains code."
-        )
+        existing_code = w3.eth.get_code(predicted_address)
+        if existing_code != b"":
+            raise click.ClickException(
+                f"Safe Account predicted address {predicted_address} already contains code."
+            )
 
     console.line()
     print_kvtable(
@@ -446,12 +451,13 @@ def exec(
     if not sigfiles:
         raise click.ClickException("Cannot execute SafeTx without signatures.")
 
-    client = EthereumClient(URI(rpc))
-    safetxdata = reconstruct_safetx(client, txfile)
-    safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
-    owners = safe.retrieve_owners()
-    threshold = safe.retrieve_threshold()
-    sigdata = parse_signatures(owners, safetxdata, sigfiles)
+    with console.status("Preparing Safe transaction..."):
+        client = EthereumClient(URI(rpc))
+        safetxdata = reconstruct_safetx(client, txfile)
+        safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
+        owners = safe.retrieve_owners()
+        threshold = safe.retrieve_threshold()
+        sigdata = parse_signatures(owners, safetxdata, sigfiles)
 
     console.line()
     print_safetx(safetxdata)
@@ -497,16 +503,17 @@ def hash(txfile: typing.TextIO) -> None:
 @option.rpc
 def inspect(rpc: str, address: str):
     """Inspect a Safe Account."""
-    checksum_addr = to_checksum_address(address)
-    client = EthereumClient(URI(rpc))
-    try:
-        safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
-        info = safeobj.retrieve_all_info()
-    except Exception as exc:
-        raise click.ClickException(str(exc)) from exc
-    # FIXME: batch the two requests so results are atomic
-    block = client.w3.eth.block_number
-    balance = client.w3.eth.get_balance(checksum_addr)
+    with console.status("Retrieving Safe Account data..."):
+        checksum_addr = to_checksum_address(address)
+        client = EthereumClient(URI(rpc))
+        try:
+            safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
+            info = safeobj.retrieve_all_info()
+        except Exception as exc:
+            raise click.ClickException(str(exc)) from exc
+        # FIXME: batch the two requests so results are atomic
+        block = client.w3.eth.block_number
+        balance = client.w3.eth.get_balance(checksum_addr)
     console.line()
     print_kvtable(
         "Safe Account",
@@ -539,8 +546,9 @@ def preview(
     txfile: typing.TextIO,
 ):
     """Preview a Safe Transaction."""
-    client = EthereumClient(URI(rpc))
-    safetxdata = reconstruct_safetx(client, txfile)
+    with console.status("Processing Safe transaction..."):
+        client = EthereumClient(URI(rpc))
+        safetxdata = reconstruct_safetx(client, txfile)
 
     console.line()
     print_safetx(safetxdata)
@@ -569,8 +577,9 @@ def sign(
     force: bool,
 ):
     """Sign a Safe Transaction."""
-    client = EthereumClient(URI(rpc))
-    safetxdata = reconstruct_safetx(client, txfile)
+    with console.status("Preparing to sign Safe transaction..."):
+        client = EthereumClient(URI(rpc))
+        safetxdata = reconstruct_safetx(client, txfile)
 
     console.line()
     print_safetx(safetxdata)
