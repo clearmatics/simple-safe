@@ -84,7 +84,7 @@ def safetx_call(f: FC) -> FC:
         "contract_str",
         metavar="ADDRESS",
         required=True,
-        help="contract address",
+        help="contract call address",
     )
     @safetx
     @functools.wraps(f)
