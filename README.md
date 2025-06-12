@@ -1,3 +1,5 @@
+# Simple Safe
+
 A simple & decentralized CLI for Safe Accounts.
 
 Benefits:
