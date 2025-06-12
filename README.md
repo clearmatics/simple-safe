@@ -1,4 +1,4 @@
-A simple & decentralized interface for Safe Accounts.
+A simple & decentralized CLI for Safe Accounts.
 
 Benefits:
 
