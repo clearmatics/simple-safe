@@ -16,12 +16,12 @@ Benefits:
 - ✅ no Terms of Use to accept
 - ✅ no Privacy Policy to accept
 - ✅ all commands can be scripted
-- ✅ no reliance on centralized services
+- ✅ not reliant on centralized services
 - ✅ no need for chain to be officially supported
 
 Limitations:
 
-- ⏳ not all Safe functionality is exposed yet
+- ⏳ still a work in progress
 - ⚠️ error handling is not user friendly
 
 ## Quick Start
