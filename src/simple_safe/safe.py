@@ -57,6 +57,7 @@ from .util import (
     reconstruct_safetx,
 )
 from .workflows import (
+    SAFE_CONTRACT_VERSIONS,
     execute_calltx,
     handle_function_match_failure,
     prepare_calltx,
@@ -712,7 +713,7 @@ def sign(
             raise click.ClickException(
                 "Cannot determine Safe version and no RPC URL provided."
             )
-        if version not in SAFE_CONTRACT_VERSIONS:
+        elif version is not None and version not in SAFE_CONTRACT_VERSIONS:
             raise click.ClickException(
                 f"Invalid or unsupported Safe version {version}."
             )
