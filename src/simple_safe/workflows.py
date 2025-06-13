@@ -48,7 +48,10 @@ def prepare_calltx(
 
     fn_info = matches[0]
     fn_obj = contract.get_function_by_selector(matches[0].selector)
-    args = parse_args(fn_obj.abi, str_args)
+    try:
+        args = parse_args(fn_obj.abi, str_args)
+    except Exception as exc:
+        raise click.ClickException(f"Error: {fn_info.sig}: {str(exc)}") from exc
     calldata = HexBytes(contract.encode_abi(fn_info.sig, args))
 
     return SafeTx(
@@ -106,7 +109,10 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
 
 def execute_calltx(w3: Web3, contractfn: ContractFunction, keyfile: str, force: bool):
     with console.status("Building Web3 transaction..."):
-        tx: TxParams = contractfn.build_transaction()
+        try:
+            tx: TxParams = contractfn.build_transaction()
+        except Exception as exc:
+            raise click.ClickException(str(exc)) from exc
     print_web3_call_data(contractfn)
     execute_tx(w3, tx, keyfile, force)
 
