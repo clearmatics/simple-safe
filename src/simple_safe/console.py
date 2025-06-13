@@ -232,20 +232,19 @@ def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
             arg_str = str(arg)
         argdata[function.argument_names[i]] = arg_str
 
-    table = get_kvtable(
+    print_kvtable(
+        "Call Data Encoder",
+        "",
         {
             "Selector": function.selector,
             "Function": function.signature,
             "ABI": get_json_data_renderable(dict(function.abi)),
         },
         argdata,
+        {
+            "ABI Encoding": calldata,
+        },
     )
-    group = Group(
-        table,
-        Rule(style="default on default"),
-        Text(calldata),
-    )
-    console.print(get_panel("Web3 Call Data", "", group))
 
 
 def print_web3_tx_params(value: TxParams) -> None:
