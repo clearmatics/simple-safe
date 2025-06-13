@@ -2,6 +2,14 @@
 
 A simple & decentralized CLI for Safe Accounts.
 
+Functionality:
+
+- 🚀 Deploy Safe Account
+- 📝 Build a SafeTx
+- 🔏 Sign a SafeTx
+- ⚙️ Execute a SafeTx
+- 🪪 Authenticate with Ethereum keyfile
+
 Benefits:
 
 - ✅ No Terms of Use to accept
@@ -10,14 +18,6 @@ Benefits:
 - ✅ No need for chain to be officially supported
 - ✅ Runs in the terminal
 - ✅ All commands can be scripted
-
-Functionality:
-
-- 🚀 Deploy Safe Account
-- 📝 Build a SafeTx
-- 🔏 Sign a SafeTx
-- ⚙️ Execute a SafeTx
-- 🪪 Authenticate with Ethereum keyfile
 
 Pre-requisites:
 
@@ -35,3 +35,40 @@ Limitations:
 - Only tested on Linux operating systems.
 - Not all Safe functionality is implemented yet.
 - Error handling is basic and not user friendly.
+
+## Quick Start
+
+Install Simple Safe using `pipx`:
+
+```sh
+pipx install git+ssh://git@github.com/clearmatics/simple-safe.git
+```
+
+For convenience, set the environment variable `SAFE_RPC` to the JSON-RPC node
+URL:
+
+```sh
+export SAFE_RPC=http://localhost:8545
+```
+
+Use the `--help` option to explore the tool's subcommands:
+
+```console
+$ safe --help
+
+Usage: safe [OPTIONS] COMMAND [ARGS]...
+
+  A simple & decentralized CLI for Safe Accounts.
+
+Options:
+  -h, --help  Show this message and exit.
+
+Commands:
+  build    Build transaction data.
+  deploy   Deploy a new Safe Account.
+  exec     Execute a signed Safe Transaction.
+  hash     Compute hash of Safe Transaction.
+  inspect  Inspect a Safe Account.
+  preview  Preview a Safe Transaction.
+  sign     Sign a Safe Transaction.
+```
