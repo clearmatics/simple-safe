@@ -708,6 +708,15 @@ def sign(
 ):
     """Sign a Safe Transaction."""
     with console.status("Loading Safe transaction..."):
+        if not rpc and not version:
+            raise click.ClickException(
+                "Cannot determine Safe version and no RPC URL provided."
+            )
+        if version not in SAFE_CONTRACT_VERSIONS:
+            raise click.ClickException(
+                f"Invalid or unsupported Safe version {version}."
+            )
+
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version)
 
