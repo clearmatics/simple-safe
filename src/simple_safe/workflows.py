@@ -116,7 +116,12 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
     console.line()
 
 
-def execute_calltx(w3: Web3, contractfn: ContractFunction, keyfile: str, force: bool):
+def execute_calltx(
+    w3: Web3,
+    contractfn: ContractFunction,
+    keyfile: str,
+    force: bool,
+):
     with console.status("Building Web3 transaction..."):
         try:
             tx: TxParams = contractfn.build_transaction()
