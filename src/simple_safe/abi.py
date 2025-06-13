@@ -1,6 +1,6 @@
 import json
 from itertools import chain
-from typing import Any, NamedTuple, Sequence
+from typing import Any, NamedTuple, Optional, Sequence
 
 from eth_typing import ABI
 from eth_typing.abi import ABIConstructor, ABIFunction, ABIFunctionType
@@ -24,10 +24,12 @@ class Function(NamedTuple):
     selector: HexBytes
 
 
-def find_function(abi: ABI, fn_identifier: str) -> Sequence[Function]:
+def find_function(
+    abi: ABI, fn_identifier: str
+) -> tuple[Optional[Function], Sequence[Function]]:
     """Find a function by an identifier in the Contract ABI."""
-    exact_matches: list[Function] = []
-    partial_matches: list[Function] = []
+    exact_name_matches: list[Function] = []
+    partial_name_matches: list[Function] = []
     for fn_abi in chain(
         filter_abi_by_type("fallback", abi), get_all_function_abis(abi)
     ):
@@ -41,16 +43,19 @@ def find_function(abi: ABI, fn_identifier: str) -> Sequence[Function]:
             selector=selector,
         )
         if fn_identifier == selector.to_0x_hex() or fn_identifier == signature:
-            return [match]
-        elif fn_identifier.split("(")[0] == name:
-            exact_matches.append(match)
+            return (match, [])
+        elif fn_identifier.split("(")[0] == name and signature.startswith(
+            fn_identifier
+        ):
+            exact_name_matches.append(match)
         elif signature.startswith(fn_identifier):
-            partial_matches.append(match)
-    if len(exact_matches) > 0:
-        matches = exact_matches
-    else:
-        matches = partial_matches
-    return sorted(matches, key=lambda fn: fn.sig)
+            partial_name_matches.append(match)
+    if len(exact_name_matches) == 1:
+        return (exact_name_matches[0], [])
+    return (
+        None,
+        sorted(chain(exact_name_matches, partial_name_matches), key=lambda fn: fn.sig),
+    )
 
 
 def parse_args(

@@ -537,16 +537,16 @@ def encode(
     with console.status("Building call data..."):
         with open(abi_file, "r") as f:
             abi = json.load(f)
-        matches = find_function(abi, identifier)
-        if len(matches) != 1:
-            handle_function_match_failure(identifier, matches)
+        match, partials = find_function(abi, identifier)
+        if match is None:
+            handle_function_match_failure(identifier, partials)
+        assert match is not None
 
         w3 = Web3()
-        fn_info = matches[0]
         contract = w3.eth.contract(abi=abi)
-        fn_obj = contract.get_function_by_selector(fn_info.selector)
+        fn_obj = contract.get_function_by_selector(match.selector)
         args = parse_args(fn_obj.abi, str_args)
-        calldata = contract.encode_abi(fn_info.sig, args)
+        calldata = contract.encode_abi(match.sig, args)
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(calldata)
 

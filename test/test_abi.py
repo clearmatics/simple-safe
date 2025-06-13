@@ -2,6 +2,8 @@ import json
 from itertools import product
 from typing import Any
 
+from eth_utils.abi import abi_to_signature, function_signature_to_4byte_selector
+from hexbytes import HexBytes
 import pytest
 from eth_account.account import Account
 from safe_eth.eth.constants import NULL_ADDRESS
@@ -19,25 +21,11 @@ def test_find_function():
       "stateMutability": "nonpayable"
     }
     """
-    fox = """
-    {
-      "type": "function",
-      "name": "fox",
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    }
-    """
     foobar1 = """
     {
       "type": "function",
       "name": "foobar",
-      "inputs": [
-        {
-          "name": "a",
-          "type": "uint256",
-          "internalType": "uint256"
-        }
-      ],
+      "inputs": [],
       "outputs": [],
       "stateMutability": "nonpayable"
     }
@@ -51,11 +39,6 @@ def test_find_function():
           "name": "a",
           "type": "uint256",
           "internalType": "uint256"
-        },
-        {
-          "name": "b",
-          "type": "uint256",
-          "internalType": "uint256"
         }
       ],
       "outputs": [],
@@ -63,26 +46,42 @@ def test_find_function():
     }
     """
 
-    abi = [json.loads(f) for f in (foo, fox, foobar1, foobar2)]
+    contract_abi = [json.loads(fn) for fn in (foo, foobar1, foobar2)]
+    signatures = [abi_to_signature(fn_abi) for fn_abi in contract_abi]
+    selectors = [
+        HexBytes(function_signature_to_4byte_selector(signature))
+        for signature in signatures
+    ]
 
-    allfuncs = find_function(abi, "")
-    assert len(allfuncs) == 4
+    for selector in selectors:
+        exact, partial = find_function(contract_abi, selector.to_0x_hex())
+        assert exact is not None
+        assert exact.selector == selector
+        assert len(partial) == 0
 
-    for func in allfuncs:
-        res = find_function(abi, func.selector.to_0x_hex())
-        assert len(res) == 1
-        assert res[0].selector == func.selector
+    exact, partial = find_function(contract_abi, "x")
+    assert exact is None
+    assert len(partial) == 0
 
-    assert len(find_function(abi, "x")) == 0
-    assert len(find_function(abi, "fo")) == 4
-    assert len(find_function(abi, "foo")) == 1
-    assert len(find_function(abi, "fox")) == 1
-    assert len(find_function(abi, "foobar")) == 2
+    for identifier in ("", "f", "fo"):
+        exact, partial = find_function(contract_abi, identifier)
+        assert exact is None
+        assert len(partial) == 3
 
-    abi: list[Any] = []
-    for i, f in enumerate((foo, fox, foobar1, foobar2)):
-        abi.append(json.loads(f))
-        assert len(find_function(abi, "f")) == i + 1
+    exact, partial = find_function(contract_abi, "foo")
+    assert exact is not None
+    assert exact.name == "foo"
+    assert len(partial) == 0
+
+    for identifier in ("foob", "foobar", "foobar("):
+        exact, partial = find_function(contract_abi, identifier)
+        assert exact is None
+        assert len(partial) == 2
+
+    exact, partial = find_function(contract_abi, "foobar(u")
+    assert exact is not None
+    assert exact.sig == "foobar(uint256)"
+    assert len(partial) == 0
 
 
 def test_parse_args_struct_values():

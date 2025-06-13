@@ -51,17 +51,17 @@ def prepare_calltx(
     chain_id: Optional[int],
     safe_nonce: Optional[int],
 ) -> SafeTx:
-    matches = find_function(contract.abi, fn_identifier)
-    if len(matches) != 1:
-        handle_function_match_failure(fn_identifier, matches)
+    match, partials = find_function(contract.abi, fn_identifier)
+    if match is None:
+        handle_function_match_failure(fn_identifier, partials)
+    assert match is not None
 
-    fn_info = matches[0]
-    fn_obj = contract.get_function_by_selector(matches[0].selector)
+    fn_obj = contract.get_function_by_selector(match.selector)
     try:
         args = parse_args(fn_obj.abi, str_args)
     except Exception as exc:
-        raise click.ClickException(f"Error: {fn_info.sig}: {str(exc)}") from exc
-    calldata = HexBytes(contract.encode_abi(fn_info.sig, args))
+        raise click.ClickException(f"Error: {match.sig}: {str(exc)}") from exc
+    calldata = HexBytes(contract.encode_abi(match.sig, args))
 
     return SafeTx(
         ethereum_client=client,
