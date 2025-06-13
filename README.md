@@ -21,11 +21,8 @@ Benefits:
 
 Limitations:
 
-- only tested with Safe Accounts v1.4.1
-- only deploys Safe Accounts v1.4.1 (latest)
-- only tested on Linux operating systems
-- not all Safe functionality is implemented yet
-- error handling is basic and not user friendly
+- ⏳ not all Safe functionality is exposed yet
+- ⚠️ error handling is basic and not user friendly
 
 ## Quick Start
 
