@@ -34,13 +34,14 @@ def find_function(abi: ABI, fn_identifier: str) -> Sequence[Function]:
         signature = abi_to_signature(fn_abi)
         selector = HexBytes(function_signature_to_4byte_selector(signature))
         name = fn_abi["name"] if fn_abi["type"] != "fallback" else "fallback"
-        match =  Function(
-                    name=name,
-                    abi=fn_abi,
-                    sig=signature,
-                    selector=selector,
-                )
-        if fn_identifier == selector.to_0x_hex() or fn_identifier == signature:   return [match]
+        match = Function(
+            name=name,
+            abi=fn_abi,
+            sig=signature,
+            selector=selector,
+        )
+        if fn_identifier == selector.to_0x_hex() or fn_identifier == signature:
+            return [match]
         elif fn_identifier.split("(")[0] == name:
             exact_matches.append(match)
         elif signature.startswith(fn_identifier):
