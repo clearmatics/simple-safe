@@ -119,15 +119,15 @@ def build():
 @option.output_file
 @option.help
 def build_tx(
-    safe: str,
-    version: Optional[str],
     chain_id: Optional[int],
-    safe_nonce: Optional[int],
-    to_str: str,
-    value_: str,
     data: str,
     output: typing.TextIO | None,
     rpc: str,
+    safe: str,
+    safe_nonce: Optional[int],
+    to_str: str,
+    value_: str,
+    version: Optional[str],
 ) -> None:
     """Build a custom Safe Transaction."""
     with console.status("Building Safe transaction..."):
@@ -183,16 +183,16 @@ def build_tx(
 @option.help
 def build_call(
     abi_file: str,
-    contract_str: str,
-    safe: str,
-    version: Optional[str],
     chain_id: Optional[int],
-    safe_nonce: Optional[int],
-    value_: str,
+    contract_str: str,
+    identifier: str,
     output: typing.TextIO | None,
     rpc: str,
-    identifier: str,
+    safe: str,
+    safe_nonce: Optional[int],
     str_args: list[str],
+    value_: str,
+    version: Optional[str],
 ) -> None:
     """Build a smart contract call Safe Transaction.
 
@@ -242,16 +242,16 @@ def build_call(
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @option.help
 def build_erc20(
-    token_str: str,
-    safe: str,
-    version: Optional[str],
     chain_id: Optional[int],
-    safe_nonce: Optional[int],
-    value_: str,
+    identifier: str,
     output: typing.TextIO | None,
     rpc: str,
-    identifier: str,
+    safe: str,
+    safe_nonce: Optional[int],
     str_args: list[str],
+    token_str: str,
+    value_: str,
+    version: Optional[str],
 ) -> None:
     """Build an ERC-20 contract call Safe Transaction.
 
@@ -291,15 +291,15 @@ def build_erc20(
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @option.help
 def build_safe(
-    safe: str,
-    version: Optional[str],
     chain_id: Optional[int],
-    safe_nonce: Optional[int],
-    value_: str,
+    identifier: str,
     output: typing.TextIO | None,
     rpc: str,
-    identifier: str,
+    safe: str,
+    safe_nonce: Optional[int],
     str_args: list[str],
+    value_: str,
+    version: Optional[str],
 ) -> None:
     """Build a Safe Transaction to call the Safe itself.
 
@@ -398,17 +398,17 @@ def build_safe(
 @option.force
 @option.help
 def deploy(
-    keyfile: str,
-    rpc: str,
-    owners: tuple[str],
-    threshold: int,
-    fallback: str,
     chain_specific: bool,
-    salt_nonce: str,
-    without_events: bool,
-    custom_singleton: str,
     custom_proxy_factory: str,
+    custom_singleton: str,
+    fallback: str,
     force: bool,
+    keyfile: str,
+    owners: tuple[str],
+    rpc: str,
+    salt_nonce: str,
+    threshold: int,
+    without_events: bool,
 ):
     """Deploy a new Safe Account.
 
@@ -526,8 +526,8 @@ def deploy(
 @option.help
 def encode(
     abi_file: str,
-    output: typing.TextIO | None,
     identifier: str,
+    output: typing.TextIO | None,
     str_args: list[str],
 ) -> None:
     """Encode smart contract call data.
@@ -560,10 +560,10 @@ def encode(
 @click.argument("txfile", type=click.File("r"), required=True)
 @option.help
 def exec(
-    keyfile: str,
-    sigfiles: list[str],
-    rpc: str,
     force: bool,
+    keyfile: str,
+    rpc: str,
+    sigfiles: list[str],
     txfile: typing.TextIO,
 ):
     """Execute a signed Safe Transaction.
@@ -626,7 +626,7 @@ def hash(txfile: typing.TextIO) -> None:
 @option.rpc(click.option)
 @click.argument("address")
 @option.help
-def inspect(rpc: str, address: str):
+def inspect(address: str, rpc: str):
     """Inspect a Safe Account."""
     with console.status("Retrieving Safe Account data..."):
         checksum_addr = to_checksum_address(address)
@@ -666,8 +666,8 @@ def inspect(rpc: str, address: str):
 @click.argument("txfile", type=click.File("r"), required=True)
 @option.help
 def preview(
-    sigfiles: list[str],
     rpc: str,
+    sigfiles: list[str],
     txfile: typing.TextIO,
 ):
     """Preview a Safe Transaction."""
@@ -699,12 +699,12 @@ def preview(
 @click.argument("txfile", type=click.File("r"), required=True)
 @option.help
 def sign(
-    version: Optional[str],
+    force: bool,
     keyfile: str,
     output: typing.TextIO | None,
-    txfile: typing.TextIO,
-    force: bool,
     rpc: str,
+    txfile: typing.TextIO,
+    version: Optional[str],
 ):
     """Sign a Safe Transaction."""
     with console.status("Preparing to sign Safe transaction..."):
