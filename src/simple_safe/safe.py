@@ -10,6 +10,7 @@ from decimal import Decimal
 from getpass import getpass
 from typing import (
     Optional,
+    cast,
 )
 
 import click
@@ -37,6 +38,7 @@ from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
+from web3.contract.contract import Contract
 from web3.providers.auto import load_provider_from_uri
 
 from . import option
@@ -251,6 +253,55 @@ def build_erc20(
             version,
             chain_id,
             safe_nonce,
+        )
+    output_console = Console(file=output if output else sys.stdout)
+    output_console.print(
+        JSON.from_data(
+            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
+        )
+    )
+
+
+@build.command(name="safe")
+@option.safetx
+@option.safe
+@option.rpc
+@option.output_file
+@click.argument("identifier", metavar="FUNCTION")
+@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+def build_safe(
+    safe: str,
+    version: Optional[str],
+    chain_id: Optional[int],
+    safe_nonce: Optional[int],
+    value_: str,
+    output: typing.TextIO | None,
+    rpc: str,
+    identifier: str,
+    str_args: list[str],
+) -> None:
+    """Build a Safe Transaction to call the Safe itself.
+
+    FUNCTION is the function's name, 4-byte selector, or full signature.
+    """
+    with console.status("Building Safe transaction..."):
+        client = EthereumClient(URI(rpc))
+        safe_address = to_checksum_address(safe)
+        safe = Safe(safe_address, client)  # type: ignore[abstract]
+        safe_contract = cast(
+            Contract,
+            safe.get_contract_fn()(client.w3, address=safe_address),  # pyright: ignore[reportAttributeAccessIssue]
+        )
+        safetx = prepare_calltx(
+            client=client,
+            contract=safe_contract,
+            fn_identifier=identifier,
+            str_args=str_args,
+            safe=safe_address,
+            value_=value_,
+            version=version,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
         )
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(
