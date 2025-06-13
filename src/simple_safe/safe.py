@@ -171,9 +171,7 @@ def build_call(
 ) -> None:
     """Build a smart contract call Safe Transaction.
 
-    FUNCTION should be the unambiguous function identifier in the context of the
-    ABI. The 4-byte selector and full signature string are always unique. The
-    function's name may be used if it is not overloaded.
+    FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with console.status("Building Safe transaction..."):
         with open(abi_file, "r") as f:
@@ -235,9 +233,7 @@ def build_calldata(
 ) -> None:
     """Encode smart contract call data.
 
-    FUNCTION should be the unambiguous function identifier in the context of the
-    ABI. The 4-byte selector and full signature string are always unique. The
-    function's name may be used if it is not overloaded.
+    FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with console.status("Building call data..."):
         with open(abi_file, "r") as f:
