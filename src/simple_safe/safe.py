@@ -485,7 +485,7 @@ def deploy(
         "",
         {
             "Safe Address": f"{predicted_address} (predicted)",
-            "Version": DEPLOY_SAFE_VERSION,
+            "Safe Version": DEPLOY_SAFE_VERSION,
             f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
             "Threshold": str(threshold),
             "Fallback Handler": fallback_address,
@@ -632,7 +632,7 @@ def inspect(rpc: str, address: str):
         f"[Block {str(block)}]",
         {
             "Safe Address": info.address,
-            "Version": info.version,
+            "Safe Version": info.version,
             f"Owners({len(info.owners)})": ", ".join(info.owners),
             "Threshold": str(info.threshold),
             "Safe Nonce": str(info.nonce),
