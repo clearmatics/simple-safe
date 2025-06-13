@@ -423,6 +423,7 @@ def deploy(
     if not force and not Confirm.ask("Prepare Web3 Transaction?", default=False):
         raise click.Abort()
 
+    console.line()
     execute_calltx(w3, deployment_call, keyfile, force)
 
 
@@ -460,6 +461,7 @@ def exec(
     console.line()
     print_signatures(safetxdata.safetx, sigdata, threshold)
 
+    console.line()
     good: list[SafeSignature] = []
     for sd in sigdata:
         if not isinstance(sd.sig, SafeSignature):
@@ -468,7 +470,7 @@ def exec(
             good.append(sd.sig)
     if len(good) < len(sigdata):
         raise click.ClickException(
-            "Cannot execute SafeTx with invalid or non-owner signatures."
+            "Cannot execute SafeTx with invalid or unknown signatures."
         )
     elif len(good) < threshold:
         raise click.ClickException("Insufficient valid owner signatures to execute.")
@@ -480,6 +482,7 @@ def exec(
         if not Confirm.ask("Prepare Web3 Transaction?", default=False):
             raise click.Abort()
 
+    console.line()
     execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
 
 

@@ -57,7 +57,6 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
 def execute_calltx(w3: Web3, contractfn: ContractFunction, keyfile: str, force: bool):
     with console.status("Building Web3 transaction..."):
         tx: TxParams = contractfn.build_transaction()
-    console.line()
     print_web3_call_data(contractfn)
     execute_tx(w3, tx, keyfile, force)
 
