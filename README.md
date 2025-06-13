@@ -57,7 +57,7 @@ Usage: safe [OPTIONS] COMMAND [ARGS]...
   A simple & decentralized CLI for Safe Accounts.
 
 Options:
-  -h, --help  Show this message and exit.
+  -h, --help  show this message and exit
 
 Commands:
   build    Build a Safe Transaction.
