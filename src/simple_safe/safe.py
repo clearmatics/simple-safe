@@ -143,7 +143,7 @@ def build_abi_call(
     value_: str,
     version: Optional[str],
 ) -> None:
-    """Build a contract call Safe Transaction from an ABI.
+    """Build a contract call Safe Transaction from an ABI file.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
@@ -505,7 +505,7 @@ def deploy(
         },
     )
     console.line()
-    if not force and not Confirm.ask("Prepare Web3 Transaction?", default=False):
+    if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
     console.line()
@@ -573,7 +573,7 @@ def exec(
     if not sigfiles:
         raise click.ClickException("Cannot execute SafeTx without signatures.")
 
-    with console.status("Preparing Safe transaction..."):
+    with console.status("Loading Safe transaction..."):
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
         safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
@@ -603,7 +603,7 @@ def exec(
     safetxdata.safetx.signatures = SafeSignature.export_signatures(good)
 
     if not force:
-        if not Confirm.ask("Prepare Web3 Transaction?", default=False):
+        if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
     console.line()
@@ -671,7 +671,7 @@ def preview(
     txfile: typing.TextIO,
 ):
     """Preview a Safe Transaction."""
-    with console.status("Processing Safe transaction..."):
+    with console.status("Loading Safe transaction..."):
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
 
@@ -707,7 +707,7 @@ def sign(
     version: Optional[str],
 ):
     """Sign a Safe Transaction."""
-    with console.status("Preparing to sign Safe transaction..."):
+    with console.status("Loading Safe transaction..."):
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version)
 
