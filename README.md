@@ -22,7 +22,7 @@ Benefits:
 Limitations:
 
 - ⏳ not all Safe functionality is exposed yet
-- ⚠️ error handling is basic and not user friendly
+- ⚠️ error handling is not user friendly
 
 ## Quick Start
 
