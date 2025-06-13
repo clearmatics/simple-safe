@@ -56,7 +56,12 @@ from .util import (
     parse_signatures,
     reconstruct_safetx,
 )
-from .workflows import execute_calltx, handle_function_match_failure, prepare_calltx
+from .workflows import (
+    execute_calltx,
+    handle_function_match_failure,
+    prepare_calltx,
+    validate_safetx_options,
+)
 
 DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
@@ -102,9 +107,12 @@ def build():
 
 
 @build.command(name="tx")
-@option.safetx_custom
+@click.option(
+    "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
+)
+@click.option("--data", default="0x", help="call data payload")
+@option.build_safetx
 @option.safe
-@option.rpc
 @option.output_file
 def build_tx(
     safe: str,
@@ -119,6 +127,9 @@ def build_tx(
 ) -> None:
     """Build a custom Safe Transaction."""
     with console.status("Building Safe transaction..."):
+        validate_safetx_options(
+            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+        )
         client = EthereumClient(URI(rpc))
         safetx = SafeTx(
             ethereum_client=client,
@@ -160,9 +171,8 @@ def build_tx(
     required=True,
     help="contract call address",
 )
-@option.safetx
+@option.build_safetx
 @option.safe
-@option.rpc
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
@@ -184,6 +194,9 @@ def build_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with console.status("Building Safe transaction..."):
+        validate_safetx_options(
+            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+        )
         with open(abi_file, "r") as f:
             abi = json.load(f)
         client = EthereumClient(URI(rpc))
@@ -217,9 +230,8 @@ def build_call(
     required=True,
     help="ERC-20 token address",
 )
-@option.safetx
+@option.build_safetx
 @option.safe
-@option.rpc
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
@@ -240,6 +252,9 @@ def build_erc20(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with console.status("Building Safe transaction..."):
+        validate_safetx_options(
+            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+        )
         client = EthereumClient(URI(rpc))
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(client.w3, address=token_address)
@@ -263,9 +278,8 @@ def build_erc20(
 
 
 @build.command(name="safe")
-@option.safetx
+@option.build_safetx
 @option.safe
-@option.rpc
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
@@ -285,6 +299,9 @@ def build_safe(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with console.status("Building Safe transaction..."):
+        validate_safetx_options(
+            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+        )
         client = EthereumClient(URI(rpc))
         safe_address = to_checksum_address(safe)
         safe = Safe(safe_address, client)  # type: ignore[abstract]
@@ -368,8 +385,9 @@ def build_safe(
     metavar="ADDRESS",
     help="use non-canonical ProxyFactory address",
 )
+@option.web3tx
 @option.authentication
-@option.rpc
+@option.rpc(click.option, required=True)
 @option.force
 def deploy(
     keyfile: str,
@@ -528,7 +546,7 @@ def encode(
 @option.signature
 @option.web3tx
 @option.authentication
-@option.rpc
+@option.rpc(click.option, required=True)
 @option.force
 @click.argument("txfile", type=click.File("r"), required=True)
 def exec(
@@ -547,7 +565,7 @@ def exec(
 
     with console.status("Preparing Safe transaction..."):
         client = EthereumClient(URI(rpc))
-        safetxdata = reconstruct_safetx(client, txfile)
+        safetxdata = reconstruct_safetx(client, txfile, version=None)
         safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
         owners = safe.retrieve_owners()
         threshold = safe.retrieve_threshold()
@@ -594,8 +612,8 @@ def hash(txfile: typing.TextIO) -> None:
 
 
 @main.command()
+@option.rpc(click.option)
 @click.argument("address")
-@option.rpc
 def inspect(rpc: str, address: str):
     """Inspect a Safe Account."""
     with console.status("Retrieving Safe Account data..."):
@@ -632,7 +650,7 @@ def inspect(rpc: str, address: str):
 
 @main.command()
 @option.signature
-@option.rpc
+@option.rpc(click.option, required=True)
 @click.argument("txfile", type=click.File("r"), required=True)
 def preview(
     sigfiles: list[str],
@@ -642,7 +660,7 @@ def preview(
     """Preview a Safe Transaction."""
     with console.status("Processing Safe transaction..."):
         client = EthereumClient(URI(rpc))
-        safetxdata = reconstruct_safetx(client, txfile)
+        safetxdata = reconstruct_safetx(client, txfile, version=None)
 
     console.line()
     print_safetx(safetxdata)
@@ -658,22 +676,26 @@ def preview(
 
 
 @main.command()
+@optgroup.group("Sign offline")
+@optgroup.option("--version", help="Safe version")
+@optgroup.group("Sign online")
+@option.rpc(optgroup.option)
 @option.authentication
-@option.rpc
 @option.output_file
 @option.force
 @click.argument("txfile", type=click.File("r"), required=True)
 def sign(
+    version: Optional[str],
     keyfile: str,
     output: typing.TextIO | None,
-    rpc: str,
     txfile: typing.TextIO,
     force: bool,
+    rpc: str,
 ):
     """Sign a Safe Transaction."""
     with console.status("Preparing to sign Safe transaction..."):
         client = EthereumClient(URI(rpc))
-        safetxdata = reconstruct_safetx(client, txfile)
+        safetxdata = reconstruct_safetx(client, txfile, version)
 
     console.line()
     print_safetx(safetxdata)

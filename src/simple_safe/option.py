@@ -53,37 +53,26 @@ safe = click.option(
 )
 
 
-rpc = click.option(
-    "--rpc",
-    "-r",
-    envvar="SAFE_RPC",
-    metavar="URI",
-    show_envvar=True,
-    required=True,
-    prompt="RPC URI",
-    prompt_required=False,
-    help="HTTP JSON-RPC endpoint",
-)
-
-
-def safetx(f: FC) -> FC:
-    @click.option("--value", "value_", default="0.0", help="tx value in decimals")
-    @click.option("--version", help="Safe Account version")
-    @click.option("--chain", "chain_id", type=int, metavar="ID", help="Chain ID")
-    @click.option("--safe-nonce", type=int, help="Safe Nonce")
-    @functools.wraps(f)
-    def wrapper(*args: object, **kwargs: object) -> object:
-        f(*args, **kwargs)
-
-    return cast(FC, wrapper)
-
-
-def safetx_custom(f: FC) -> FC:
-    @click.option(
-        "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
+def rpc(decorator: Any, required: bool = False) -> Callable[[FC], FC]:
+    return decorator(
+        "--rpc",
+        "-r",
+        required=required,
+        envvar="SAFE_RPC",
+        metavar="URI",
+        show_envvar=True,
+        help="HTTP JSON-RPC endpoint",
     )
-    @click.option("--data", default="0x", help="call data payload")
-    @safetx
+
+
+def build_safetx(f: FC) -> FC:
+    @click.option("--value", "value_", default="0.0", help="tx value in decimals")
+    @optgroup.group("Build offline")
+    @optgroup.option("--chain", "chain_id", type=int, metavar="ID", help="chain ID")
+    @optgroup.option("--version", help="Safe version")
+    @optgroup.option("--safe-nonce", type=int, help="Safe nonce")
+    @optgroup.group("Build online")
+    @rpc(optgroup.option)
     @functools.wraps(f)
     def wrapper(*args: object, **kwargs: object) -> object:
         f(*args, **kwargs)

@@ -30,6 +30,15 @@ from .console import (
     print_web3_tx_receipt,
 )
 
+SAFE_CONTRACT_VERSIONS = (
+    "0.0.1",
+    "1.0.0",
+    "1.1.1",
+    "1.2.0",
+    "1.3.0",
+    "1.4.1",
+)
+
 
 def prepare_calltx(
     client: EthereumClient,
@@ -126,4 +135,25 @@ def handle_function_match_failure(identifier: str, matches: Sequence[Function]) 
         console.line()
         raise click.ClickException(
             "Matched multiple function identifiers. Please use unique identifier."
+        )
+
+
+def validate_safetx_options(
+    version: Optional[str],
+    chain_id: Optional[int],
+    safe_nonce: Optional[int],
+    rpc: str,
+):
+    missing: list[str] = []
+    if chain_id is None:
+        missing.append("chain ID")
+    if safe_nonce is None:
+        missing.append("Safe nonce")
+    if version is None:
+        missing.append("Safe version")
+    elif version not in SAFE_CONTRACT_VERSIONS:
+        raise click.ClickException(f"Invalid or unsupported Safe version {version}.")
+    if len(missing) > 0 and not rpc:
+        raise click.ClickException(
+            f"Missing info for offline SafeTx: {', '.join(missing)}. "
         )

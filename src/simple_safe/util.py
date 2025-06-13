@@ -78,9 +78,11 @@ def eip712_data_to_safetx(
     )
 
 
-def reconstruct_safetx(client: EthereumClient, txfile: TextIO) -> SafeTxData:
+def reconstruct_safetx(
+    client: EthereumClient, txfile: TextIO, version: Optional[str]
+) -> SafeTxData:
     safetx_json = json.loads(txfile.read())
-    safetx = eip712_data_to_safetx(client, safetx_json)
+    safetx = eip712_data_to_safetx(client, safetx_json, version)
     return SafeTxData(
         safetx=safetx,
         payload=safetx.eip712_structured_data,
