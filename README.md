@@ -4,20 +4,20 @@ A simple & decentralized CLI for Safe Accounts.
 
 Functionality:
 
-- 🚀 Deploy Safe Account
-- 📝 Build a SafeTx
-- 🔏 Sign a SafeTx
-- ⚙️ Execute a SafeTx
+- 🚀 Deploy a Safe Account
+- 📝 Build a Safe Transaction
+- 🔏 Sign a Safe Transaction
+- ⚙️ Execute a Safe Transaction
 - 🪪 Authenticate with Ethereum keyfile
 
 Benefits:
 
+- ✅ Runs in the terminal
 - ✅ No Terms of Use to accept
 - ✅ No Privacy Policy to accept
+- ✅ All commands can be scripted
 - ✅ No reliance on centralized services
 - ✅ No need for chain to be officially supported
-- ✅ Runs in the terminal
-- ✅ All commands can be scripted
 
 Pre-requisites:
 
