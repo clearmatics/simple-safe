@@ -1,11 +1,10 @@
 import json
 from itertools import product
-from typing import Any
 
-from eth_utils.abi import abi_to_signature, function_signature_to_4byte_selector
-from hexbytes import HexBytes
 import pytest
 from eth_account.account import Account
+from eth_utils.abi import abi_to_signature, function_signature_to_4byte_selector
+from hexbytes import HexBytes
 from safe_eth.eth.constants import NULL_ADDRESS
 
 from simple_safe.abi import find_function, parse_abi_type, parse_args
