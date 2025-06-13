@@ -1,16 +1,27 @@
 import json
+from decimal import Decimal
 from getpass import getpass
-from typing import Sequence
+from typing import (
+    Optional,
+    Sequence,
+)
 
 import click
 from eth_account import Account
+from eth_typing import ChecksumAddress
 from eth_utils.address import to_checksum_address
+from hexbytes import (
+    HexBytes,
+)
 from rich.prompt import Confirm
+from safe_eth.eth import EthereumClient
+from safe_eth.safe import SafeOperationEnum, SafeTx
 from web3 import Web3
+from web3.contract import Contract
 from web3.contract.contract import ContractFunction
 from web3.types import TxParams
 
-from .abi import Function
+from .abi import Function, find_function, parse_args
 from .console import (
     console,
     print_function_matches,
@@ -18,6 +29,45 @@ from .console import (
     print_web3_tx_params,
     print_web3_tx_receipt,
 )
+
+
+def prepare_calltx(
+    client: EthereumClient,
+    contract: Contract,
+    fn_identifier: str,
+    str_args: list[str],
+    safe: ChecksumAddress,
+    value_: str,
+    version: Optional[str],
+    chain_id: Optional[int],
+    safe_nonce: Optional[int],
+) -> SafeTx:
+    matches = find_function(contract.abi, fn_identifier)
+    if len(matches) != 1:
+        handle_function_match_failure(fn_identifier, matches)
+
+    fn_info = matches[0]
+    fn_obj = contract.get_function_by_selector(matches[0].selector)
+    args = parse_args(fn_obj.abi, str_args)
+    calldata = HexBytes(contract.encode_abi(fn_info.sig, args))
+
+    return SafeTx(
+        ethereum_client=client,
+        safe_address=safe,
+        to=contract.address,
+        value=int(Decimal(value_) * 10**18),
+        data=calldata,
+        operation=SafeOperationEnum.CALL.value,
+        safe_tx_gas=0,
+        base_gas=0,
+        gas_price=0,
+        gas_token=None,
+        refund_receiver=None,
+        signatures=None,
+        safe_nonce=safe_nonce,
+        safe_version=version,
+        chain_id=chain_id,
+    )
 
 
 def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):

@@ -54,7 +54,7 @@ from .util import (
     parse_signatures,
     reconstruct_safetx,
 )
-from .workflows import execute_calltx, handle_function_match_failure
+from .workflows import execute_calltx, handle_function_match_failure, prepare_calltx
 
 DEPLOY_SAFE_VERSION = "1.4.1"
 SALT_NONCE_SENTINEL = "random"
@@ -184,35 +184,20 @@ def build_call(
     with console.status("Building Safe transaction..."):
         with open(abi_file, "r") as f:
             abi = json.load(f)
-        matches = find_function(abi, identifier)
-        if len(matches) != 1:
-            handle_function_match_failure(identifier, matches)
-
         client = EthereumClient(URI(rpc))
-        fn_info = matches[0]
-        contract = to_checksum_address(contract_str)
         Contract = client.w3.eth.contract(
-            address=to_checksum_address(contract), abi=abi
+            address=to_checksum_address(to_checksum_address(contract_str)), abi=abi
         )
-        fn_obj = Contract.get_function_by_selector(matches[0].selector)
-        args = parse_args(fn_obj.abi, str_args)
-        calldata = HexBytes(Contract.encode_abi(fn_info.sig, args))
-        safetx = SafeTx(
-            ethereum_client=client,
-            safe_address=to_checksum_address(safe),
-            to=contract,
-            value=int(Decimal(value_) * 10**18),
-            data=calldata,
-            operation=SafeOperationEnum.CALL.value,
-            safe_tx_gas=0,
-            base_gas=0,
-            gas_price=0,
-            gas_token=None,
-            refund_receiver=None,
-            signatures=None,
-            safe_nonce=safe_nonce,
-            safe_version=version,
-            chain_id=chain_id,
+        safetx = prepare_calltx(
+            client,
+            Contract,
+            identifier,
+            str_args,
+            to_checksum_address(safe),
+            value_,
+            version,
+            chain_id,
+            safe_nonce,
         )
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(
@@ -256,31 +241,16 @@ def build_erc20(
         client = EthereumClient(URI(rpc))
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(client.w3, address=token_address)
-
-        matches = find_function(ERC20.abi, identifier)
-        if len(matches) != 1:
-            handle_function_match_failure(identifier, matches)
-
-        fn_info = matches[0]
-        fn_obj = ERC20.get_function_by_selector(matches[0].selector)
-        args = parse_args(fn_obj.abi, str_args)
-        calldata = HexBytes(ERC20.encode_abi(fn_info.sig, args))
-        safetx = SafeTx(
-            ethereum_client=client,
-            safe_address=to_checksum_address(safe),
-            to=token_address,
-            value=int(Decimal(value_) * 10**18),
-            data=calldata,
-            operation=SafeOperationEnum.CALL.value,
-            safe_tx_gas=0,
-            base_gas=0,
-            gas_price=0,
-            gas_token=None,
-            refund_receiver=None,
-            signatures=None,
-            safe_nonce=safe_nonce,
-            safe_version=version,
-            chain_id=chain_id,
+        safetx = prepare_calltx(
+            client,
+            ERC20,
+            identifier,
+            str_args,
+            to_checksum_address(safe),
+            value_,
+            version,
+            chain_id,
+            safe_nonce,
         )
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(
