@@ -95,7 +95,7 @@ def main():
 
 @main.group()
 def build():
-    """Build transaction data."""
+    """Build a Safe Transaction."""
     pass
 
 
@@ -205,44 +205,6 @@ def build_call(
             safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
         )
     )
-
-
-@build.command(name="calldata")
-@click.option(
-    "--abi",
-    "abi_file",
-    type=click.Path(exists=True),
-    required=True,
-    help="contract ABI in JSON format",
-)
-@option.output_file
-@click.argument("identifier", metavar="FUNCTION")
-@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-def build_calldata(
-    abi_file: str,
-    output: typing.TextIO | None,
-    identifier: str,
-    str_args: list[str],
-) -> None:
-    """Encode smart contract call data.
-
-    FUNCTION is the function's name, 4-byte selector, or full signature.
-    """
-    with console.status("Building call data..."):
-        with open(abi_file, "r") as f:
-            abi = json.load(f)
-        matches = find_function(abi, identifier)
-        if len(matches) != 1:
-            handle_function_match_failure(identifier, matches)
-
-        w3 = Web3()
-        fn_info = matches[0]
-        contract = w3.eth.contract(abi=abi)
-        fn_obj = contract.get_function_by_selector(fn_info.selector)
-        args = parse_args(fn_obj.abi, str_args)
-        calldata = contract.encode_abi(fn_info.sig, args)
-    output_console = Console(file=output if output else sys.stdout)
-    output_console.print(calldata)
 
 
 @build.command(name="erc20")
@@ -471,6 +433,44 @@ def deploy(
 
     console.line()
     execute_calltx(w3, deployment_call, keyfile, force)
+
+
+@main.command()
+@click.option(
+    "--abi",
+    "abi_file",
+    type=click.Path(exists=True),
+    required=True,
+    help="contract ABI in JSON format",
+)
+@option.output_file
+@click.argument("identifier", metavar="FUNCTION")
+@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+def encode(
+    abi_file: str,
+    output: typing.TextIO | None,
+    identifier: str,
+    str_args: list[str],
+) -> None:
+    """Encode smart contract call data.
+
+    FUNCTION is the function's name, 4-byte selector, or full signature.
+    """
+    with console.status("Building call data..."):
+        with open(abi_file, "r") as f:
+            abi = json.load(f)
+        matches = find_function(abi, identifier)
+        if len(matches) != 1:
+            handle_function_match_failure(identifier, matches)
+
+        w3 = Web3()
+        fn_info = matches[0]
+        contract = w3.eth.contract(abi=abi)
+        fn_obj = contract.get_function_by_selector(fn_info.selector)
+        args = parse_args(fn_obj.abi, str_args)
+        calldata = contract.encode_abi(fn_info.sig, args)
+    output_console = Console(file=output if output else sys.stdout)
+    output_console.print(calldata)
 
 
 @main.command()

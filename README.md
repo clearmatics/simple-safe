@@ -64,8 +64,9 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
-  build    Build transaction data.
+  build    Build a Safe Transaction.
   deploy   Deploy a new Safe Account.
+  encode   Encode smart contract call data.
   exec     Execute a signed Safe Transaction.
   hash     Compute hash of Safe Transaction.
   inspect  Inspect a Safe Account.
