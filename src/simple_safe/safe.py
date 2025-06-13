@@ -575,7 +575,6 @@ def exec(
     safetxdata.safetx.signatures = SafeSignature.export_signatures(good)
 
     if not force:
-        console.line()
         if not Confirm.ask("Prepare Web3 Transaction?", default=False):
             raise click.Abort()
 
