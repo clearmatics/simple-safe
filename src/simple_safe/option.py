@@ -31,6 +31,21 @@ def authentication(f: FC) -> FC:
     return cast(FC, wrapper)
 
 
+def build_safetx(f: FC) -> FC:
+    @click.option("--value", "value_", default="0.0", help="tx value in decimals")
+    @optgroup.group("Build offline")
+    @optgroup.option("--chain", "chain_id", type=int, metavar="ID", help="chain ID")
+    @optgroup.option("--version", help="Safe version")
+    @optgroup.option("--safe-nonce", type=int, help="Safe nonce")
+    @optgroup.group("Build online")
+    @rpc(optgroup.option)
+    @functools.wraps(f)
+    def wrapper(*args: object, **kwargs: object) -> object:
+        f(*args, **kwargs)
+
+    return cast(FC, wrapper)
+
+
 force = click.option(
     "--force",
     "-f",
@@ -41,15 +56,6 @@ force = click.option(
 
 output_file = click.option(
     "--output", "-o", type=click.File(mode="w"), help="write output to FILENAME"
-)
-
-
-safe = click.option(
-    "--safe",
-    "safe",
-    metavar="ADDRESS",
-    required=True,
-    help="Safe Account address",
 )
 
 
@@ -65,19 +71,13 @@ def rpc(decorator: Any, required: bool = False) -> Callable[[FC], FC]:
     )
 
 
-def build_safetx(f: FC) -> FC:
-    @click.option("--value", "value_", default="0.0", help="tx value in decimals")
-    @optgroup.group("Build offline")
-    @optgroup.option("--chain", "chain_id", type=int, metavar="ID", help="chain ID")
-    @optgroup.option("--version", help="Safe version")
-    @optgroup.option("--safe-nonce", type=int, help="Safe nonce")
-    @optgroup.group("Build online")
-    @rpc(optgroup.option)
-    @functools.wraps(f)
-    def wrapper(*args: object, **kwargs: object) -> object:
-        f(*args, **kwargs)
-
-    return cast(FC, wrapper)
+safe = click.option(
+    "--safe",
+    "safe",
+    metavar="ADDRESS",
+    required=True,
+    help="Safe Account address",
+)
 
 
 signature = click.option(
