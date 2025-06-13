@@ -94,7 +94,7 @@ def get_panel(
         padding=(1, 1),
     )
     base_config.update(**kwargs)
-    return Panel(renderable, box=ROUNDED, **base_config)
+    return Panel(renderable, box=ROUNDED, **base_config)  # pyright: ignore[reportArgumentType]
 
 
 def print_function_matches(matches: Sequence[Function]):
