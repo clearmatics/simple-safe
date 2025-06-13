@@ -104,18 +104,21 @@ def print_function_matches(matches: Sequence[Function]):
         header_style="default",
         box=HORIZONTALS,
     )
-    table.add_column("Selector", justify="left", no_wrap=True)
+    table.add_column("Selector", no_wrap=True)
     table.add_column("Signature")
     table.add_column("Arguments")
     for match in matches:
-        arguments = [
-            arg if arg else "<unnamed>"
-            for arg in get_abi_input_names(cast(ABIElement, match.abi))
-        ]
+        fn_abi = cast(ABIElement, match.abi)
+        if fn_abi["type"] == "fallback":
+            arguments = []
+        else:
+            arguments = [
+                arg if arg else "<unnamed>" for arg in get_abi_input_names(fn_abi)
+            ]
         table.add_row(
             match.selector.to_0x_hex(),
-            match.sig,
-            ", ".join(arguments),
+            Text(match.sig, overflow="fold"),
+            Text(", ".join(arguments), overflow="fold"),
         )
     panel = get_panel("ABI Function Matches", f"[ matches={len(matches)} ]", table)
     console.print(panel)
