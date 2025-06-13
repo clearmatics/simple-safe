@@ -223,7 +223,7 @@ def print_signatures(
     )
 
 
-def print_web3_call_data(function: ContractFunction) -> None:
+def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
     argdata: dict[str, RenderableType] = {}
     for i, arg in enumerate(function.arguments):
         if function.argument_types[i] == "bytes":
@@ -232,17 +232,20 @@ def print_web3_call_data(function: ContractFunction) -> None:
             arg_str = str(arg)
         argdata[function.argument_names[i]] = arg_str
 
-    print_kvtable(
-        "Web3 Call Data",
-        "",
+    table = get_kvtable(
         {
-            "Contract": function.address,
-            "Function": function.signature,
             "Selector": function.selector,
+            "Function": function.signature,
             "ABI": get_json_data_renderable(dict(function.abi)),
         },
         argdata,
     )
+    group = Group(
+        table,
+        Rule(style="default on default"),
+        Text(calldata),
+    )
+    console.print(get_panel("Web3 Call Data", "", group))
 
 
 def print_web3_tx_params(value: TxParams) -> None:
