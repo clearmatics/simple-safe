@@ -209,15 +209,15 @@ def build_call(
             address=to_checksum_address(to_checksum_address(contract_str)), abi=abi
         )
         safetx = prepare_calltx(
-            client,
-            contract,
-            identifier,
-            str_args,
-            to_checksum_address(safe),
-            value_,
-            version,
-            chain_id,
-            safe_nonce,
+            client=client,
+            contract=contract,
+            fn_identifier=identifier,
+            str_args=str_args,
+            safe=to_checksum_address(safe),
+            value_=value_,
+            version=version,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
         )
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(
@@ -265,15 +265,15 @@ def build_erc20(
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(client.w3, address=token_address)
         safetx = prepare_calltx(
-            client,
-            ERC20,
-            identifier,
-            str_args,
-            to_checksum_address(safe),
-            value_,
-            version,
-            chain_id,
-            safe_nonce,
+            client=client,
+            contract=ERC20,
+            fn_identifier=identifier,
+            str_args=str_args,
+            safe=to_checksum_address(safe),
+            value_=value_,
+            version=version,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
         )
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(
