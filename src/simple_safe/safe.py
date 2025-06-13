@@ -109,7 +109,74 @@ def build():
     pass
 
 
-@build.command(name="tx", add_help_option=False)
+@build.command(name="abi-call", add_help_option=False)
+@click.option(
+    "--abi",
+    "abi_file",
+    type=click.Path(exists=True),
+    required=True,
+    help="contract ABI in JSON format",
+)
+@click.option(
+    "--contract",
+    "contract_str",
+    metavar="ADDRESS",
+    required=True,
+    help="contract call address",
+)
+@option.build_safetx
+@option.safe
+@option.output_file
+@click.argument("identifier", metavar="FUNCTION")
+@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+@option.help
+def build_abi_call(
+    abi_file: str,
+    chain_id: Optional[int],
+    contract_str: str,
+    identifier: str,
+    output: typing.TextIO | None,
+    rpc: str,
+    safe: str,
+    safe_nonce: Optional[int],
+    str_args: list[str],
+    value_: str,
+    version: Optional[str],
+) -> None:
+    """Build a contract call Safe Transaction from an ABI.
+
+    FUNCTION is the function's name, 4-byte selector, or full signature.
+    """
+    with console.status("Building Safe transaction..."):
+        validate_safetx_options(
+            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+        )
+        with open(abi_file, "r") as f:
+            abi = json.load(f)
+        client = EthereumClient(URI(rpc))
+        contract = client.w3.eth.contract(
+            address=to_checksum_address(to_checksum_address(contract_str)), abi=abi
+        )
+        safetx = prepare_calltx(
+            client=client,
+            contract=contract,
+            fn_identifier=identifier,
+            str_args=str_args,
+            safe=to_checksum_address(safe),
+            value_=value_,
+            version=version,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
+        )
+    output_console = Console(file=output if output else sys.stdout)
+    output_console.print(
+        JSON.from_data(
+            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
+        )
+    )
+
+
+@build.command(name="custom", add_help_option=False)
 @click.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
 )
@@ -118,7 +185,7 @@ def build():
 @option.safe
 @option.output_file
 @option.help
-def build_tx(
+def build_custom(
     chain_id: Optional[int],
     data: str,
     output: typing.TextIO | None,
@@ -160,74 +227,7 @@ def build_tx(
     )
 
 
-@build.command(name="call", add_help_option=False)
-@click.option(
-    "--abi",
-    "abi_file",
-    type=click.Path(exists=True),
-    required=True,
-    help="contract ABI in JSON format",
-)
-@click.option(
-    "--contract",
-    "contract_str",
-    metavar="ADDRESS",
-    required=True,
-    help="contract call address",
-)
-@option.build_safetx
-@option.safe
-@option.output_file
-@click.argument("identifier", metavar="FUNCTION")
-@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@option.help
-def build_call(
-    abi_file: str,
-    chain_id: Optional[int],
-    contract_str: str,
-    identifier: str,
-    output: typing.TextIO | None,
-    rpc: str,
-    safe: str,
-    safe_nonce: Optional[int],
-    str_args: list[str],
-    value_: str,
-    version: Optional[str],
-) -> None:
-    """Build a smart contract call Safe Transaction.
-
-    FUNCTION is the function's name, 4-byte selector, or full signature.
-    """
-    with console.status("Building Safe transaction..."):
-        validate_safetx_options(
-            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
-        )
-        with open(abi_file, "r") as f:
-            abi = json.load(f)
-        client = EthereumClient(URI(rpc))
-        contract = client.w3.eth.contract(
-            address=to_checksum_address(to_checksum_address(contract_str)), abi=abi
-        )
-        safetx = prepare_calltx(
-            client=client,
-            contract=contract,
-            fn_identifier=identifier,
-            str_args=str_args,
-            safe=to_checksum_address(safe),
-            value_=value_,
-            version=version,
-            chain_id=chain_id,
-            safe_nonce=safe_nonce,
-        )
-    output_console = Console(file=output if output else sys.stdout)
-    output_console.print(
-        JSON.from_data(
-            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
-        )
-    )
-
-
-@build.command(name="erc20", add_help_option=False)
+@build.command(name="erc20-call", add_help_option=False)
 @click.option(
     "--token",
     "token_str",
@@ -241,7 +241,7 @@ def build_call(
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @option.help
-def build_erc20(
+def build_erc20_call(
     chain_id: Optional[int],
     identifier: str,
     output: typing.TextIO | None,
@@ -283,14 +283,14 @@ def build_erc20(
     )
 
 
-@build.command(name="safe", add_help_option=False)
+@build.command(name="safe-call", add_help_option=False)
 @option.build_safetx
 @option.safe
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @option.help
-def build_safe(
+def build_safe_call(
     chain_id: Optional[int],
     identifier: str,
     output: typing.TextIO | None,
@@ -301,7 +301,7 @@ def build_safe(
     value_: str,
     version: Optional[str],
 ) -> None:
-    """Build a Safe Transaction to call the Safe itself.
+    """Build a Safe Transaction that calls the Safe Account.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
