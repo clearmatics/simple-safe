@@ -78,22 +78,6 @@ def safetx(f: FC) -> FC:
     return cast(FC, wrapper)
 
 
-def safetx_call(f: FC) -> FC:
-    @click.option(
-        "--contract",
-        "contract_str",
-        metavar="ADDRESS",
-        required=True,
-        help="contract call address",
-    )
-    @safetx
-    @functools.wraps(f)
-    def wrapper(*args: object, **kwargs: object) -> object:
-        f(*args, **kwargs)
-
-    return cast(FC, wrapper)
-
-
 def safetx_custom(f: FC) -> FC:
     @click.option(
         "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"

@@ -29,6 +29,7 @@ from rich.json import JSON
 from rich.prompt import Confirm
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.contracts import (
+    get_erc20_contract,
     get_proxy_factory_V1_4_1_contract,
     get_safe_V1_4_1_contract,
 )
@@ -150,7 +151,14 @@ def build_tx(
     required=True,
     help="contract ABI in JSON format",
 )
-@option.safetx_call
+@click.option(
+    "--contract",
+    "contract_str",
+    metavar="ADDRESS",
+    required=True,
+    help="contract call address",
+)
+@option.safetx
 @option.safe
 @option.rpc
 @option.output_file
@@ -193,6 +201,74 @@ def build_call(
             ethereum_client=client,
             safe_address=to_checksum_address(safe),
             to=contract,
+            value=int(Decimal(value_) * 10**18),
+            data=calldata,
+            operation=SafeOperationEnum.CALL.value,
+            safe_tx_gas=0,
+            base_gas=0,
+            gas_price=0,
+            gas_token=None,
+            refund_receiver=None,
+            signatures=None,
+            safe_nonce=safe_nonce,
+            safe_version=version,
+            chain_id=chain_id,
+        )
+    output_console = Console(file=output if output else sys.stdout)
+    output_console.print(
+        JSON.from_data(
+            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
+        )
+    )
+
+
+@build.command(name="erc20")
+@click.option(
+    "--token",
+    "token_str",
+    metavar="ADDRESS",
+    required=True,
+    help="ERC-20 token address",
+)
+@option.safetx
+@option.safe
+@option.rpc
+@option.output_file
+@click.argument("identifier", metavar="FUNCTION")
+@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+def build_erc20(
+    token_str: str,
+    safe: str,
+    version: Optional[str],
+    chain_id: Optional[int],
+    safe_nonce: Optional[int],
+    value_: str,
+    output: typing.TextIO | None,
+    rpc: str,
+    identifier: str,
+    str_args: list[str],
+) -> None:
+    """Build a smart contract call Safe Transaction.
+
+    FUNCTION is the function's name, 4-byte selector, or full signature.
+    """
+    with console.status("Building Safe transaction..."):
+        client = EthereumClient(URI(rpc))
+        token_address = to_checksum_address(token_str)
+        ERC20 = get_erc20_contract(client.w3, address=token_address)
+
+        matches = find_function(ERC20.abi, identifier)
+        if len(matches) != 1:
+            handle_function_match_failure(identifier, matches)
+
+        fn_info = matches[0]
+        fn_obj = ERC20.get_function_by_selector(matches[0].selector)
+        args = parse_args(fn_obj.abi, str_args)
+        calldata = HexBytes(ERC20.encode_abi(fn_info.sig, args))
+        safetx = SafeTx(
+            ethereum_client=client,
+            safe_address=to_checksum_address(safe),
+            to=token_address,
             value=int(Decimal(value_) * 10**18),
             data=calldata,
             operation=SafeOperationEnum.CALL.value,
