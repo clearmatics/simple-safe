@@ -556,9 +556,8 @@ def inspect(rpc: str, address: str):
             info = safeobj.retrieve_all_info()
         except Exception as exc:
             raise click.ClickException(str(exc)) from exc
-        # FIXME: batch the two requests so results are atomic
         block = client.w3.eth.block_number
-        balance = client.w3.eth.get_balance(checksum_addr)
+        balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
     console.line()
     print_kvtable(
         "Safe Account",
