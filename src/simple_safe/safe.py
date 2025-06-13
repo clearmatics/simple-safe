@@ -271,7 +271,7 @@ def build_erc20(
     identifier: str,
     str_args: list[str],
 ) -> None:
-    """Build a smart contract call Safe Transaction.
+    """Build an ERC-20 contract call Safe Transaction.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
