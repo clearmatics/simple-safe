@@ -162,14 +162,12 @@ def print_safetx(safetxdata: SafeTxData) -> None:
     group = Group(
         get_json_data_renderable(safetxdata.payload),
         Rule(style="default on default"),
-        # Rule(characters=" "),
         table,
     )
     console.print(get_panel("Safe Transaction", "", group))
 
 
 def print_signatures(
-    safetx: SafeTx,
     sigdata: list[SignatureData],
     threshold: int,
 ) -> None:

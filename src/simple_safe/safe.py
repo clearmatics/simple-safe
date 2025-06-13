@@ -134,7 +134,7 @@ def build_tx(
         safetx = SafeTx(
             ethereum_client=client,
             safe_address=to_checksum_address(safe),
-            to=to_checksum_address(to_checksum_address(to_str)),
+            to=to_checksum_address(to_str),
             value=int(Decimal(value_) * 10**18),
             data=HexBytes(data),
             operation=SafeOperationEnum.CALL.value,
