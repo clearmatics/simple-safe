@@ -178,7 +178,7 @@ def build_call(
             abi = json.load(f)
         matches = find_function(abi, identifier)
         if len(matches) != 1:
-            handle_function_match_failure(abi_file, identifier, matches)
+            handle_function_match_failure(identifier, matches)
 
         client = EthereumClient(URI(rpc))
         fn_info = matches[0]
@@ -240,7 +240,7 @@ def build_calldata(
             abi = json.load(f)
         matches = find_function(abi, identifier)
         if len(matches) != 1:
-            handle_function_match_failure(abi_file, identifier, matches)
+            handle_function_match_failure(identifier, matches)
 
         w3 = Web3()
         fn_info = matches[0]

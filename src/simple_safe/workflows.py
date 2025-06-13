@@ -62,13 +62,9 @@ def execute_calltx(w3: Web3, contractfn: ContractFunction, keyfile: str, force: 
     execute_tx(w3, tx, keyfile, force)
 
 
-def handle_function_match_failure(
-    abi_file: str, identifier: str, matches: Sequence[Function]
-) -> None:
+def handle_function_match_failure(identifier: str, matches: Sequence[Function]) -> None:
     if len(matches) == 0:
-        raise click.ClickException(
-            f"No matches for function '{identifier}' in '{abi_file}'."
-        )
+        raise click.ClickException(f"No matches for function '{identifier}'.")
     if len(matches) > 1:
         console.line()
         print_function_matches(matches)
