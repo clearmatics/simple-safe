@@ -584,7 +584,7 @@ def exec(
     console.line()
     print_safetx(safetxdata)
     console.line()
-    print_signatures(safetxdata.safetx, sigdata, threshold)
+    print_signatures(sigdata, threshold)
 
     console.line()
     good: list[SafeSignature] = []
@@ -684,7 +684,7 @@ def preview(
         threshold = safe.retrieve_threshold()
         sigdata = parse_signatures(owners, safetxdata, sigfiles)
         console.line()
-        print_signatures(safetxdata.safetx, sigdata, threshold)
+        print_signatures(sigdata, threshold)
     console.line()
 
 
