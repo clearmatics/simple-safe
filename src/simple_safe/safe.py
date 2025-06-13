@@ -185,12 +185,12 @@ def build_call(
         with open(abi_file, "r") as f:
             abi = json.load(f)
         client = EthereumClient(URI(rpc))
-        Contract = client.w3.eth.contract(
+        contract = client.w3.eth.contract(
             address=to_checksum_address(to_checksum_address(contract_str)), abi=abi
         )
         safetx = prepare_calltx(
             client,
-            Contract,
+            contract,
             identifier,
             str_args,
             to_checksum_address(safe),
@@ -237,10 +237,10 @@ def build_calldata(
 
         w3 = Web3()
         fn_info = matches[0]
-        Contract = w3.eth.contract(abi=abi)
-        fn_obj = Contract.get_function_by_selector(fn_info.selector)
+        contract = w3.eth.contract(abi=abi)
+        fn_obj = contract.get_function_by_selector(fn_info.selector)
         args = parse_args(fn_obj.abi, str_args)
-        calldata = Contract.encode_abi(fn_info.sig, args)
+        calldata = contract.encode_abi(fn_info.sig, args)
     output_console = Console(file=output if output else sys.stdout)
     output_console.print(calldata)
 
