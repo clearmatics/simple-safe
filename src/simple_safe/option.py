@@ -1,5 +1,5 @@
 import functools
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, Callable, Optional, TypeVar, cast
 
 import click
 from click import Command
@@ -46,12 +46,31 @@ def build_safetx(f: FC) -> FC:
     return cast(FC, wrapper)
 
 
+def help_callback(
+    ctx: click.Context, _: click.Option, value: Optional[bool]
+) -> Optional[Any]:
+    if value:
+        click.echo(ctx.get_help())
+        ctx.exit()
+    return None
+
+
 force = click.option(
     "--force",
     "-f",
     is_flag=True,
     default=False,
     help="skip confirmation prompts",
+)
+
+help = click.option(
+    "--help",
+    "-h",
+    is_flag=True,
+    expose_value=False,
+    is_eager=True,  # ensures it's handled early
+    help="show this message and exit",
+    callback=help_callback,
 )
 
 output_file = click.option(

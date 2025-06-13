@@ -9,6 +9,7 @@ import typing
 from decimal import Decimal
 from getpass import getpass
 from typing import (
+    Any,
     Optional,
     cast,
 )
@@ -88,8 +89,10 @@ logging.getLogger("safe_eth").setLevel(logging.CRITICAL)
         show_default=True,
         max_content_width=shutil.get_terminal_size().columns,
         help_option_names=["-h", "--help"],
-    )
+    ),
+    add_help_option=False,
 )
+@option.help
 def main():
     """A simple & decentralized CLI for Safe Accounts."""
     pass
@@ -100,13 +103,14 @@ def main():
 # └──────────┘
 
 
-@main.group()
+@main.group(add_help_option=False)
+@option.help
 def build():
     """Build a Safe Transaction."""
     pass
 
 
-@build.command(name="tx")
+@build.command(name="tx", add_help_option=False)
 @click.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
 )
@@ -114,6 +118,7 @@ def build():
 @option.build_safetx
 @option.safe
 @option.output_file
+@option.help
 def build_tx(
     safe: str,
     version: Optional[str],
@@ -156,7 +161,7 @@ def build_tx(
     )
 
 
-@build.command(name="call")
+@build.command(name="call", add_help_option=False)
 @click.option(
     "--abi",
     "abi_file",
@@ -176,6 +181,7 @@ def build_tx(
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+@option.help
 def build_call(
     abi_file: str,
     contract_str: str,
@@ -222,7 +228,7 @@ def build_call(
     )
 
 
-@build.command(name="erc20")
+@build.command(name="erc20", add_help_option=False)
 @click.option(
     "--token",
     "token_str",
@@ -235,6 +241,7 @@ def build_call(
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+@option.help
 def build_erc20(
     token_str: str,
     safe: str,
@@ -277,12 +284,13 @@ def build_erc20(
     )
 
 
-@build.command(name="safe")
+@build.command(name="safe", add_help_option=False)
 @option.build_safetx
 @option.safe
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+@option.help
 def build_safe(
     safe: str,
     version: Optional[str],
@@ -328,7 +336,7 @@ def build_safe(
     )
 
 
-@main.command()
+@main.command(add_help_option=False)
 # pyright: reportUntypedFunctionDecorator=false
 # pyright: reportUnknownMemberType=false
 @optgroup.group(
@@ -389,6 +397,7 @@ def build_safe(
 @option.authentication
 @option.rpc(click.option, required=True)
 @option.force
+@option.help
 def deploy(
     keyfile: str,
     rpc: str,
@@ -504,7 +513,7 @@ def deploy(
     execute_calltx(w3, deployment_call, keyfile, force)
 
 
-@main.command()
+@main.command(add_help_option=False)
 @click.option(
     "--abi",
     "abi_file",
@@ -515,6 +524,7 @@ def deploy(
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+@option.help
 def encode(
     abi_file: str,
     output: typing.TextIO | None,
@@ -542,13 +552,14 @@ def encode(
     output_console.print(calldata)
 
 
-@main.command()
+@main.command(add_help_option=False)
 @option.signature
 @option.web3tx
 @option.authentication
 @option.rpc(click.option, required=True)
 @option.force
 @click.argument("txfile", type=click.File("r"), required=True)
+@option.help
 def exec(
     keyfile: str,
     sigfiles: list[str],
@@ -600,8 +611,9 @@ def exec(
     execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
 
 
-@main.command()
+@main.command(add_help_option=False)
 @click.argument("txfile", type=click.File("r"), required=True)
+@option.help
 def hash(txfile: typing.TextIO) -> None:
     """Compute hash of Safe Transaction."""
     safetx_json = txfile.read()
@@ -611,9 +623,10 @@ def hash(txfile: typing.TextIO) -> None:
     output_console.print(safetx_hash.to_0x_hex())
 
 
-@main.command()
+@main.command(add_help_option=False)
 @option.rpc(click.option)
 @click.argument("address")
+@option.help
 def inspect(rpc: str, address: str):
     """Inspect a Safe Account."""
     with console.status("Retrieving Safe Account data..."):
@@ -648,10 +661,11 @@ def inspect(rpc: str, address: str):
     console.line()
 
 
-@main.command()
+@main.command(add_help_option=False)
 @option.signature
 @option.rpc(click.option, required=True)
 @click.argument("txfile", type=click.File("r"), required=True)
+@option.help
 def preview(
     sigfiles: list[str],
     rpc: str,
@@ -675,7 +689,7 @@ def preview(
     console.line()
 
 
-@main.command()
+@main.command(add_help_option=False)
 @optgroup.group("Sign offline")
 @optgroup.option("--version", help="Safe version")
 @optgroup.group("Sign online")
@@ -684,6 +698,7 @@ def preview(
 @option.output_file
 @option.force
 @click.argument("txfile", type=click.File("r"), required=True)
+@option.help
 def sign(
     version: Optional[str],
     keyfile: str,
