@@ -132,15 +132,17 @@ def execute_calltx(
     execute_tx(w3, tx, keyfile, force)
 
 
-def handle_function_match_failure(identifier: str, matches: Sequence[Function]) -> None:
-    if len(matches) == 0:
+def handle_function_match_failure(
+    identifier: str, partial_matches: Sequence[Function]
+) -> None:
+    if len(partial_matches) == 0:
         raise click.ClickException(f"No matches for function '{identifier}'.")
-    if len(matches) > 1:
+    else:
         console.line()
-        print_function_matches(matches)
+        print_function_matches(partial_matches)
         console.line()
         raise click.ClickException(
-            "Matched multiple function identifiers. Please use unique identifier."
+            "Matched ambiguous function identifiers. Please specify a unique identifier."
         )
 
 
