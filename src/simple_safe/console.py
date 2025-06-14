@@ -1,4 +1,6 @@
 import json
+import sys
+import typing
 from datetime import datetime, timezone
 from typing import Any, Optional, Sequence, cast
 
@@ -6,7 +8,7 @@ import rich
 from eth_typing.abi import ABIElement
 from eth_utils.abi import get_abi_input_names
 from rich.box import HORIZONTALS, ROUNDED, Box
-from rich.console import Group, RenderableType
+from rich.console import Console, Group, RenderableType
 from rich.highlighter import JSONHighlighter
 from rich.panel import Panel
 from rich.rule import Rule
@@ -80,6 +82,16 @@ def get_kvtable(*args: dict[str, RenderableType], draw_divider: bool = True) -> 
             else:
                 table.add_row("", "")
     return table
+
+
+def get_output_console(output: Optional[typing.TextIO] = None) -> Console:
+    """Return a Console suitable for printing results.
+
+    The Console must not insert hard wraps, which Rich normally inserts by
+    default. This is important when piping or writing text-encoded data to a
+    file such as a hexadecimal string or a JSON object.
+    """
+    return Console(file=output if output else sys.stdout, soft_wrap=True)
 
 
 def get_panel(

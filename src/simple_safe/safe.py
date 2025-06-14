@@ -27,7 +27,6 @@ from eth_utils.address import to_checksum_address
 from hexbytes import (
     HexBytes,
 )
-from rich.console import Console
 from rich.json import JSON
 from rich.prompt import Confirm
 from rich.traceback import Traceback
@@ -48,6 +47,7 @@ from . import option
 from .abi import find_function, parse_args
 from .console import (
     console,
+    get_output_console,
     print_kvtable,
     print_safetx,
     print_signatures,
@@ -200,7 +200,7 @@ def build_abi_call(
             chain_id=chain_id,
             safe_nonce=safe_nonce,
         )
-    output_console = Console(file=output if output else sys.stdout)
+    output_console = get_output_console(output)
     output_console.print(
         JSON.from_data(
             safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
@@ -251,7 +251,7 @@ def build_custom(
             safe_version=version,
             chain_id=chain_id,
         )
-    output_console = Console(file=output if output else sys.stdout)
+    output_console = get_output_console(output)
     output_console.print(
         JSON.from_data(
             safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
@@ -307,7 +307,7 @@ def build_erc20_call(
             chain_id=chain_id,
             safe_nonce=safe_nonce,
         )
-    output_console = Console(file=output if output else sys.stdout)
+    output_console = get_output_console(output)
     output_console.print(
         JSON.from_data(
             safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
@@ -359,11 +359,11 @@ def build_safe_call(
             chain_id=chain_id,
             safe_nonce=safe_nonce,
         )
-    output_console = Console(file=output if output else sys.stdout)
+    output_console = get_output_console(output)
     output_console.print(
         JSON.from_data(
             safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
-        )
+        ),
     )
 
 
@@ -579,7 +579,7 @@ def encode(
         fn_obj = contract.get_function_by_selector(match.selector)
         args = parse_args(fn_obj.abi, str_args)
         calldata = contract.encode_abi(match.sig, args)
-    output_console = Console(file=output if output else sys.stdout)
+    output_console = get_output_console(output)
     output_console.print(calldata)
 
 
@@ -650,7 +650,7 @@ def hash(txfile: typing.TextIO) -> None:
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx_hash = hash_eip712_data(safetx_data)
-    output_console = Console(file=sys.stdout)
+    output_console = get_output_console()
     output_console.print(safetx_hash.to_0x_hex())
 
 
@@ -769,7 +769,7 @@ def sign(
     sigobj = SafeSignature.parse_signature(signedmsg.signature, safetxdata.hash)[0]
     signature = sigobj.export_signature()
 
-    output_console = Console(file=output if output else sys.stdout)
+    output_console = get_output_console(output)
     output_console.print(signature.to_0x_hex())
 
 
