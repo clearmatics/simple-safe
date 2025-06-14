@@ -103,6 +103,7 @@ def handle_crash(
             exc_value,
             exc_traceback,
             suppress=[click],
+            show_locals=True,
         )
         console.print(rich_traceback)
 
