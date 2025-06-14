@@ -57,10 +57,7 @@ def prepare_calltx(
     assert match is not None
 
     fn_obj = contract.get_function_by_selector(match.selector)
-    try:
-        args = parse_args(fn_obj.abi, str_args)
-    except Exception as exc:
-        raise click.ClickException(f"Error: {match.sig}: {str(exc)}") from exc
+    args = parse_args(fn_obj.abi, str_args)
     calldata = HexBytes(contract.encode_abi(match.sig, args))
 
     return SafeTx(

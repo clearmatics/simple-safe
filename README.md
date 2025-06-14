@@ -19,11 +19,6 @@ Benefits:
 - ✅ not reliant on centralized services
 - ✅ no need for chain to be officially supported
 
-Limitations:
-
-- ⏳ still a work in progress
-- ⚠️ error handling is not user friendly
-
 ## Quick Start
 
 To get started, you will need:

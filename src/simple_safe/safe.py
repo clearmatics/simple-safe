@@ -2,12 +2,14 @@
 
 import json
 import logging
+import os
 import secrets
 import shutil
 import sys
 import typing
 from decimal import Decimal
 from getpass import getpass
+from types import TracebackType
 from typing import (
     Optional,
     cast,
@@ -28,6 +30,7 @@ from hexbytes import (
 from rich.console import Console
 from rich.json import JSON
 from rich.prompt import Confirm
+from rich.traceback import Traceback
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.contracts import (
     get_erc20_contract,
@@ -75,9 +78,36 @@ DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
     "0x41675C099F32341bf84BFc5382aF534df5C7461a"
 )
 
+# ┌───────┐
+# │ Setup │
+# └───────┘
+
+
 # Silence logs from `safe_eth` library.
 logging.getLogger("safe_eth").setLevel(logging.CRITICAL)
 
+
+DEBUG = True if "SAFE_DEBUG" in os.environ else False
+
+
+def handle_crash(
+    exc_type: type[BaseException],
+    exc_value: BaseException,
+    exc_traceback: TracebackType | None,
+) -> None:
+    if not DEBUG:
+        console.print(f"{exc_type.__name__}: {exc_value}")
+    else:
+        rich_traceback = Traceback.from_exception(
+            exc_type,
+            exc_value,
+            exc_traceback,
+            suppress=[click],
+        )
+        console.print(rich_traceback)
+
+
+sys.excepthook = handle_crash
 
 # ┌──────┐
 # │ Main │
