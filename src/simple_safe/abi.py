@@ -48,7 +48,7 @@ def find_function(
             fn_identifier
         ):
             exact_name_matches.append(match)
-        elif signature.startswith(fn_identifier):
+        elif signature.lower().startswith(fn_identifier.lower()):
             partial_name_matches.append(match)
     if len(exact_name_matches) == 1:
         return (exact_name_matches[0], [])

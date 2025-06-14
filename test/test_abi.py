@@ -20,19 +20,19 @@ def test_find_function():
       "stateMutability": "nonpayable"
     }
     """
-    foobar1 = """
+    fooBar1 = """
     {
       "type": "function",
-      "name": "foobar",
+      "name": "fooBar",
       "inputs": [],
       "outputs": [],
       "stateMutability": "nonpayable"
     }
     """
-    foobar2 = """
+    fooBar2 = """
     {
       "type": "function",
-      "name": "foobar",
+      "name": "fooBar",
       "inputs": [
         {
           "name": "a",
@@ -45,7 +45,7 @@ def test_find_function():
     }
     """
 
-    contract_abi = [json.loads(fn) for fn in (foo, foobar1, foobar2)]
+    contract_abi = [json.loads(fn) for fn in (foo, fooBar1, fooBar2)]
     signatures = [abi_to_signature(fn_abi) for fn_abi in contract_abi]
     selectors = [
         HexBytes(function_signature_to_4byte_selector(signature))
@@ -67,19 +67,25 @@ def test_find_function():
         assert exact is None
         assert len(partial) == 3
 
-    exact, partial = find_function(contract_abi, "foo")
-    assert exact is not None
-    assert exact.name == "foo"
-    assert len(partial) == 0
-
-    for identifier in ("foob", "foobar", "foobar("):
+    for identifier in list("".join(letters) for letters in product("Ff", "Oo", "Oo")):
         exact, partial = find_function(contract_abi, identifier)
-        assert exact is None
-        assert len(partial) == 2
+        if identifier == "foo":
+            assert exact is not None
+            assert exact.name == "foo"
+            assert len(partial) == 0
+        else:
+            assert exact is None
+            assert len(partial) == 3
 
-    exact, partial = find_function(contract_abi, "foobar(u")
+    for identifier in ("fooB", "fooBar", "fooBar("):
+        for identifier_mod in (identifier.lower(), identifier, identifier.upper()):
+            exact, partial = find_function(contract_abi, identifier_mod)
+            assert exact is None
+            assert len(partial) == 2
+
+    exact, partial = find_function(contract_abi, "fooBar(u")
     assert exact is not None
-    assert exact.sig == "foobar(uint256)"
+    assert exact.sig == "fooBar(uint256)"
     assert len(partial) == 0
 
 
