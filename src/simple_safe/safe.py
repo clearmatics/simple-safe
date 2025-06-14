@@ -285,8 +285,8 @@ def build_erc20_call(
 
 
 @build.command(name="safe-call", add_help_option=False)
-@option.build_safetx
 @option.safe
+@option.build_safetx
 @option.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
