@@ -137,12 +137,16 @@ def handle_function_match_failure(
 ) -> None:
     if len(partial_matches) == 0:
         raise click.ClickException(f"No matches for function '{identifier}'.")
-    else:
-        console.line()
-        print_function_matches(partial_matches)
-        console.line()
+    console.line()
+    print_function_matches(partial_matches)
+    console.line()
+    if len(partial_matches) == 1:
         raise click.ClickException(
-            "Matched ambiguous function identifiers. Please specify a unique identifier."
+            f"No match for function '{identifier}'. Did you mean '{partial_matches[0].name}'?"
+        )
+    else:
+        raise click.ClickException(
+            "Matched multiple functions. Please specify unique identifier."
         )
 
 
