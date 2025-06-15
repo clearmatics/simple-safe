@@ -43,7 +43,7 @@ from web3.constants import ADDRESS_ZERO
 from web3.contract.contract import Contract
 from web3.providers.auto import load_provider_from_uri
 
-from . import option
+from . import params
 from .abi import find_function, parse_args
 from .console import (
     console,
@@ -123,7 +123,7 @@ sys.excepthook = handle_crash
     ),
     add_help_option=False,
 )
-@option.help
+@params.help
 def main():
     """A simple & decentralized CLI for Safe Accounts."""
     pass
@@ -135,7 +135,7 @@ def main():
 
 
 @main.group(add_help_option=False)
-@option.help
+@params.help
 def build():
     """Build a Safe Transaction."""
     pass
@@ -156,12 +156,12 @@ def build():
     required=True,
     help="contract call address",
 )
-@option.build_safetx
-@option.safe
-@option.output_file
+@params.build_safetx
+@params.safe
+@params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@option.help
+@params.help
 def build_abi_call(
     abi_file: str,
     chain_id: Optional[int],
@@ -213,10 +213,10 @@ def build_abi_call(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
 )
 @click.option("--data", default="0x", help="call data payload")
-@option.build_safetx
-@option.safe
-@option.output_file
-@option.help
+@params.build_safetx
+@params.safe
+@params.output_file
+@params.help
 def build_custom(
     chain_id: Optional[int],
     data: str,
@@ -267,12 +267,12 @@ def build_custom(
     required=True,
     help="ERC-20 token address",
 )
-@option.build_safetx
-@option.safe
-@option.output_file
+@params.build_safetx
+@params.safe
+@params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@option.help
+@params.help
 def build_erc20_call(
     chain_id: Optional[int],
     identifier: str,
@@ -316,12 +316,12 @@ def build_erc20_call(
 
 
 @build.command(name="safe-call", add_help_option=False)
-@option.safe
-@option.build_safetx
-@option.output_file
+@params.safe
+@params.build_safetx
+@params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@option.help
+@params.help
 def build_safe_call(
     chain_id: Optional[int],
     identifier: str,
@@ -424,11 +424,11 @@ def build_safe_call(
     metavar="ADDRESS",
     help="use non-canonical ProxyFactory address",
 )
-@option.web3tx
-@option.authentication
-@option.rpc(click.option, required=True)
-@option.force
-@option.help
+@params.web3tx
+@params.authentication
+@params.rpc(click.option, required=True)
+@params.force
+@params.help
 def deploy(
     chain_specific: bool,
     custom_proxy_factory: str,
@@ -552,10 +552,10 @@ def deploy(
     required=True,
     help="contract ABI in JSON format",
 )
-@option.output_file
+@params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@option.help
+@params.help
 def encode(
     abi_file: str,
     identifier: str,
@@ -584,13 +584,13 @@ def encode(
 
 
 @main.command(add_help_option=False)
-@option.signature
-@option.web3tx
-@option.authentication
-@option.rpc(click.option, required=True)
-@option.force
-@option.help
+@params.web3tx
+@params.authentication
+@params.rpc(click.option, required=True)
+@params.force
+@params.help
 @click.argument("txfile", type=click.File("r"), required=True)
+@params.sigfile
 def exec(
     force: bool,
     keyfile: str,
@@ -600,7 +600,7 @@ def exec(
 ):
     """Execute a signed Safe Transaction.
 
-    Repeat the signature option to include all required signatures.
+    A SIGFILE must be a valid owner signature.
     """
     if not sigfiles:
         raise click.ClickException("Cannot execute SafeTx without signatures.")
@@ -644,7 +644,7 @@ def exec(
 
 @main.command(add_help_option=False)
 @click.argument("txfile", type=click.File("r"), required=True)
-@option.help
+@params.help
 def hash(txfile: typing.TextIO) -> None:
     """Compute hash of Safe Transaction."""
     safetx_json = txfile.read()
@@ -655,9 +655,9 @@ def hash(txfile: typing.TextIO) -> None:
 
 
 @main.command(add_help_option=False)
-@option.rpc(click.option)
+@params.rpc(click.option)
 @click.argument("address")
-@option.help
+@params.help
 def inspect(address: str, rpc: str):
     """Inspect a Safe Account."""
     with console.status("Retrieving Safe Account data..."):
@@ -693,16 +693,19 @@ def inspect(address: str, rpc: str):
 
 
 @main.command(add_help_option=False)
-@option.signature
-@option.rpc(click.option, required=True)
-@option.help
+@params.rpc(click.option, required=True)
+@params.help
 @click.argument("txfile", type=click.File("r"), required=True)
+@params.sigfile
 def preview(
     rpc: str,
     sigfiles: list[str],
     txfile: typing.TextIO,
 ):
-    """Preview a Safe Transaction."""
+    """Preview a Safe Transaction.
+
+    A SIGFILE must be a valid owner signature.
+    """
     with console.status("Loading Safe transaction..."):
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
@@ -724,12 +727,12 @@ def preview(
 @optgroup.group("Sign offline")
 @optgroup.option("--version", help="Safe version")
 @optgroup.group("Sign online")
-@option.rpc(optgroup.option)
-@option.authentication
-@option.output_file
-@option.force
+@params.rpc(optgroup.option)
+@params.authentication
+@params.output_file
+@params.force
 @click.argument("txfile", type=click.File("r"), required=True)
-@option.help
+@params.help
 def sign(
     force: bool,
     keyfile: str,

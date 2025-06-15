@@ -99,13 +99,11 @@ safe = click.option(
 )
 
 
-signature = click.option(
-    "--sigfile",
-    "-g",
+sigfile = click.argument(
     "sigfiles",
+    metavar="[SIGFILE]...",
     type=click.Path(exists=True),
-    multiple=True,
-    help="owner signature file",
+    nargs=-1,
 )
 
 
