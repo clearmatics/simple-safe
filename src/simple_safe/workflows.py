@@ -47,7 +47,7 @@ def prepare_calltx(
     str_args: list[str],
     safe: ChecksumAddress,
     value_: str,
-    version: Optional[str],
+    safe_version: Optional[str],
     chain_id: Optional[int],
     safe_nonce: Optional[int],
 ) -> SafeTx:
@@ -74,7 +74,7 @@ def prepare_calltx(
         refund_receiver=None,
         signatures=None,
         safe_nonce=safe_nonce,
-        safe_version=version,
+        safe_version=safe_version,
         chain_id=chain_id,
     )
 
@@ -149,7 +149,7 @@ def handle_function_match_failure(
 
 
 def validate_safetx_options(
-    version: Optional[str],
+    safe_version: Optional[str],
     chain_id: Optional[int],
     safe_nonce: Optional[int],
     rpc: str,
@@ -159,10 +159,12 @@ def validate_safetx_options(
         missing.append("chain ID")
     if safe_nonce is None:
         missing.append("Safe nonce")
-    if version is None:
+    if safe_version is None:
         missing.append("Safe version")
-    elif version not in SAFE_CONTRACT_VERSIONS:
-        raise click.ClickException(f"Invalid or unsupported Safe version {version}.")
+    elif safe_version not in SAFE_CONTRACT_VERSIONS:
+        raise click.ClickException(
+            f"Invalid or unsupported Safe version {safe_version}."
+        )
     if len(missing) > 0 and not rpc:
         raise click.ClickException(
             f"Missing info for offline SafeTx: {', '.join(missing)}. "

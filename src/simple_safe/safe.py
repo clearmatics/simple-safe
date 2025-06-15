@@ -173,7 +173,7 @@ def build_abi_call(
     safe_nonce: Optional[int],
     str_args: list[str],
     value_: str,
-    version: Optional[str],
+    safe_version: Optional[str],
 ) -> None:
     """Build a contract call Safe transaction from an ABI file.
 
@@ -181,7 +181,7 @@ def build_abi_call(
     """
     with console.status("Building Safe transaction..."):
         validate_safetx_options(
-            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
         with open(abi_file, "r") as f:
             abi = json.load(f)
@@ -196,7 +196,7 @@ def build_abi_call(
             str_args=str_args,
             safe=to_checksum_address(safe),
             value_=value_,
-            version=version,
+            safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
         )
@@ -226,12 +226,12 @@ def build_custom(
     safe_nonce: Optional[int],
     to_str: str,
     value_: str,
-    version: Optional[str],
+    safe_version: Optional[str],
 ) -> None:
     """Build a custom Safe transaction."""
     with console.status("Building Safe transaction..."):
         validate_safetx_options(
-            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
         client = EthereumClient(URI(rpc))
         safetx = SafeTx(
@@ -248,7 +248,7 @@ def build_custom(
             refund_receiver=None,
             signatures=None,
             safe_nonce=safe_nonce,
-            safe_version=version,
+            safe_version=safe_version,
             chain_id=chain_id,
         )
     output_console = get_output_console(output)
@@ -283,7 +283,7 @@ def build_erc20_call(
     str_args: list[str],
     token_str: str,
     value_: str,
-    version: Optional[str],
+    safe_version: Optional[str],
 ) -> None:
     """Build an ERC-20 contract call Safe transaction.
 
@@ -291,7 +291,7 @@ def build_erc20_call(
     """
     with console.status("Building Safe transaction..."):
         validate_safetx_options(
-            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
         client = EthereumClient(URI(rpc))
         token_address = to_checksum_address(token_str)
@@ -303,7 +303,7 @@ def build_erc20_call(
             str_args=str_args,
             safe=to_checksum_address(safe),
             value_=value_,
-            version=version,
+            safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
         )
@@ -331,7 +331,7 @@ def build_safe_call(
     safe_nonce: Optional[int],
     str_args: list[str],
     value_: str,
-    version: Optional[str],
+    safe_version: Optional[str],
 ) -> None:
     """Build a Safe transaction that calls the Safe account.
 
@@ -339,7 +339,7 @@ def build_safe_call(
     """
     with console.status("Building Safe transaction..."):
         validate_safetx_options(
-            version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
         client = EthereumClient(URI(rpc))
         safe_address = to_checksum_address(safe)
@@ -355,7 +355,7 @@ def build_safe_call(
             str_args=str_args,
             safe=safe_address,
             value_=value_,
-            version=version,
+            safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
         )
@@ -725,7 +725,7 @@ def preview(
 
 @main.command(add_help_option=False)
 @optgroup.group("Sign offline")
-@optgroup.option("--version", help="Safe version")
+@params.safe_version
 @optgroup.group("Sign online")
 @params.rpc(optgroup.option)
 @params.authentication
@@ -739,21 +739,21 @@ def sign(
     output: typing.TextIO | None,
     rpc: str,
     txfile: typing.TextIO,
-    version: Optional[str],
+    safe_version: Optional[str],
 ):
     """Sign a Safe transaction."""
     with console.status("Loading Safe transaction..."):
-        if not rpc and not version:
+        if not rpc and not safe_version:
             raise click.ClickException(
                 "Cannot determine Safe version and no RPC URL provided."
             )
-        elif version is not None and version not in SAFE_CONTRACT_VERSIONS:
+        elif safe_version is not None and safe_version not in SAFE_CONTRACT_VERSIONS:
             raise click.ClickException(
-                f"Invalid or unsupported Safe version {version}."
+                f"Invalid or unsupported Safe version {safe_version}."
             )
 
         client = EthereumClient(URI(rpc))
-        safetxdata = reconstruct_safetx(client, txfile, version)
+        safetxdata = reconstruct_safetx(client, txfile, safe_version)
 
     console.line()
     print_safetx(safetxdata)
