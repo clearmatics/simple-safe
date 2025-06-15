@@ -1,32 +1,33 @@
 # Simple Safe
 
-A simple & decentralized CLI for Safe Accounts.
+A simple & decentralized CLI for Safe accounts.
 
 Functionality:
 
-- 🚀 deploy a Safe Account
-- 📝 build a Safe Transaction
-- 🔏 sign a Safe Transaction
-- ⚙️ execute a Safe Transaction
-- 🪪 authenticate with Ethereum keyfile
+`🚀` Deploy a Safe account<br/>
+`📝` Build a Safe transaction<br/>
+`🔏` Sign a Safe transaction<br/>
+`⚙️` Execute a Safe transaction<br/>
+`🔌` Build and sign offline<br/>
+`🪪` Authenticate with a keyfile<br/>
 
 Benefits:
 
-- ✅ runs in the terminal
-- ✅ no Terms of Use to accept
-- ✅ no Privacy Policy to accept
-- ✅ all commands can be scripted
-- ✅ not reliant on centralized services
-- ✅ no need for chain to be officially supported
+`✅` Runs in the terminal<br/>
+`✅` No Terms of Use to accept<br/>
+`✅` No Privacy Policy to accept<br/>
+`✅` All commands can be scripted<br/>
+`✅` Not reliant on centralized services<br/>
+`✅` No need for chain to be officially supported<br/>
 
 ## Quick Start
 
 To get started, you will need:
 
-- [ ] a chain that implements EIP-1559
-- [ ] a JSON-RPC endpoint
+- [ ] EVM-compatible chain that implements EIP-1559
+- [ ] JSON-RPC endpoint over HTTP (not Websocket)
 - [ ] [Safe contracts](https://github.com/safe-global/safe-smart-account)
-      already deployed (preferably at
+      deployed (preferably at
       [canonical addresses](https://github.com/safe-global/safe-singleton-factory?tab=readme-ov-file#how-to-get-the-singleton-deployed-to-your-network))
 
 Install Simple Safe using `pipx`:
@@ -49,18 +50,18 @@ $ safe --help
 
 Usage: safe [OPTIONS] COMMAND [ARGS]...
 
-  A simple & decentralized CLI for Safe Accounts.
+  A simple & decentralized CLI for Safe accounts.
 
 Options:
   -h, --help  show this message and exit
 
 Commands:
-  build    Build a Safe Transaction.
-  deploy   Deploy a new Safe Account.
+  build    Build a Safe transaction.
+  deploy   Deploy a new Safe account.
   encode   Encode smart contract call data.
-  exec     Execute a signed Safe Transaction.
-  hash     Compute hash of Safe Transaction.
-  inspect  Inspect a Safe Account.
-  preview  Preview a Safe Transaction.
-  sign     Sign a Safe Transaction.
+  exec     Execute a signed Safe transaction.
+  hash     Compute hash of Safe transaction.
+  inspect  Inspect a Safe account.
+  preview  Preview a Safe transaction.
+  sign     Sign a Safe transaction.
 ```
