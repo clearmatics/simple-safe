@@ -125,7 +125,7 @@ sys.excepthook = handle_crash
 )
 @params.help
 def main():
-    """A simple & decentralized CLI for Safe Accounts."""
+    """A simple & decentralized CLI for Safe accounts."""
     pass
 
 
@@ -137,7 +137,7 @@ def main():
 @main.group(add_help_option=False)
 @params.help
 def build():
-    """Build a Safe Transaction."""
+    """Build a Safe transaction."""
     pass
 
 
@@ -175,7 +175,7 @@ def build_abi_call(
     value_: str,
     version: Optional[str],
 ) -> None:
-    """Build a contract call Safe Transaction from an ABI file.
+    """Build a contract call Safe transaction from an ABI file.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
@@ -228,7 +228,7 @@ def build_custom(
     value_: str,
     version: Optional[str],
 ) -> None:
-    """Build a custom Safe Transaction."""
+    """Build a custom Safe transaction."""
     with console.status("Building Safe transaction..."):
         validate_safetx_options(
             version=version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
@@ -285,7 +285,7 @@ def build_erc20_call(
     value_: str,
     version: Optional[str],
 ) -> None:
-    """Build an ERC-20 contract call Safe Transaction.
+    """Build an ERC-20 contract call Safe transaction.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
@@ -333,7 +333,7 @@ def build_safe_call(
     value_: str,
     version: Optional[str],
 ) -> None:
-    """Build a Safe Transaction that calls the Safe Account.
+    """Build a Safe transaction that calls the Safe account.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
@@ -442,9 +442,9 @@ def deploy(
     threshold: int,
     without_events: bool,
 ):
-    """Deploy a new Safe Account.
+    """Deploy a new Safe account.
 
-    The Safe Account is deployed with CREATE2, which makes it possible to
+    The Safe account is deployed with CREATE2, which makes it possible to
     own the same address on different chains. If this is not desirable, pass the
     --chain-specific option to include the Chain ID in the CREATE2 salt derivation.
 
@@ -516,7 +516,7 @@ def deploy(
         existing_code = w3.eth.get_code(computed_address)
         if existing_code != b"":
             raise click.ClickException(
-                f"Safe Account computed address {computed_address} already contains code."
+                f"Safe account computed address {computed_address} already contains code."
             )
 
     console.line()
@@ -598,7 +598,7 @@ def exec(
     sigfiles: list[str],
     txfile: typing.TextIO,
 ):
-    """Execute a signed Safe Transaction.
+    """Execute a signed Safe transaction.
 
     A SIGFILE must be a valid owner signature.
     """
@@ -646,7 +646,7 @@ def exec(
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.help
 def hash(txfile: typing.TextIO) -> None:
-    """Compute hash of Safe Transaction."""
+    """Compute hash of Safe transaction."""
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx_hash = hash_eip712_data(safetx_data)
@@ -659,8 +659,8 @@ def hash(txfile: typing.TextIO) -> None:
 @click.argument("address")
 @params.help
 def inspect(address: str, rpc: str):
-    """Inspect a Safe Account."""
-    with console.status("Retrieving Safe Account data..."):
+    """Inspect a Safe account."""
+    with console.status("Retrieving Safe account data..."):
         checksum_addr = to_checksum_address(address)
         client = EthereumClient(URI(rpc))
         try:
@@ -672,7 +672,7 @@ def inspect(address: str, rpc: str):
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
     console.line()
     print_kvtable(
-        "Safe Account",
+        "Safe account",
         f"[Block {str(block)}]",
         {
             "Safe Address": info.address,
@@ -702,7 +702,7 @@ def preview(
     sigfiles: list[str],
     txfile: typing.TextIO,
 ):
-    """Preview a Safe Transaction.
+    """Preview a Safe transaction.
 
     A SIGFILE must be a valid owner signature.
     """
@@ -741,7 +741,7 @@ def sign(
     txfile: typing.TextIO,
     version: Optional[str],
 ):
-    """Sign a Safe Transaction."""
+    """Sign a Safe transaction."""
     with console.status("Loading Safe transaction..."):
         if not rpc and not version:
             raise click.ClickException(
@@ -759,7 +759,7 @@ def sign(
     print_safetx(safetxdata)
     console.line()
 
-    if not force and not Confirm.ask("Sign Safe Transaction?", default=False):
+    if not force and not Confirm.ask("Sign Safe transaction?", default=False):
         raise click.Abort()
 
     with click.open_file(keyfile) as kf:

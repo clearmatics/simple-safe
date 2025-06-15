@@ -95,7 +95,7 @@ safe = click.option(
     "safe",
     metavar="ADDRESS",
     required=True,
-    help="Safe Account address",
+    help="Safe account address",
 )
 
 

@@ -90,7 +90,7 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
     console.line()
     print_web3_tx_params(tx)
     console.line()
-    if not force and not Confirm.ask("Execute Web3 Transaction?", default=False):
+    if not force and not Confirm.ask("Execute Web3 transaction?", default=False):
         raise click.Abort()
 
     password = getpass()
