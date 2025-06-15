@@ -562,7 +562,7 @@ def encode(
     output: typing.TextIO | None,
     str_args: list[str],
 ) -> None:
-    """Encode smart contract call data.
+    """Encode contract call data.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """

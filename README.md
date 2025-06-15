@@ -58,7 +58,7 @@ Options:
 Commands:
   build    Build a Safe transaction.
   deploy   Deploy a new Safe account.
-  encode   Encode smart contract call data.
+  encode   Encode contract call data.
   exec     Execute a signed Safe transaction.
   hash     Compute hash of Safe transaction.
   inspect  Inspect a Safe account.
