@@ -2,9 +2,11 @@ import json
 import sys
 import typing
 from datetime import datetime, timezone
+from importlib.metadata import version
 from typing import Any, Optional, Sequence, cast
 
 import rich
+from click import Context, Parameter
 from eth_typing.abi import ABIElement
 from eth_utils.abi import get_abi_input_names
 from rich.box import HORIZONTALS, ROUNDED, Box
@@ -233,6 +235,16 @@ def print_signatures(
             border_style="panel_ok" if executable else "panel_danger",
         )
     )
+
+
+def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None:
+    if not value or ctx.resilient_parsing:
+        return
+
+    get_output_console().print(
+        f"Simple Safe v{version('simple_safe')}", highlight=False
+    )
+    ctx.exit()
 
 
 def print_web3_call_data(function: ContractFunction, calldata: str) -> None:

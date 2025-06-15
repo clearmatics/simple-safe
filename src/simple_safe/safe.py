@@ -51,6 +51,7 @@ from .console import (
     print_kvtable,
     print_safetx,
     print_signatures,
+    print_version,
 )
 from .util import (
     as_checksum,
@@ -122,6 +123,14 @@ sys.excepthook = handle_crash
         help_option_names=["-h", "--help"],
     ),
     add_help_option=False,
+)
+@click.option(
+    "--version",
+    is_flag=True,
+    callback=print_version,
+    expose_value=False,
+    is_eager=True,
+    help="print version info and exit",
 )
 @params.help
 def main():
