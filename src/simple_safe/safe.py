@@ -589,8 +589,8 @@ def encode(
 @option.authentication
 @option.rpc(click.option, required=True)
 @option.force
-@click.argument("txfile", type=click.File("r"), required=True)
 @option.help
+@click.argument("txfile", type=click.File("r"), required=True)
 def exec(
     force: bool,
     keyfile: str,
@@ -695,8 +695,8 @@ def inspect(address: str, rpc: str):
 @main.command(add_help_option=False)
 @option.signature
 @option.rpc(click.option, required=True)
-@click.argument("txfile", type=click.File("r"), required=True)
 @option.help
+@click.argument("txfile", type=click.File("r"), required=True)
 def preview(
     rpc: str,
     sigfiles: list[str],
