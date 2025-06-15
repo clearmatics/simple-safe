@@ -511,12 +511,12 @@ def deploy(
         deployment_call = proxy_factory_method(
             singleton_address, initializer, salt_nonce_int
         )
-        predicted_address = deployment_call.call()
+        computed_address = deployment_call.call()
 
-        existing_code = w3.eth.get_code(predicted_address)
+        existing_code = w3.eth.get_code(computed_address)
         if existing_code != b"":
             raise click.ClickException(
-                f"Safe Account predicted address {predicted_address} already contains code."
+                f"Safe Account computed address {computed_address} already contains code."
             )
 
     console.line()
@@ -524,7 +524,7 @@ def deploy(
         "Safe Deployment Parameters",
         "",
         {
-            "Safe Address": f"{predicted_address} (predicted)",
+            "Safe Address": f"{computed_address} (computed)",
             "Safe Version": DEPLOY_SAFE_VERSION,
             f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
             "Threshold": str(threshold),
