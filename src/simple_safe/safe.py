@@ -681,7 +681,7 @@ def inspect(address: str, rpc: str):
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
     console.line()
     print_kvtable(
-        "Safe account",
+        "Safe Account",
         f"[Block {str(block)}]",
         {
             "Safe Address": info.address,
