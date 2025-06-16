@@ -8,7 +8,6 @@ import shutil
 import sys
 import typing
 from decimal import Decimal
-from getpass import getpass
 from types import TracebackType
 from typing import (
     Optional,
@@ -47,6 +46,7 @@ from . import params
 from .abi import find_function, parse_args
 from .console import (
     console,
+    get_keyfile_password,
     get_output_console,
     print_kvtable,
     print_safetx,
@@ -771,7 +771,8 @@ def sign(
 
     with click.open_file(keyfile) as kf:
         keydata = kf.read()
-    password = getpass(stream=sys.stderr)
+    address = to_checksum_address(json.loads(keydata)["address"])
+    password = get_keyfile_password(address, keyfile)
     privkey = Account.decrypt(keydata, password=password)
     account = Account.from_key(privkey)
 

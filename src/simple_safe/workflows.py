@@ -1,6 +1,5 @@
 import json
 from decimal import Decimal
-from getpass import getpass
 from typing import (
     Optional,
     Sequence,
@@ -24,6 +23,7 @@ from web3.types import TxParams
 from .abi import Function, find_function, parse_args
 from .console import (
     console,
+    get_keyfile_password,
     print_function_matches,
     print_web3_call_data,
     print_web3_tx_params,
@@ -93,7 +93,7 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
     if not force and not Confirm.ask("Execute Web3 transaction?", default=False):
         raise click.Abort()
 
-    password = getpass()
+    password = get_keyfile_password(sender_address, keyfile)
     console.line()
 
     with console.status("Loading account from keyfile..."):

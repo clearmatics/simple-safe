@@ -2,9 +2,11 @@ import json
 import sys
 import typing
 from datetime import datetime, timezone
+from getpass import getpass
 from importlib.metadata import version
 from typing import Any, Optional, Sequence, cast
 
+from eth_typing import ChecksumAddress
 import rich
 from click import Context, Parameter
 from eth_typing.abi import ABIElement
@@ -61,6 +63,10 @@ def get_json_data_renderable(
             indent=indent,
         )
     )
+
+
+def get_keyfile_password(address: ChecksumAddress, keyfile: str) -> str:
+    return getpass(prompt=f"[{keyfile}] {address} password: ", stream=sys.stderr)
 
 
 def get_kvtable(*args: dict[str, RenderableType], draw_divider: bool = True) -> Table:

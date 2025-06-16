@@ -22,7 +22,7 @@ def authentication(f: FC) -> FC:
         "--keyfile",
         "-k",
         type=click.Path(exists=True),
-        help="local Ethereum Keyfile",
+        help="local Ethereum keyfile",
     )
     @functools.wraps(f)
     def wrapper(*args: object, **kwargs: object) -> object:
