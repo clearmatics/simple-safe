@@ -94,7 +94,6 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
         raise click.Abort()
 
     password = get_keyfile_password(sender_address, keyfile)
-    console.line()
 
     with console.status("Loading account from keyfile..."):
         privkey = Account.decrypt(keydata, password=password)
@@ -110,6 +109,7 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
         tx_receipt["blockNumber"], full_transactions=False
     ).get("timestamp")
 
+    console.line()
     print_web3_tx_receipt(timestamp, tx_receipt)
 
 
