@@ -342,7 +342,7 @@ def build_safe_call(
     value_: str,
     safe_version: Optional[str],
 ) -> None:
-    """Build a Safe transaction to call a Safe.
+    """Build a Safe transaction to call the Safe.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
