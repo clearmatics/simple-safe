@@ -314,8 +314,7 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
             "Timestamp": timestamp_str,
             "Gas Used": str(txreceipt["gasUsed"]),
             "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
-            "Status": str(txreceipt["status"])
-            + (" [[ok]OK[/ok]]" if success else " [[danger]ERROR[/danger]]"),
+            "Status": str(txreceipt["status"]) + (" (OK)" if success else " (ERROR)"),
         }
     ]
     if "contractAddress" in txreceipt and txreceipt["contractAddress"]:
