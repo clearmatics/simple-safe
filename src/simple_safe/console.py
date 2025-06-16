@@ -166,7 +166,7 @@ def print_safetx(safetxdata: SafeTxData) -> None:
             "Value": str(safetx.value),
             "SafeTx Gas": str(safetx.safe_tx_gas),
             "Data": safetx.data.to_0x_hex(),
-        }
+        },
     ]
     if safetx.gas_price > 0:
         table_data.append({
