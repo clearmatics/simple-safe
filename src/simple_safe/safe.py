@@ -184,7 +184,7 @@ def build_abi_call(
     value_: str,
     safe_version: Optional[str],
 ) -> None:
-    """Build a contract call Safe transaction from an ABI file.
+    """Build a contract call Safe transaction.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
@@ -294,7 +294,7 @@ def build_erc20_call(
     value_: str,
     safe_version: Optional[str],
 ) -> None:
-    """Build an ERC-20 contract call Safe transaction.
+    """Build an ERC-20 token Safe transaction.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
@@ -342,7 +342,7 @@ def build_safe_call(
     value_: str,
     safe_version: Optional[str],
 ) -> None:
-    """Build a Safe transaction that calls the Safe account.
+    """Build a Safe transaction to call a Safe.
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
