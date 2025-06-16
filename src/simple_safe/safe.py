@@ -674,10 +674,10 @@ def inspect(address: str, rpc: str):
         client = EthereumClient(URI(rpc))
         try:
             safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
-            info = safeobj.retrieve_all_info()
+            block = client.w3.eth.block_number
+            info = safeobj.retrieve_all_info(block)
         except Exception as exc:
             raise click.ClickException(str(exc)) from exc
-        block = client.w3.eth.block_number
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
     console.line()
     print_kvtable(
