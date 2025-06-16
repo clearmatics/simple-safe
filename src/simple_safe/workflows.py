@@ -111,7 +111,6 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
     ).get("timestamp")
 
     print_web3_tx_receipt(timestamp, tx_receipt)
-    console.line()
 
 
 def execute_calltx(

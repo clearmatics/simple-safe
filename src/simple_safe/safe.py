@@ -698,7 +698,6 @@ def inspect(address: str, rpc: str):
             "Balance": str(balance),
         },
     )
-    console.line()
 
 
 @main.command(add_help_option=False)
@@ -729,7 +728,6 @@ def preview(
         sigdata = parse_signatures(owners, safetxdata, sigfiles)
         console.line()
         print_signatures(sigdata, threshold)
-    console.line()
 
 
 @main.command(add_help_option=False)
