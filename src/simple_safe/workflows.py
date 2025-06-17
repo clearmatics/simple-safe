@@ -125,6 +125,7 @@ def execute_calltx(
         except Exception as exc:
             raise click.ClickException(str(exc)) from exc
     assert "data" in tx
+    console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
     execute_tx(w3, tx, keyfile, force)
 

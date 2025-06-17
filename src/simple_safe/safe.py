@@ -553,7 +553,6 @@ def deploy(
     if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
-    console.line()
     execute_calltx(w3, deployment_call, keyfile, force)
 
 
@@ -631,7 +630,6 @@ def exec(
     console.line()
     print_signatures(sigdata, threshold)
 
-    console.line()
     good: list[SafeSignature] = []
     for sd in sigdata:
         if not isinstance(sd.sig, SafeSignature):
@@ -648,10 +646,10 @@ def exec(
     safetxdata.safetx.signatures = SafeSignature.export_signatures(good)
 
     if not force:
+        console.line()
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
-    console.line()
     execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
 
 
