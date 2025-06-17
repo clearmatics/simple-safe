@@ -2,6 +2,7 @@
 
 import json
 import logging
+import logging.config
 import os
 import secrets
 import shutil
@@ -52,6 +53,7 @@ from .console import (
     print_safetx,
     print_signatures,
     print_version,
+    setup_logging,
 )
 from .util import (
     as_checksum,
@@ -83,12 +85,17 @@ DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
 # │ Setup │
 # └───────┘
 
-
-# Silence logs from `safe_eth` library.
-logging.getLogger("safe_eth").setLevel(logging.CRITICAL)
-
-
 DEBUG = True if "SAFE_DEBUG" in os.environ else False
+
+# Silence third party log messages.
+logging.config.dictConfig({
+    "version": 1,
+    "disable_existing_loggers": True,
+})
+
+if DEBUG:
+    setup_logging()
+logger = logging.getLogger(__name__)
 
 
 def handle_crash(

@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 import typing
 from datetime import datetime, timezone
@@ -14,6 +15,7 @@ from eth_utils.abi import get_abi_input_names
 from rich.box import HORIZONTALS, ROUNDED, Box
 from rich.console import Console, Group, RenderableType
 from rich.highlighter import JSONHighlighter
+from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
@@ -335,3 +337,13 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
         border_style="panel_ok" if success else "panel_danger",
     )
     console.print(panel)
+
+
+def setup_logging():
+    FORMAT = "%(module)s.%(funcName)s: %(message)s"
+    logging.basicConfig(
+        level="NOTSET",
+        format=FORMAT,
+        datefmt="[%F %X]",
+        handlers=[RichHandler(console=console)],
+    )
