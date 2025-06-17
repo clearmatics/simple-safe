@@ -339,7 +339,7 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
     console.print(panel)
 
 
-def setup_logging():
+def activate_logging():
     FORMAT = "%(module)s.%(funcName)s: %(message)s"
     logging.basicConfig(
         level="NOTSET",

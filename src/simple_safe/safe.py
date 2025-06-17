@@ -53,7 +53,6 @@ from .console import (
     print_safetx,
     print_signatures,
     print_version,
-    setup_logging,
 )
 from .util import (
     as_checksum,
@@ -93,8 +92,6 @@ logging.config.dictConfig({
     "disable_existing_loggers": True,
 })
 
-if DEBUG:
-    setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -177,7 +174,7 @@ def build():
 @params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@params.help
+@params.common
 def build_abi_call(
     abi_file: str,
     chain_id: Optional[int],
@@ -232,7 +229,7 @@ def build_abi_call(
 @params.build_safetx
 @params.safe
 @params.output_file
-@params.help
+@params.common
 def build_custom(
     chain_id: Optional[int],
     data: str,
@@ -288,7 +285,7 @@ def build_custom(
 @params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@params.help
+@params.common
 def build_erc20_call(
     chain_id: Optional[int],
     identifier: str,
@@ -337,7 +334,7 @@ def build_erc20_call(
 @params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@params.help
+@params.common
 def build_safe_call(
     chain_id: Optional[int],
     identifier: str,
@@ -444,7 +441,7 @@ def build_safe_call(
 @params.authentication
 @params.rpc(click.option, required=True)
 @params.force
-@params.help
+@params.common
 def deploy(
     chain_specific: bool,
     custom_proxy_factory: str,
@@ -571,7 +568,7 @@ def deploy(
 @params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
-@params.help
+@params.common
 def encode(
     abi_file: str,
     identifier: str,
@@ -604,9 +601,9 @@ def encode(
 @params.authentication
 @params.rpc(click.option, required=True)
 @params.force
-@params.help
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.sigfile
+@params.common
 def exec(
     force: bool,
     keyfile: str,
@@ -660,7 +657,7 @@ def exec(
 
 @main.command(add_help_option=False)
 @click.argument("txfile", type=click.File("r"), required=True)
-@params.help
+@params.common
 def hash(txfile: typing.TextIO) -> None:
     """Compute hash of Safe transaction."""
     safetx_json = txfile.read()
@@ -673,7 +670,7 @@ def hash(txfile: typing.TextIO) -> None:
 @main.command(add_help_option=False)
 @params.rpc(click.option)
 @click.argument("address")
-@params.help
+@params.common
 def inspect(address: str, rpc: str):
     """Inspect a Safe account."""
     with console.status("Retrieving Safe account data..."):
@@ -709,9 +706,9 @@ def inspect(address: str, rpc: str):
 
 @main.command(add_help_option=False)
 @params.rpc(click.option, required=True)
-@params.help
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.sigfile
+@params.common
 def preview(
     rpc: str,
     sigfiles: list[str],
@@ -746,7 +743,7 @@ def preview(
 @params.output_file
 @params.force
 @click.argument("txfile", type=click.File("r"), required=True)
-@params.help
+@params.common
 def sign(
     force: bool,
     keyfile: str,

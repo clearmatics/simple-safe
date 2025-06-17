@@ -1,5 +1,5 @@
 import functools
-from typing import Any, Callable, Optional, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 
 import click
 from click import Command
@@ -7,6 +7,8 @@ from click_option_group import (
     RequiredAnyOptionGroup,
     optgroup,
 )
+
+from .validation import help_callback, verbose_callback
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
@@ -46,13 +48,22 @@ def build_safetx(f: FC) -> FC:
     return cast(FC, wrapper)
 
 
-def help_callback(
-    ctx: click.Context, _: click.Option, value: Optional[bool]
-) -> Optional[Any]:
-    if value:
-        click.echo(ctx.get_help())
-        ctx.exit()
-    return None
+def common(f: FC) -> FC:
+    @help
+    @click.option(
+        "--verbose",
+        "-v",
+        is_flag=True,
+        expose_value=False,
+        is_eager=True,
+        help="print debug log messages",
+        callback=verbose_callback,
+    )
+    @functools.wraps(f)
+    def wrapper(*args: object, **kwargs: object) -> object:
+        f(*args, **kwargs)
+
+    return cast(FC, wrapper)
 
 
 force = click.option(
