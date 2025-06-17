@@ -84,6 +84,7 @@ help = click.option(
     callback=help_callback,
 )
 
+
 output_file = click.option(
     "--output", "-o", type=click.File(mode="w"), help="write output to FILENAME"
 )
