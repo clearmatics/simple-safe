@@ -279,31 +279,31 @@ def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
     )
 
 
-def print_web3_tx_params(value: TxParams) -> None:
+def print_web3_tx_params(params: TxParams) -> None:
     # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
     # TxParams fields being optional.
-    assert "from" in value
-    assert "chainId" in value
-    assert "nonce" in value
-    assert "to" in value
-    assert "value" in value
-    assert "gas" in value
-    assert "maxFeePerGas" in value
-    assert "maxPriorityFeePerGas" in value
-    assert "data" in value
+    assert "from" in params
+    assert "chainId" in params
+    assert "nonce" in params
+    assert "to" in params
+    assert "value" in params
+    assert "gas" in params
+    assert "maxFeePerGas" in params
+    assert "maxPriorityFeePerGas" in params
+    assert "data" in params
     print_kvtable(
         "Web3 Transaction Parameters",
         "",
         {
-            "From": str(value["from"]),
-            "Chain ID": str(value["chainId"]),
-            "Web3 Nonce": str(value["nonce"]),
-            "To": str(value["to"]),
-            "Value": str(value["value"]),
-            "Gas": str(value["gas"]),
-            "Max Fee": str(value["maxFeePerGas"]),
-            "Max Pri Fee": str(value["maxPriorityFeePerGas"]),
-            "Data": str(value["data"]),
+            "From": str(params["from"]),
+            "Chain ID": str(params["chainId"]),
+            "Web3 Nonce": str(params["nonce"]),
+            "To": str(params["to"]),
+            "Value": str(params["value"]),
+            "Gas": str(params["gas"]),
+            "Max Fee": str(params["maxFeePerGas"]),
+            "Max Pri Fee": str(params["maxPriorityFeePerGas"]),
+            "Data": str(params["data"]),
         },
     )
 
