@@ -6,9 +6,9 @@ from getpass import getpass
 from importlib.metadata import version
 from typing import Any, Optional, Sequence, cast
 
-from eth_typing import ChecksumAddress
 import rich
 from click import Context, Parameter
+from eth_typing import ChecksumAddress
 from eth_typing.abi import ABIElement
 from eth_utils.abi import get_abi_input_names
 from rich.box import HORIZONTALS, ROUNDED, Box
