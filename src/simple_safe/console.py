@@ -68,7 +68,7 @@ def get_json_data_renderable(
 
 
 def get_keyfile_password(address: ChecksumAddress, keyfile: str) -> str:
-    return getpass(prompt=f"[{keyfile}] {address} password: ", stream=sys.stderr)
+    return getpass(prompt=f"[{keyfile}] password: ", stream=sys.stderr)
 
 
 def get_kvtable(*args: dict[str, RenderableType], draw_divider: bool = True) -> Table:
