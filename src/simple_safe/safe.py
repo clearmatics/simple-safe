@@ -203,7 +203,7 @@ def build_abi_call(
             abi = json.load(f)
         client = EthereumClient(URI(rpc))
         contract = client.w3.eth.contract(
-            address=to_checksum_address(to_checksum_address(contract_str)), abi=abi
+            address=to_checksum_address(contract_str), abi=abi
         )
         safetx = prepare_calltx(
             client=client,
