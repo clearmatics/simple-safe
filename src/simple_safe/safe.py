@@ -188,7 +188,7 @@ def build_abi_call(
     safe: str,
     safe_nonce: Optional[int],
     str_args: list[str],
-    value_: str,
+    value: str,
     safe_version: Optional[str],
 ) -> None:
     """Build a contract call Safe transaction.
@@ -211,7 +211,7 @@ def build_abi_call(
             fn_identifier=identifier,
             str_args=str_args,
             safe=to_checksum_address(safe),
-            value_=value_,
+            value=value,
             safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
@@ -241,7 +241,7 @@ def build_custom(
     safe: str,
     safe_nonce: Optional[int],
     to_str: str,
-    value_: str,
+    value: str,
     safe_version: Optional[str],
 ) -> None:
     """Build a custom Safe transaction."""
@@ -254,7 +254,7 @@ def build_custom(
             ethereum_client=client,
             safe_address=to_checksum_address(safe),
             to=to_checksum_address(to_str),
-            value=int(Decimal(value_) * 10**18),
+            value=int(Decimal(value) * 10**18),
             data=HexBytes(data),
             operation=SafeOperationEnum.CALL.value,
             safe_tx_gas=0,
@@ -298,7 +298,7 @@ def build_erc20_call(
     safe_nonce: Optional[int],
     str_args: list[str],
     token_str: str,
-    value_: str,
+    value: str,
     safe_version: Optional[str],
 ) -> None:
     """Build an ERC-20 token Safe transaction.
@@ -318,7 +318,7 @@ def build_erc20_call(
             fn_identifier=identifier,
             str_args=str_args,
             safe=to_checksum_address(safe),
-            value_=value_,
+            value=value,
             safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
@@ -346,7 +346,7 @@ def build_safe_call(
     safe: str,
     safe_nonce: Optional[int],
     str_args: list[str],
-    value_: str,
+    value: str,
     safe_version: Optional[str],
 ) -> None:
     """Build a Safe transaction to call the Safe.
@@ -370,7 +370,7 @@ def build_safe_call(
             fn_identifier=identifier,
             str_args=str_args,
             safe=safe_address,
-            value_=value_,
+            value=value,
             safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,

@@ -34,7 +34,7 @@ def authentication(f: FC) -> FC:
 
 
 def build_safetx(f: FC) -> FC:
-    @click.option("--value", "value_", default="0.0", help="tx value in decimals")
+    @click.option("--value", default="0.0", help="tx value in decimals")
     @optgroup.group("Build offline")
     @optgroup.option("--chain-id", "chain_id", type=int, metavar="ID", help="chain ID")
     @safe_version
