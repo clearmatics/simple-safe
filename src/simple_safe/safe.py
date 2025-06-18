@@ -42,9 +42,11 @@ from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract.contract import Contract
 from web3.providers.auto import load_provider_from_uri
+from web3.types import Wei
 
 from . import params
 from .abi import find_function, parse_args
+from .chain import fetch_chaindata
 from .console import (
     console,
     get_keyfile_password,
@@ -56,6 +58,7 @@ from .console import (
 )
 from .util import (
     as_checksum,
+    format_native_value,
     hash_eip712_data,
     hexbytes_json_encoder,
     parse_signatures,
@@ -625,8 +628,11 @@ def exec(
         threshold = safe.retrieve_threshold()
         sigdata = parse_signatures(owners, safetxdata, sigfiles)
 
+    with console.status("Fetching chain data..."):
+        chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
+
     console.line()
-    print_safetx(safetxdata)
+    print_safetx(safetxdata, chaindata)
     console.line()
     print_signatures(sigdata, threshold)
 
@@ -681,6 +687,10 @@ def inspect(address: str, rpc: str):
         except Exception as exc:
             raise click.ClickException(str(exc)) from exc
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
+
+    with console.status("Fetching chain data..."):
+        chaindata = fetch_chaindata(client.w3.eth.chain_id)
+
     console.line()
     print_kvtable(
         "Safe Account",
@@ -697,7 +707,7 @@ def inspect(address: str, rpc: str):
             "Modules": ", ".join(info.modules) if info.modules else "<none>",
         },
         {
-            "Balance": str(balance),
+            "Balance": format_native_value(Wei(balance), chaindata),
         },
     )
 
@@ -720,8 +730,11 @@ def preview(
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
 
+    with console.status("Fetching chain data..."):
+        chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
+
     console.line()
-    print_safetx(safetxdata)
+    print_safetx(safetxdata, chaindata)
 
     if sigfiles:
         safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
@@ -764,10 +777,13 @@ def sign(
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, safe_version)
 
-    console.line()
-    print_safetx(safetxdata)
-    console.line()
+    with console.status("Fetching chain data..."):
+        chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
 
+    console.line()
+    print_safetx(safetxdata, chaindata)
+
+    console.line()
     if not force and not Confirm.ask("Sign Safe transaction?", default=False):
         raise click.Abort()
 

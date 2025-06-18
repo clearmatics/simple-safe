@@ -21,6 +21,7 @@ from web3.contract.contract import ContractFunction
 from web3.types import TxParams
 
 from .abi import Function, find_function, parse_args
+from .chain import fetch_chaindata
 from .console import (
     console,
     get_keyfile_password,
@@ -87,8 +88,12 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
         tx["nonce"] = w3.eth.get_transaction_count(sender_address)
         tx["from"] = sender_address
 
+    with console.status("Fetching chain data..."):
+        chaindata = fetch_chaindata(w3.eth.chain_id)
+
     console.line()
-    print_web3_tx_params(tx)
+    print_web3_tx_params(tx, chaindata)
+
     console.line()
     if not force and not Confirm.ask("Execute Web3 transaction?", default=False):
         raise click.Abort()

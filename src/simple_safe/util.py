@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal, localcontext
 from typing import (
     Any,
     NamedTuple,
@@ -13,6 +14,7 @@ from eth_account.messages import (
 )
 from eth_typing import ChecksumAddress
 from eth_utils.address import to_checksum_address
+from eth_utils.currency import denoms
 from hexbytes import (
     HexBytes,
 )
@@ -20,6 +22,9 @@ from safe_eth.eth import EthereumClient
 from safe_eth.eth.constants import NULL_ADDRESS
 from safe_eth.safe import SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
+from web3.types import Wei
+
+from .chain import ChainData
 
 
 class SafeTxData(NamedTuple):
@@ -43,6 +48,29 @@ class SignatureData(NamedTuple):
 def as_checksum(checksum_str: str) -> ChecksumAddress:
     """Cast to satisfy type checker."""
     return cast(ChecksumAddress, checksum_str)
+
+
+def format_native_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:
+    symbol = chaindata.symbol if chaindata else "ETH"
+    if chaindata:
+        symbol, decimals = chaindata.symbol, chaindata.decimals
+    else:
+        symbol, decimals = "ETH", 18
+    with localcontext() as ctx:
+        ctx.prec = 78
+        converted = Decimal(value).scaleb(-decimals).normalize()
+    return f"{converted:f} {symbol}"
+
+
+def format_wei_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:
+    return f"{value} Wei ({format_native_value(value, chaindata)})"
+
+
+def format_gwei_value(value: Wei) -> str:
+    with localcontext() as ctx:
+        ctx.prec = 78
+        converted = (Decimal(value) / denoms.gwei).normalize()
+    return f"{value} Wei ({converted:f} Gwei)"
 
 
 def hexbytes_json_encoder(obj: Any):

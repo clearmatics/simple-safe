@@ -13,21 +13,27 @@ from eth_typing import ChecksumAddress
 from eth_typing.abi import ABIElement
 from eth_utils.abi import get_abi_input_names
 from rich.box import HORIZONTALS, ROUNDED, Box
-from rich.console import Console, Group, RenderableType
+from rich.console import Console, RenderableType
 from rich.highlighter import JSONHighlighter
 from rich.logging import RichHandler
 from rich.panel import Panel
-from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 from safe_eth.safe import SafeOperationEnum
 from web3.contract.contract import ContractFunction
-from web3.types import Timestamp, TxParams, TxReceipt
+from web3.types import Timestamp, TxParams, TxReceipt, Wei
 
 from .abi import Function
+from .chain import ChainData
 from .characters import CHECK, CROSS
-from .util import SafeTxData, SignatureData, hexbytes_json_encoder
+from .util import (
+    SafeTxData,
+    SignatureData,
+    format_gwei_value,
+    format_native_value,
+    hexbytes_json_encoder,
+)
 
 custom_theme = Theme({
     "ok": "green",
@@ -156,7 +162,7 @@ def print_kvtable(
     console.print(get_panel(title, subtitle, table))
 
 
-def print_safetx(safetxdata: SafeTxData) -> None:
+def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) -> None:
     safetx = safetxdata.safetx
     table_data: list[dict[str, RenderableType]] = []
     table_data.append({
@@ -165,13 +171,13 @@ def print_safetx(safetxdata: SafeTxData) -> None:
         "Safe Nonce": str(safetx.safe_nonce),
         "To Address": str(safetx.to),
         "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
-        "Value": str(safetx.value),
-        "SafeTx Gas": str(safetx.safe_tx_gas),
+        "Value": format_native_value(Wei(safetx.value), chaindata),
+        "SafeTx Gas": format_gwei_value(Wei(safetx.safe_tx_gas)),
         "Data": safetx.data.to_0x_hex(),
     })
     if safetx.gas_price > 0:
         table_data.append({
-            "Gas Price": str(safetx.gas_price),
+            "Gas Price": format_gwei_value(Wei(safetx.gas_price)),
             "Gas Token": safetx.gas_token,
             "Refund Receiver": safetx.refund_receiver,
         })
@@ -271,7 +277,9 @@ def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
     )
 
 
-def print_web3_tx_params(params: TxParams) -> None:
+def print_web3_tx_params(
+    params: TxParams, chaindata: Optional[ChainData] = None
+) -> None:
     # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
     # TxParams fields being optional.
     assert "from" in params
@@ -291,10 +299,12 @@ def print_web3_tx_params(params: TxParams) -> None:
             "Chain ID": str(params["chainId"]),
             "Web3 Nonce": str(params["nonce"]),
             "To": str(params["to"]),
-            "Value": str(params["value"]),
+            "Value": format_native_value(params["value"], chaindata),
             "Gas": str(params["gas"]),
-            "MaxFee/Gas": str(params["maxFeePerGas"]),
-            "MaxPriFee/Gas": str(params["maxPriorityFeePerGas"]),
+            "MaxFee/Gas": format_gwei_value(Wei(int(params["maxFeePerGas"]))),
+            "MaxPriFee/Gas": format_gwei_value(
+                Wei(int(params["maxPriorityFeePerGas"]))
+            ),
             "Data": str(params["data"]),
         },
     )
@@ -313,7 +323,7 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
             "Block": str(txreceipt["blockNumber"]),
             "Timestamp": timestamp_str,
             "Gas Used": str(txreceipt["gasUsed"]),
-            "Effective Gas Price": str(txreceipt["effectiveGasPrice"]),
+            "Effective Gas Price": format_gwei_value(txreceipt["effectiveGasPrice"]),
             "Status": str(txreceipt["status"]) + (" (OK)" if success else " (ERROR)"),
         }
     ]

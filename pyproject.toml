@@ -8,9 +8,12 @@ dependencies = [
   "click>=8.2.1",
   "click-option-group>=0.5.7",
   "devtools>=0.12.2",
+  "platformdirs>=4.3.8",
   "pydantic>=2.11.4",
+  "requests>=2.32.4",
   "rich>=14.0.0",
   "safe-eth-py>=7.3.0",
+  "tomli-w>=1.2.0",
 ]
 
 [project.scripts]
