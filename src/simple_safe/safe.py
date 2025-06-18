@@ -104,7 +104,7 @@ def handle_crash(
     exc_traceback: TracebackType | None,
 ) -> None:
     if not DEBUG:
-        console.print(f"{exc_type.__name__}: {exc_value}")
+        console.print(f"[bold]{exc_type.__name__}[/bold]: {exc_value}")
     else:
         rich_traceback = Traceback.from_exception(
             exc_type,
