@@ -21,7 +21,7 @@ from web3.contract.contract import ContractFunction
 from web3.types import TxParams
 
 from .abi import Function, find_function, parse_args
-from .chain import fetch_chaindata
+from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     console,
     get_keyfile_password,
@@ -60,12 +60,14 @@ def prepare_calltx(
     fn_obj = contract.get_function_by_selector(match.selector)
     args = parse_args(fn_obj.abi, str_args)
     calldata = HexBytes(contract.encode_abi(match.sig, args))
+    chaindata = fetch_chaindata(chain_id if chain_id else client.w3.eth.chain_id)
+    decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
 
     return SafeTx(
         ethereum_client=client,
         safe_address=safe,
         to=contract.address,
-        value=int(Decimal(value) * 10**18),
+        value=int(Decimal(value).scaleb(decimals)),
         data=calldata,
         operation=SafeOperationEnum.CALL.value,
         safe_tx_gas=0,

@@ -46,7 +46,7 @@ from web3.types import Wei
 
 from . import params
 from .abi import find_function, parse_args
-from .chain import fetch_chaindata
+from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     console,
     get_keyfile_password,
@@ -250,11 +250,13 @@ def build_custom(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
         client = EthereumClient(URI(rpc))
+        chaindata = fetch_chaindata(chain_id if chain_id else client.w3.eth.chain_id)
+        decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
         safetx = SafeTx(
             ethereum_client=client,
             safe_address=to_checksum_address(safe),
             to=to_checksum_address(to_str),
-            value=int(Decimal(value) * 10**18),
+            value=int(Decimal(value).scaleb(decimals)),
             data=HexBytes(data),
             operation=SafeOperationEnum.CALL.value,
             safe_tx_gas=0,

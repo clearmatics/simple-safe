@@ -12,6 +12,8 @@ APP_NAME = "simple-safe"
 APP_AUTHOR = "Clearmatics"
 CHAINLIST_URL = "https://chainlist.org/rpcs.json"
 
+FALLBACK_DECIMALS = 18
+
 
 logger = logging.getLogger(__name__)
 
