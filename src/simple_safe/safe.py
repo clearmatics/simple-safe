@@ -628,7 +628,7 @@ def exec(
         threshold = safe.retrieve_threshold()
         sigdata = parse_signatures(owners, safetxdata, sigfiles)
 
-    with console.status("Fetching chain data..."):
+    with console.status("Retrieving chain data..."):
         chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
 
     console.line()
@@ -688,7 +688,7 @@ def inspect(address: str, rpc: str):
             raise click.ClickException(str(exc)) from exc
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
 
-    with console.status("Fetching chain data..."):
+    with console.status("Retrieving chain data..."):
         chaindata = fetch_chaindata(client.w3.eth.chain_id)
 
     console.line()
@@ -730,7 +730,7 @@ def preview(
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
 
-    with console.status("Fetching chain data..."):
+    with console.status("Retrieving chain data..."):
         chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
 
     console.line()
@@ -777,7 +777,7 @@ def sign(
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, safe_version)
 
-    with console.status("Fetching chain data..."):
+    with console.status("Retrieving chain data..."):
         chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
 
     console.line()

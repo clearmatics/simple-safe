@@ -88,7 +88,7 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
         tx["nonce"] = w3.eth.get_transaction_count(sender_address)
         tx["from"] = sender_address
 
-    with console.status("Fetching chain data..."):
+    with console.status("Retrieving chain data..."):
         chaindata = fetch_chaindata(w3.eth.chain_id)
 
     console.line()
