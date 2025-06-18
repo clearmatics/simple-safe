@@ -999,7 +999,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/fd/73/67ba7ed2177b0b17d
 
 [[package]]
 name = "simple-safe"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
