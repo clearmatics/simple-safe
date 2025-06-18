@@ -301,8 +301,8 @@ def print_web3_tx_params(params: TxParams) -> None:
             "To": str(params["to"]),
             "Value": str(params["value"]),
             "Gas": str(params["gas"]),
-            "Max Fee": str(params["maxFeePerGas"]),
-            "Max Pri Fee": str(params["maxPriorityFeePerGas"]),
+            "MaxFee/Gas": str(params["maxFeePerGas"]),
+            "MaxPriFee/Gas": str(params["maxPriorityFeePerGas"]),
             "Data": str(params["data"]),
         },
     )
