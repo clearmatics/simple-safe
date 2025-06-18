@@ -158,18 +158,17 @@ def print_kvtable(
 
 def print_safetx(safetxdata: SafeTxData) -> None:
     safetx = safetxdata.safetx
-    table_data = [
-        {
-            "Safe Address": safetx.safe_address,
-            "Chain ID": str(safetx.chain_id),
-            "Safe Nonce": str(safetx.safe_nonce),
-            "To Address": str(safetx.to),
-            "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
-            "Value": str(safetx.value),
-            "SafeTx Gas": str(safetx.safe_tx_gas),
-            "Data": safetx.data.to_0x_hex(),
-        },
-    ]
+    table_data: list[dict[str, RenderableType]] = []
+    table_data.append({
+        "Safe Address": safetx.safe_address,
+        "Chain ID": str(safetx.chain_id),
+        "Safe Nonce": str(safetx.safe_nonce),
+        "To Address": str(safetx.to),
+        "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
+        "Value": str(safetx.value),
+        "SafeTx Gas": str(safetx.safe_tx_gas),
+        "Data": safetx.data.to_0x_hex(),
+    })
     if safetx.gas_price > 0:
         table_data.append({
             "Gas Price": str(safetx.gas_price),
@@ -177,16 +176,9 @@ def print_safetx(safetxdata: SafeTxData) -> None:
             "Refund Receiver": safetx.refund_receiver,
         })
     table_data.append({
-        "SafeTx Preimage": safetxdata.preimage.to_0x_hex(),
         "SafeTx Hash": safetxdata.hash.to_0x_hex(),
     })
-    table = get_kvtable(*table_data)
-    group = Group(
-        get_json_data_renderable(safetxdata.payload),
-        Rule(style="default on default"),
-        table,
-    )
-    console.print(get_panel("Safe Transaction", "", group))
+    print_kvtable("Safe Transaction", "", *table_data)
 
 
 def print_signatures(
