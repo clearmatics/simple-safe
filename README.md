@@ -53,6 +53,7 @@ Usage: safe [OPTIONS] COMMAND [ARGS]...
   A simple & decentralized CLI for Safe accounts.
 
 Options:
+  --version   print version info and exit
   -h, --help  show this message and exit
 
 Commands:
