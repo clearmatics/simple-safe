@@ -558,7 +558,9 @@ def deploy(
     if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
-    execute_calltx(w3, deployment_call, keyfile, force)
+    txhash = execute_calltx(w3, deployment_call, keyfile, force)
+    output_console = get_output_console()
+    output_console.print(txhash.to_0x_hex())
 
 
 @main.command(add_help_option=False)
@@ -658,7 +660,9 @@ def exec(
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
-    execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
+    txhash = execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
+    output_console = get_output_console()
+    output_console.print(txhash.to_0x_hex())
 
 
 @main.command(add_help_option=False)

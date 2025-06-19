@@ -82,7 +82,7 @@ def prepare_calltx(
     )
 
 
-def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
+def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool) -> HexBytes:
     with console.status("Checking sender address..."):
         with click.open_file(keyfile) as kf:
             keydata = kf.read()
@@ -118,6 +118,7 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool):
 
     console.line()
     print_web3_tx_receipt(timestamp, tx_receipt)
+    return tx_hash
 
 
 def execute_calltx(
@@ -125,7 +126,7 @@ def execute_calltx(
     contractfn: ContractFunction,
     keyfile: str,
     force: bool,
-):
+) -> HexBytes:
     with console.status("Building Web3 transaction..."):
         try:
             tx: TxParams = contractfn.build_transaction()
@@ -134,7 +135,7 @@ def execute_calltx(
     assert "data" in tx
     console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
-    execute_tx(w3, tx, keyfile, force)
+    return execute_tx(w3, tx, keyfile, force)
 
 
 def handle_function_match_failure(
