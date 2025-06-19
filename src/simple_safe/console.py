@@ -262,18 +262,18 @@ def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
             arg_str = str(arg)
         argdata[function.argument_names[i]] = arg_str
 
-    funcsig = function.signature
+    function_signature = function.signature
     if (
         "stateMutability" in function.abi
         and function.abi["stateMutability"] == "payable"
     ):
-        funcsig += " [green]💲Payable[/green]"
+        function_signature += " [green]💲Payable[/green]"
     print_kvtable(
         "Call Data Encoder",
         "",
         {
             "Selector": function.selector,
-            "Function": funcsig,
+            "Function": function_signature,
         },
         argdata,
         {
