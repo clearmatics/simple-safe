@@ -53,7 +53,7 @@ def lookup_chaindata(datafile: Path, chain_id: int) -> Optional[ChainData]:
     with datafile.open("rb") as fp:
         chaindata = json.load(fp)
     for chain in chaindata:
-        if chain["chainId"] == chain_id:
+        if chain["chainId"] == chain_id and chain["nativeCurrency"]["decimals"] >= 0:
             return ChainData(
                 chain_id=chain_id,
                 name=chain["nativeCurrency"]["name"],
