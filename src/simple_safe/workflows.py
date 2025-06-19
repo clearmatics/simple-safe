@@ -27,6 +27,7 @@ from .console import (
     get_keyfile_password,
     print_function_matches,
     print_web3_call_data,
+    print_web3_tx_fees,
     print_web3_tx_params,
     print_web3_tx_receipt,
 )
@@ -92,9 +93,12 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool) -> HexBytes:
 
     with console.status("Retrieving chain data..."):
         chaindata = fetch_chaindata(w3.eth.chain_id)
+        gasprice = w3.eth.gas_price
 
     console.line()
-    print_web3_tx_params(tx, chaindata)
+    print_web3_tx_params(tx, gasprice, chaindata)
+    console.line()
+    print_web3_tx_fees(tx, gasprice, chaindata)
 
     console.line()
     if not force and not Confirm.ask("Execute Web3 transaction?", default=False):
@@ -117,7 +121,7 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool) -> HexBytes:
     ).get("timestamp")
 
     console.line()
-    print_web3_tx_receipt(timestamp, tx_receipt)
+    print_web3_tx_receipt(timestamp, tx_receipt, chaindata)
     return tx_hash
 
 

@@ -282,8 +282,29 @@ def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
     )
 
 
+def print_web3_tx_fees(
+    params: TxParams, gasprice: int, chaindata: Optional[ChainData]
+) -> None:
+    # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
+    # TxParams fields being optional.
+    assert "gas" in params
+    assert "maxFeePerGas" in params
+    est_fee = format_native_value(Wei(params["gas"] * gasprice), chaindata)
+    max_fee = format_native_value(
+        Wei(params["gas"] * int(params["maxFeePerGas"])), chaindata
+    )
+    print_kvtable(
+        "Web3 Transaction Fees",
+        "",
+        {
+            "Current Gas Price": format_gwei_value(Wei(gasprice)),
+            "Transaction Fees": f"~{est_fee} ─ {max_fee}",
+        },
+    )
+
+
 def print_web3_tx_params(
-    params: TxParams, chaindata: Optional[ChainData] = None
+    params: TxParams, gasprice: int, chaindata: Optional[ChainData] = None
 ) -> None:
     # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
     # TxParams fields being optional.
@@ -315,7 +336,9 @@ def print_web3_tx_params(
     )
 
 
-def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) -> None:
+def print_web3_tx_receipt(
+    timestamp: Optional[Timestamp], txreceipt: TxReceipt, chaindata: Optional[ChainData]
+) -> None:
     timestamp_str = (
         datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
         if timestamp
@@ -329,6 +352,9 @@ def print_web3_tx_receipt(timestamp: Optional[Timestamp], txreceipt: TxReceipt) 
             "Timestamp": timestamp_str,
             "Gas Used": str(txreceipt["gasUsed"]),
             "Effective Gas Price": format_gwei_value(txreceipt["effectiveGasPrice"]),
+            "Transaction Fees": format_native_value(
+                Wei(txreceipt["gasUsed"] * txreceipt["effectiveGasPrice"]), chaindata
+            ),
             "Status": str(txreceipt["status"]) + (" (OK)" if success else " (ERROR)"),
         }
     ]
