@@ -59,7 +59,7 @@ def format_native_value(value: Wei, chaindata: Optional[ChainData] = None) -> st
     with localcontext() as ctx:
         ctx.prec = 78
         converted = Decimal(value).scaleb(-decimals).normalize()
-    return f"{converted:f} {symbol}"
+    return f"{converted:,f} {symbol}"
 
 
 def format_wei_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:
