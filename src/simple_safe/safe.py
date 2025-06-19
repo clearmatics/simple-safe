@@ -41,6 +41,7 @@ from safe_eth.safe.safe_signature import SafeSignature
 from web3 import Web3
 from web3.constants import ADDRESS_ZERO
 from web3.contract.contract import Contract
+from web3.exceptions import ContractLogicError
 from web3.providers.auto import load_provider_from_uri
 from web3.types import Wei
 
@@ -104,7 +105,13 @@ def handle_crash(
     exc_traceback: TracebackType | None,
 ) -> None:
     if not DEBUG:
-        console.print(f"[bold]{exc_type.__name__}[/bold]: {exc_value}")
+        if exc_type is ContractLogicError:
+            exc = cast(ContractLogicError, exc_value)
+            console.print(
+                f'[bold]{exc_type.__name__}[/bold]: "{exc.message}" ({exc.data})'
+            )
+        else:
+            console.print(f"[bold]{exc_type.__name__}[/bold]: {exc_value}")
     else:
         rich_traceback = Traceback.from_exception(
             exc_type,

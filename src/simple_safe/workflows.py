@@ -128,10 +128,7 @@ def execute_calltx(
     force: bool,
 ) -> HexBytes:
     with console.status("Building Web3 transaction..."):
-        try:
-            tx: TxParams = contractfn.build_transaction()
-        except Exception as exc:
-            raise click.ClickException(str(exc)) from exc
+        tx: TxParams = contractfn.build_transaction()
     assert "data" in tx
     console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
