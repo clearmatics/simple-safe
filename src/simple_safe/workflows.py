@@ -84,14 +84,12 @@ def prepare_calltx(
 
 
 def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool) -> HexBytes:
-    with console.status("Checking sender address..."):
+    with console.status("Preparing Web3 transaction..."):
         with click.open_file(keyfile) as kf:
             keydata = kf.read()
         sender_address = to_checksum_address(json.loads(keydata)["address"])
         tx["nonce"] = w3.eth.get_transaction_count(sender_address)
         tx["from"] = sender_address
-
-    with console.status("Retrieving chain data..."):
         chaindata = fetch_chaindata(w3.eth.chain_id)
         gasprice = w3.eth.gas_price
 
