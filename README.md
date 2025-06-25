@@ -1,6 +1,6 @@
 # Simple Safe
 
-A simple & decentralized CLI for Safe accounts.
+A simple Web3-native CLI for Safe accounts.
 
 Functionality:
 
