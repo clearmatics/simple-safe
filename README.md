@@ -50,7 +50,7 @@ $ safe --help
 
 Usage: safe [OPTIONS] COMMAND [ARGS]...
 
-  A simple & decentralized CLI for Safe accounts.
+  A simple Web3-native CLI for Safe accounts.
 
 Options:
   --version   print version info and exit
