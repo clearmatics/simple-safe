@@ -91,10 +91,9 @@ DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
 DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 # Silence third party log messages.
-logging.config.dictConfig({
-    "version": 1,
-    "disable_existing_loggers": True,
-})
+for name, root_logger in logging.root.manager.loggerDict.items():
+    if not name.startswith("simple_safe.") and isinstance(root_logger, logging.Logger):
+        root_logger.disabled = True
 
 logger = logging.getLogger(__name__)
 
