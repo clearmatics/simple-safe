@@ -15,7 +15,7 @@
 
   languages.python = {
     enable = true;
-    version = "3.12";
+    version = "3.13";
     uv.enable = true;
     uv.sync.enable = true;
   };
