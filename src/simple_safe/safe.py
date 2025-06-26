@@ -3,7 +3,6 @@
 import json
 import logging
 import logging.config
-import os
 import secrets
 import shutil
 import sys
@@ -49,6 +48,7 @@ from . import params
 from .abi import find_function, parse_args
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
+    DEBUG,
     console,
     get_keyfile_password,
     get_output_console,
@@ -87,8 +87,6 @@ DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
 # ┌───────┐
 # │ Setup │
 # └───────┘
-
-DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 # Silence third party log messages.
 for name, root_logger in logging.root.manager.loggerDict.items():

@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 import typing
 from datetime import datetime, timezone
@@ -59,6 +60,9 @@ CUSTOM_BOX: Box = Box(
     "    \n"  # foot
     "    \n"  # bottom
 )
+
+
+DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 
 def get_json_data_renderable(
@@ -373,10 +377,15 @@ def print_web3_tx_receipt(
 
 
 def activate_logging():
-    FORMAT = "%(module)s.%(funcName)s: %(message)s"
+    if DEBUG:
+        format = "%(module)s.%(funcName)s: %(message)s"
+        level = "NOTSET"
+    else:
+        format = "%(message)s"
+        level = "INFO"
     logging.basicConfig(
-        level="NOTSET",
-        format=FORMAT,
+        level=level,
+        format=format,
         datefmt="[%F %X]",
         handlers=[RichHandler(console=console)],
     )
