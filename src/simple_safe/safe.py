@@ -18,7 +18,6 @@ import click
 from click_option_group import (
     optgroup,
 )
-from eth_account import Account
 from eth_typing import (
     URI,
 )
@@ -46,11 +45,11 @@ from web3.types import Wei
 
 from . import params
 from .abi import find_function, parse_args
+from .auth import get_authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     DEBUG,
     console,
-    get_keyfile_password,
     get_output_console,
     print_kvtable,
     print_safetx,
@@ -453,7 +452,7 @@ def deploy(
     custom_singleton: str,
     fallback: str,
     force: bool,
-    keyfile: str,
+    keyfile: Optional[str],
     owners: tuple[str],
     rpc: str,
     salt_nonce: str,
@@ -558,7 +557,8 @@ def deploy(
     if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
-    txhash = execute_calltx(w3, deployment_call, keyfile, force)
+    auth = get_authenticator(keyfile)
+    txhash = execute_calltx(w3, deployment_call, auth, force)
     output_console = get_output_console()
     output_console.print(txhash.to_0x_hex())
 
@@ -660,7 +660,8 @@ def exec(
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
-    txhash = execute_calltx(client.w3, safetxdata.safetx.w3_tx, keyfile, force)
+    auth = get_authenticator(keyfile)
+    txhash = execute_calltx(client.w3, safetxdata.safetx.w3_tx, auth, force)
     output_console = get_output_console()
     output_console.print(txhash.to_0x_hex())
 
@@ -796,15 +797,9 @@ def sign(
     if not force and not Confirm.ask("Sign Safe transaction?", default=False):
         raise click.Abort()
 
-    with click.open_file(keyfile) as kf:
-        keydata = kf.read()
-    address = to_checksum_address(json.loads(keydata)["address"])
-    password = get_keyfile_password(address, keyfile)
-    privkey = Account.decrypt(keydata, password=password)
-    account = Account.from_key(privkey)
-
-    signedmsg = account.sign_typed_data(full_message=safetxdata.payload)
-    sigobj = SafeSignature.parse_signature(signedmsg.signature, safetxdata.hash)[0]
+    auth = get_authenticator(keyfile)
+    sigbytes = auth.sign_typed_data(safetxdata.data)
+    sigobj = SafeSignature.parse_signature(sigbytes, safetxdata.hash)[0]
     signature = sigobj.export_signature()
 
     output_console = get_output_console(output)

@@ -1,4 +1,3 @@
-import json
 from decimal import Decimal
 from typing import (
     Optional,
@@ -6,9 +5,7 @@ from typing import (
 )
 
 import click
-from eth_account import Account
 from eth_typing import ChecksumAddress
-from eth_utils.address import to_checksum_address
 from hexbytes import (
     HexBytes,
 )
@@ -21,10 +18,10 @@ from web3.contract.contract import ContractFunction
 from web3.types import TxParams
 
 from .abi import Function, find_function, parse_args
+from .auth import Authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     console,
-    get_keyfile_password,
     print_function_matches,
     print_web3_call_data,
     print_web3_tx_fees,
@@ -83,13 +80,10 @@ def prepare_calltx(
     )
 
 
-def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool) -> HexBytes:
+def execute_tx(w3: Web3, tx: TxParams, auth: Authenticator, force: bool) -> HexBytes:
     with console.status("Preparing Web3 transaction..."):
-        with click.open_file(keyfile) as kf:
-            keydata = kf.read()
-        sender_address = to_checksum_address(json.loads(keydata)["address"])
-        tx["nonce"] = w3.eth.get_transaction_count(sender_address)
-        tx["from"] = sender_address
+        tx["nonce"] = w3.eth.get_transaction_count(auth.address)
+        tx["from"] = auth.address
         chaindata = fetch_chaindata(w3.eth.chain_id)
         gasprice = w3.eth.gas_price
 
@@ -102,14 +96,9 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool) -> HexBytes:
     if not force and not Confirm.ask("Execute Web3 transaction?", default=False):
         raise click.Abort()
 
-    password = get_keyfile_password(sender_address, keyfile)
-
-    with console.status("Loading account from keyfile..."):
-        privkey = Account.decrypt(keydata, password=password)
-        deployer_account = Account.from_key(privkey)
+    signed_tx = auth.sign_transaction(tx)
 
     with console.status("Executing Web3 transaction..."):
-        signed_tx = deployer_account.sign_transaction(tx)
         tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
     with console.status("Waiting for Web3 transaction receipt..."):
@@ -126,7 +115,7 @@ def execute_tx(w3: Web3, tx: TxParams, keyfile: str, force: bool) -> HexBytes:
 def execute_calltx(
     w3: Web3,
     contractfn: ContractFunction,
-    keyfile: str,
+    auth: Authenticator,
     force: bool,
 ) -> HexBytes:
     with console.status("Building Web3 transaction..."):
@@ -134,7 +123,7 @@ def execute_calltx(
     assert "data" in tx
     console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
-    return execute_tx(w3, tx, keyfile, force)
+    return execute_tx(w3, tx, auth, force)
 
 
 def handle_function_match_failure(

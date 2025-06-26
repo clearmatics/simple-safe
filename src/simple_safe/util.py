@@ -31,7 +31,7 @@ from .chain import ChainData
 
 class SafeTxData(NamedTuple):
     safetx: SafeTx
-    payload: dict[str, Any]
+    data: dict[str, Any]
     preimage: HexBytes
     hash: HexBytes
 
@@ -115,7 +115,7 @@ def reconstruct_safetx(
     safetx = eip712_data_to_safetx(client, safetx_json, version)
     return SafeTxData(
         safetx=safetx,
-        payload=safetx.eip712_structured_data,
+        data=safetx_json,
         preimage=safetx.safe_tx_hash_preimage,
         hash=safetx.safe_tx_hash,
     )
