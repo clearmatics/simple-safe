@@ -65,6 +65,21 @@ CUSTOM_BOX: Box = Box(
 DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 
+def activate_logging():
+    if DEBUG:
+        format = "%(module)s.%(funcName)s: %(message)s"
+        level = "NOTSET"
+    else:
+        format = "%(message)s"
+        level = "INFO"
+    logging.basicConfig(
+        level=level,
+        format=format,
+        datefmt="[%F %X]",
+        handlers=[RichHandler(console=console)],
+    )
+
+
 def get_json_data_renderable(
     data: dict[str, Any], indent: Optional[int] = None
 ) -> Text:
@@ -374,18 +389,3 @@ def print_web3_tx_receipt(
         border_style="panel_ok" if success else "panel_danger",
     )
     console.print(panel)
-
-
-def activate_logging():
-    if DEBUG:
-        format = "%(module)s.%(funcName)s: %(message)s"
-        level = "NOTSET"
-    else:
-        format = "%(message)s"
-        level = "INFO"
-    logging.basicConfig(
-        level=level,
-        format=format,
-        datefmt="[%F %X]",
-        handlers=[RichHandler(console=console)],
-    )
