@@ -50,6 +50,7 @@ from .console import (
     activate_logging,
     console,
     get_output_console,
+    make_status_logger,
     print_kvtable,
     print_safetx,
     print_signatures,
@@ -88,6 +89,7 @@ DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
 # └───────┘
 
 logger = logging.getLogger(__name__)
+status = make_status_logger(logger)
 
 
 def handle_crash(
@@ -194,7 +196,7 @@ def build_abi_call(
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
-    with console.status("Building Safe transaction..."):
+    with status("Building Safe transaction..."):
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
@@ -244,7 +246,7 @@ def build_custom(
     safe_version: Optional[str],
 ) -> None:
     """Build a custom Safe transaction."""
-    with console.status("Building Safe transaction..."):
+    with status("Building Safe transaction..."):
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
@@ -306,7 +308,7 @@ def build_erc20_call(
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
-    with console.status("Building Safe transaction..."):
+    with status("Building Safe transaction..."):
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
@@ -354,7 +356,7 @@ def build_safe_call(
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
-    with console.status("Building Safe transaction..."):
+    with status("Building Safe transaction..."):
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
@@ -469,7 +471,7 @@ def deploy(
     emits events. To use the gas-saving 'Safe.sol' variant instead, pass
     --without-events.
     """
-    with console.status("Preparing Safe deployment parameters..."):
+    with status("Preparing Safe deployment parameters..."):
         w3 = Web3(load_provider_from_uri(URI(rpc)))
 
         if salt_nonce == SALT_NONCE_SENTINEL:
@@ -585,7 +587,7 @@ def encode(
 
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
-    with console.status("Building call data..."):
+    with status("Building call data..."):
         with open(abi_file, "r") as f:
             abi = json.load(f)
         match, partials = find_function(abi, identifier)
@@ -624,7 +626,7 @@ def exec(
     if not sigfiles:
         raise click.ClickException("Cannot execute SafeTx without signatures.")
 
-    with console.status("Loading Safe transaction..."):
+    with status("Loading Safe transaction..."):
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
         safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
@@ -632,7 +634,7 @@ def exec(
         threshold = safe.retrieve_threshold()
         sigdata = parse_signatures(owners, safetxdata, sigfiles)
 
-    with console.status("Retrieving chain data..."):
+    with status("Retrieving chain data..."):
         chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
 
     console.line()
@@ -684,7 +686,7 @@ def hash(txfile: typing.TextIO) -> None:
 @params.common
 def inspect(address: str, rpc: str):
     """Inspect a Safe account."""
-    with console.status("Retrieving Safe account data..."):
+    with status("Retrieving Safe account data..."):
         checksum_addr = to_checksum_address(address)
         client = EthereumClient(URI(rpc))
         try:
@@ -698,7 +700,7 @@ def inspect(address: str, rpc: str):
             raise click.ClickException(str(exc)) from exc
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
 
-    with console.status("Retrieving chain data..."):
+    with status("Retrieving chain data..."):
         chaindata = fetch_chaindata(client.w3.eth.chain_id)
 
     console.line()
@@ -736,11 +738,11 @@ def preview(
 
     A SIGFILE must be a valid owner signature.
     """
-    with console.status("Loading Safe transaction..."):
+    with status("Loading Safe transaction..."):
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
 
-    with console.status("Retrieving chain data..."):
+    with status("Retrieving chain data..."):
         chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
 
     console.line()
@@ -774,7 +776,7 @@ def sign(
     safe_version: Optional[str],
 ):
     """Sign a Safe transaction."""
-    with console.status("Loading Safe transaction..."):
+    with status("Loading Safe transaction..."):
         if not rpc and not safe_version:
             raise click.ClickException(
                 "Cannot determine Safe version and no RPC URL provided."
@@ -787,7 +789,7 @@ def sign(
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, safe_version)
 
-    with console.status("Retrieving chain data..."):
+    with status("Retrieving chain data..."):
         chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
 
     console.line()

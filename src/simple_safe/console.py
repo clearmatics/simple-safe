@@ -49,6 +49,8 @@ rich.reconfigure(stderr=True, theme=custom_theme)
 console = rich.get_console()
 
 
+logger = logging.getLogger(__name__)
+
 CUSTOM_BOX: Box = Box(
     "    \n"  # top
     "    \n"  # head
@@ -136,6 +138,14 @@ def get_panel(
     )
     base_config.update(**kwargs)
     return Panel(renderable, box=ROUNDED, **base_config)  # pyright: ignore[reportArgumentType]
+
+
+def make_status_logger(logger: logging.Logger):
+    def status_logger(message: str):
+        logger.info(message, stacklevel=2)
+        return console.status(message)
+
+    return status_logger
 
 
 def print_function_matches(matches: Sequence[Function]):

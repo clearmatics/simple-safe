@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 from typing import (
     Optional,
@@ -22,6 +23,7 @@ from .auth import Authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     console,
+    make_status_logger,
     print_function_matches,
     print_web3_call_data,
     print_web3_tx_fees,
@@ -37,6 +39,9 @@ SAFE_CONTRACT_VERSIONS = (
     "1.3.0",
     "1.4.1",
 )
+
+logger = logging.getLogger(__name__)
+status = make_status_logger(logger)
 
 
 def prepare_calltx(
@@ -81,7 +86,7 @@ def prepare_calltx(
 
 
 def execute_tx(w3: Web3, tx: TxParams, auth: Authenticator, force: bool) -> HexBytes:
-    with console.status("Preparing Web3 transaction..."):
+    with status("Preparing Web3 transaction..."):
         tx["nonce"] = w3.eth.get_transaction_count(auth.address)
         chaindata = fetch_chaindata(w3.eth.chain_id)
         gasprice = w3.eth.gas_price
@@ -97,10 +102,10 @@ def execute_tx(w3: Web3, tx: TxParams, auth: Authenticator, force: bool) -> HexB
 
     signed_tx = auth.sign_transaction(tx)
 
-    with console.status("Executing Web3 transaction..."):
+    with status("Executing Web3 transaction..."):
         tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
-    with console.status("Waiting for Web3 transaction receipt..."):
+    with status("Waiting for Web3 transaction receipt..."):
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     timestamp = w3.eth.get_block(
         tx_receipt["blockNumber"], full_transactions=False
@@ -117,7 +122,7 @@ def execute_calltx(
     auth: Authenticator,
     force: bool,
 ) -> HexBytes:
-    with console.status("Building Web3 transaction..."):
+    with status("Building Web3 transaction..."):
         tx: TxParams = contractfn.build_transaction()
     assert "data" in tx
     console.line()

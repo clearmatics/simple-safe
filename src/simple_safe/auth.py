@@ -11,9 +11,10 @@ from eth_account.types import TransactionDictType
 from eth_typing import ChecksumAddress
 from web3.types import TxParams
 
-from .console import console
+from .console import make_status_logger
 
 logger = logging.getLogger(__name__)
+status = make_status_logger(logger)
 
 
 class Authenticator(Protocol):
@@ -30,7 +31,7 @@ class KeyfileAuthenticator:
     def __init__(self, keyfile: str):
         self.keyfile = keyfile
         password = getpass(prompt=f"[{self.keyfile}] password: ", stream=sys.stderr)
-        with console.status("Decrypting keyfile..."):
+        with status("Decrypting keyfile..."):
             with click.open_file(self.keyfile) as kf:
                 keydata = kf.read()
             privkey = Account.decrypt(keydata, password=password)
@@ -43,11 +44,11 @@ class KeyfileAuthenticator:
         )
 
     def sign_transaction(self, params: TxParams) -> SignedTransaction:
-        with console.status("Signing Web3 transaction..."):
+        with status("Signing Web3 transaction..."):
             return self.account.sign_transaction(cast(TransactionDictType, params))
 
     def sign_typed_data(self, data: dict[str, Any]) -> bytes:
-        with console.status("Signing typed data..."):
+        with status("Signing typed data..."):
             return self.account.sign_typed_data(full_message=data).signature
 
 
