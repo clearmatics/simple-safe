@@ -2,7 +2,7 @@ from typing import Any, Callable, TypeVar
 
 import click
 from click import Command
-from click_option_group import RequiredAnyOptionGroup
+from click_option_group import RequiredMutuallyExclusiveOptionGroup
 from click_option_group._decorators import (
     _OptGroup,  # pyright: ignore[reportPrivateUsage]
 )
@@ -20,13 +20,18 @@ def authentication(f: FC) -> FC:
         [
             optgroup.group(
                 "Authentication",
-                cls=RequiredAnyOptionGroup,
+                cls=RequiredMutuallyExclusiveOptionGroup,
             ),
             optgroup.option(
                 "--keyfile",
                 "-k",
                 type=click.Path(exists=True),
                 help="local Ethereum keyfile",
+            ),
+            optgroup.option(
+                "--trezor",
+                metavar="ACCOUNT",
+                help="Trezor BIP32 derivation path or account index",
             ),
         ]
     ):

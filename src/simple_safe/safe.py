@@ -392,6 +392,7 @@ def deploy(
     rpc: str,
     salt_nonce: str,
     threshold: int,
+    trezor: Optional[str],
     without_events: bool,
 ):
     """Deploy a new Safe account.
@@ -457,7 +458,7 @@ def deploy(
     if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
-    auth = validate_authenticator(keyfile)
+    auth = validate_authenticator(keyfile, trezor)
     txhash = execute_calltx(w3, deployment_call, auth, force)
 
     console.line()
@@ -519,6 +520,7 @@ def exec(
     keyfile: str,
     rpc: str,
     sigfiles: list[str],
+    trezor: Optional[str],
     txfile: typing.TextIO,
 ):
     """Execute a signed Safe transaction.
@@ -569,7 +571,7 @@ def exec(
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
-    auth = validate_authenticator(keyfile)
+    auth = validate_authenticator(keyfile, trezor)
     txhash = execute_calltx(client.w3, safetxdata.safetx.w3_tx, auth, force)
 
     console.line()
@@ -737,6 +739,7 @@ def sign(
     output: typing.TextIO | None,
     rpc: str,
     safe_version: Optional[str],
+    trezor: Optional[str],
     txfile: typing.TextIO,
 ):
     """Sign a Safe transaction."""
@@ -767,7 +770,7 @@ def sign(
 
     from safe_eth.safe.safe_signature import SafeSignature
 
-    auth = validate_authenticator(keyfile)
+    auth = validate_authenticator(keyfile, trezor)
     sigbytes = auth.sign_typed_data(safetxdata.data)
     sigobj = SafeSignature.parse_signature(sigbytes, safetxdata.hash)[0]
     signature = sigobj.export_signature()

@@ -9,10 +9,15 @@
 {
   packages = [
     pkgs.git
+    pkgs.libusb1
     pkgs.taplo
   ];
 
   env.UV_PYTHON = "${config.env.DEVENV_PROFILE}/bin/python";
+
+  env.LD_LIBRARY_PATH = lib.makeLibraryPath [
+    pkgs.libusb1
+  ];
 
   dotenv.enable = true;
 
