@@ -47,6 +47,7 @@ from .auth import get_authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     DEBUG,
+    activate_logging,
     console,
     get_output_console,
     print_kvtable,
@@ -139,7 +140,8 @@ sys.excepthook = handle_crash
 @params.help
 def main():
     """A simple Web3-native CLI for Safe accounts."""
-    pass
+    if DEBUG:
+        activate_logging()
 
 
 # ┌──────────┐

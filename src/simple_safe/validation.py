@@ -1,8 +1,8 @@
 from typing import Any, Optional
 
-from .console import activate_logging
-
 import click
+
+from .console import DEBUG, activate_logging
 
 
 def help_callback(
@@ -17,6 +17,6 @@ def help_callback(
 def verbose_callback(
     ctx: click.Context, opt: click.Option, value: Optional[bool]
 ) -> Optional[Any]:
-    if value:
+    if value and not DEBUG:
         activate_logging()
     return None
