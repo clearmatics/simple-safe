@@ -330,7 +330,6 @@ def print_web3_tx_fees(
 def print_web3_tx_params(
     params: TxParams,
     from_: ChecksumAddress,
-    gasprice: int,
     chaindata: Optional[ChainData] = None,
 ) -> None:
     # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to

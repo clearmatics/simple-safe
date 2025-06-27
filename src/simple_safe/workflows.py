@@ -92,7 +92,7 @@ def execute_tx(w3: Web3, tx: TxParams, auth: Authenticator, force: bool) -> HexB
         gasprice = w3.eth.gas_price
 
     console.line()
-    print_web3_tx_params(tx, auth.address, gasprice, chaindata)
+    print_web3_tx_params(tx, auth.address, chaindata)
     console.line()
     print_web3_tx_fees(tx, gasprice, chaindata)
 
