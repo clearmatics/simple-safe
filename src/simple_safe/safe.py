@@ -1,5 +1,3 @@
-#!/usr/bin/env -S uv run --script
-
 import json
 import logging
 import logging.config
@@ -804,7 +802,3 @@ def sign(
 
     output_console = get_output_console(output)
     output_console.print(signature.to_0x_hex())
-
-
-if __name__ == "__main__":
-    main()
