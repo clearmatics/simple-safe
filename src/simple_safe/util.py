@@ -68,11 +68,12 @@ def format_wei_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:
     return f"{value} Wei ({format_native_value(value, chaindata)})"
 
 
-def format_gwei_value(value: Wei) -> str:
+def format_gwei_value(value: Wei, units: tuple[str, str] = ("Wei", "Gwei")) -> str:
     with localcontext() as ctx:
         ctx.prec = 78
         converted = (Decimal(value) / denoms.gwei).normalize()
-    return f"{value} Wei ({converted:f} Gwei)"
+    wei, gwei = units
+    return f"{value} {wei} ({converted:f} {gwei})"
 
 
 def hexbytes_json_encoder(obj: Any):

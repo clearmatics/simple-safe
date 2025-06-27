@@ -185,7 +185,7 @@ def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) 
         "To Address": str(safetx.to),
         "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
         "Value": format_native_value(Wei(safetx.value), chaindata),
-        "SafeTx Gas": format_gwei_value(Wei(safetx.safe_tx_gas)),
+        "Gas Limit": format_gwei_value(Wei(safetx.safe_tx_gas)),
         "Data": safetx.data.to_0x_hex(),
     })
     if safetx.gas_price > 0:
@@ -311,7 +311,8 @@ def print_web3_tx_fees(
         "",
         {
             "Current Gas Price": format_gwei_value(Wei(gasprice)),
-            "Transaction Fees": f"~{est_fee} ─ {max_fee}",
+            "Estimated Fees": est_fee,
+            "Maximum Fees": max_fee,
         },
     )
 
@@ -336,15 +337,17 @@ def print_web3_tx_params(
         "Web3 Transaction Parameters",
         "",
         {
-            "From": from_,
+            "From Address": from_,
             "Chain ID": str(params["chainId"]),
-            "Web3 Nonce": str(params["nonce"]),
-            "To": str(params["to"]),
+            "Nonce": str(params["nonce"]),
+            "To Address": str(params["to"]),
             "Value": format_native_value(params["value"], chaindata),
-            "Gas": str(params["gas"]),
-            "MaxFee/Gas": format_gwei_value(Wei(int(params["maxFeePerGas"]))),
-            "MaxPriFee/Gas": format_gwei_value(
-                Wei(int(params["maxPriorityFeePerGas"]))
+            "Gas Limit": str(params["gas"]),
+            "Max Total Fee": format_gwei_value(
+                Wei(int(params["maxFeePerGas"])), units=("Wei/Gas", "Gwei/Gas")
+            ),
+            "Max Priority Fee": format_gwei_value(
+                Wei(int(params["maxPriorityFeePerGas"])), units=("Wei/Gas", "Gwei/Gas")
             ),
             "Data": str(params["data"]),
         },
@@ -370,7 +373,8 @@ def print_web3_tx_receipt(
             "Transaction Fees": format_native_value(
                 Wei(txreceipt["gasUsed"] * txreceipt["effectiveGasPrice"]), chaindata
             ),
-            "Status": str(txreceipt["status"]) + (" (OK)" if success else " (ERROR)"),
+            "Status": str(txreceipt["status"])
+            + (" (SUCCESS)" if success else " (FAILURE)"),
         }
     ]
     if "contractAddress" in txreceipt and txreceipt["contractAddress"]:
