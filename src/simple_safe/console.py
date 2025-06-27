@@ -9,6 +9,7 @@ from typing import Any, Optional, Sequence, cast
 
 import rich
 from click import Context, Parameter
+from eth_typing import ChecksumAddress
 from eth_typing.abi import ABIElement
 from eth_utils.abi import get_abi_input_names
 from rich.box import HORIZONTALS, ROUNDED, Box
@@ -316,11 +317,13 @@ def print_web3_tx_fees(
 
 
 def print_web3_tx_params(
-    params: TxParams, gasprice: int, chaindata: Optional[ChainData] = None
+    params: TxParams,
+    from_: ChecksumAddress,
+    gasprice: int,
+    chaindata: Optional[ChainData] = None,
 ) -> None:
     # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
     # TxParams fields being optional.
-    assert "from" in params
     assert "chainId" in params
     assert "nonce" in params
     assert "to" in params
@@ -333,7 +336,7 @@ def print_web3_tx_params(
         "Web3 Transaction Parameters",
         "",
         {
-            "From": str(params["from"]),
+            "From": from_,
             "Chain ID": str(params["chainId"]),
             "Web3 Nonce": str(params["nonce"]),
             "To": str(params["to"]),

@@ -83,12 +83,11 @@ def prepare_calltx(
 def execute_tx(w3: Web3, tx: TxParams, auth: Authenticator, force: bool) -> HexBytes:
     with console.status("Preparing Web3 transaction..."):
         tx["nonce"] = w3.eth.get_transaction_count(auth.address)
-        tx["from"] = auth.address
         chaindata = fetch_chaindata(w3.eth.chain_id)
         gasprice = w3.eth.gas_price
 
     console.line()
-    print_web3_tx_params(tx, gasprice, chaindata)
+    print_web3_tx_params(tx, auth.address, gasprice, chaindata)
     console.line()
     print_web3_tx_fees(tx, gasprice, chaindata)
 
