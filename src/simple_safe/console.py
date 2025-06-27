@@ -67,11 +67,10 @@ DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 def activate_logging():
     if DEBUG:
-        format = "%(module)s.%(funcName)s: %(message)s"
-        level = "NOTSET"
+        level = logging.NOTSET
     else:
-        format = "%(message)s"
-        level = "INFO"
+        level = logging.INFO
+    format = "<%(name)s.%(funcName)s> %(message)s"
     logging.basicConfig(
         level=level,
         format=format,
