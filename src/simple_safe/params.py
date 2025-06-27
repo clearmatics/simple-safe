@@ -56,7 +56,7 @@ def common(f: FC) -> FC:
         is_flag=True,
         expose_value=False,
         is_eager=True,
-        help="print debug log messages",
+        help="print informational messages",
         callback=verbose_callback,
     )
     @functools.wraps(f)
