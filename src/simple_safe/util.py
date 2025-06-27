@@ -1,4 +1,6 @@
 import json
+import logging
+from contextlib import contextmanager
 from decimal import Decimal, localcontext
 from typing import (
     Any,
@@ -163,3 +165,13 @@ def parse_signatures(
     #     sigobjs.append(siglist[0])
     # safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
     return sigdata
+
+
+@contextmanager
+def silence_logging():
+    log_level = logging.root.manager.disable
+    logging.disable(level=100)
+    try:
+        yield
+    finally:
+        logging.disable(log_level)

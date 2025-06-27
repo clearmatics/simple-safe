@@ -64,6 +64,7 @@ from .util import (
     hexbytes_json_encoder,
     parse_signatures,
     reconstruct_safetx,
+    silence_logging,
 )
 from .workflows import (
     SAFE_CONTRACT_VERSIONS,
@@ -87,11 +88,6 @@ DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
 # ┌───────┐
 # │ Setup │
 # └───────┘
-
-# Silence third party log messages.
-for name, root_logger in logging.root.manager.loggerDict.items():
-    if not name.startswith("simple_safe.") and isinstance(root_logger, logging.Logger):
-        root_logger.disabled = True
 
 logger = logging.getLogger(__name__)
 
@@ -693,7 +689,10 @@ def inspect(address: str, rpc: str):
         try:
             safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
             block = client.w3.eth.block_number
-            info = safeobj.retrieve_all_info(block)
+            # Silence safe_eth.eth.ethereum_client WARNING message:
+            # "Multicall not supported for this network"
+            with silence_logging():
+                info = safeobj.retrieve_all_info(block)
         except Exception as exc:
             raise click.ClickException(str(exc)) from exc
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
