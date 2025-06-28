@@ -66,7 +66,7 @@ def lookup_chaindata(datafile: Path, chain_id: int) -> Optional[ChainData]:
 def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
     paths = get_paths()
     if not paths.cache_dir.exists():
-        logger.debug(f"Creating cache dir '{paths.cache_dir}'.")
+        logger.debug(f"Creating cache dir '{paths.cache_dir}'")
         paths.cache_dir.mkdir(mode=0o700, parents=True)
     elif not paths.cache_dir.is_dir():
         raise NotADirectoryError(
@@ -75,7 +75,7 @@ def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
 
     chaindata = lookup_chaindata(paths.chaindata, chain_id)
     if chaindata:
-        logger.debug(f"Cache hit for chain ID {chain_id}.")
+        logger.debug(f"Cache hit for chain ID {chain_id}")
         return chaindata
 
     metadata = {}
@@ -90,10 +90,10 @@ def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
             if new_etag_value:
                 new_etag = parse_etag(new_etag_value)
                 if new_etag == old_etag:
-                    logger.debug("ChainList data unchanged.")
+                    logger.debug("ChainList data unchanged")
                     return None
 
-    logger.debug("Requesting ChainList data.")
+    logger.debug("Requesting ChainList data")
     res = requests.get(CHAINLIST_URL)
     assert len(res.content) > 0, "Bad ChainList data."
     with open(paths.chaindata, "wb") as fp:
