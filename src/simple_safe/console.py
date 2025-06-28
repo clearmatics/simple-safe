@@ -75,7 +75,7 @@ def activate_logging():
     logging.basicConfig(
         level=level,
         format=format,
-        datefmt="[%F %X]",
+        datefmt="[%X]",
         handlers=[RichHandler(console=console)],
     )
 
