@@ -63,11 +63,11 @@ CUSTOM_BOX: Box = Box(
 )
 
 
-DEBUG = True if "SAFE_DEBUG" in os.environ else False
+SAFE_DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 
 def activate_logging():
-    if DEBUG:
+    if SAFE_DEBUG:
         level = logging.NOTSET
     else:
         level = logging.INFO

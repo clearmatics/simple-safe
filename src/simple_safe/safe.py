@@ -46,7 +46,7 @@ from .abi import find_function, parse_args
 from .auth import get_authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
-    DEBUG,
+    SAFE_DEBUG,
     activate_logging,
     console,
     get_output_console,
@@ -97,7 +97,7 @@ def handle_crash(
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> None:
-    if not DEBUG:
+    if not SAFE_DEBUG:
         if exc_type is ContractLogicError:
             exc = cast(ContractLogicError, exc_value)
             console.print(
@@ -142,7 +142,7 @@ sys.excepthook = handle_crash
 @params.help
 def main():
     """A simple Web3-native CLI for Safe accounts."""
-    if DEBUG:
+    if SAFE_DEBUG:
         activate_logging()
 
 
