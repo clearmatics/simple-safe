@@ -8,6 +8,7 @@ from click_option_group import (
     optgroup,
 )
 
+from .constants import DEPLOY_SAFE_VERSION, SALT_NONCE_SENTINEL
 from .validation import help_callback, verbose_callback
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
@@ -64,6 +65,76 @@ def common(f: FC) -> FC:
         f(*args, **kwargs)
 
     return cast(FC, wrapper)
+
+
+def deployment(offline: bool) -> Callable[[FC], FC]:
+    def outer(f: FC) -> FC:
+        @optgroup.group(
+            "Deployment settings",
+        )
+        @optgroup.option(
+            "--chain-specific",
+            is_flag=True,
+            help="account address will depend on Chain ID",
+        )
+        @optgroup.option(
+            "--chain-id",
+            type=int,
+            hidden=not offline,
+            help="Chain ID (only for chain-specific address)",
+        )
+        @optgroup.option(
+            "--salt-nonce",
+            type=str,
+            metavar="BYTES32",
+            default=SALT_NONCE_SENTINEL,
+            help="nonce used to generate CREATE2 salt",
+        )
+        @optgroup.option(
+            "--without-events",
+            is_flag=True,
+            help="use implementation that does not emit events",
+        )
+        @optgroup.option(
+            "--custom-singleton",
+            metavar="ADDRESS",
+            help=f"use a non-canonical Singleton {DEPLOY_SAFE_VERSION}",
+        )
+        @optgroup.option(
+            "--custom-proxy-factory",
+            metavar="ADDRESS",
+            help=f"use a non-canonical SafeProxyFactory {DEPLOY_SAFE_VERSION}",
+        )
+        @optgroup.group(
+            "Initialization settings",
+        )
+        @optgroup.option(
+            "--owner",
+            "owners",
+            required=True,
+            multiple=True,
+            metavar="ADDRESS",
+            type=str,
+            help="add an owner (repeat option to add more)",
+        )
+        @optgroup.option(
+            "--threshold",
+            type=int,
+            default=1,
+            help="number of required confirmations",
+        )
+        @optgroup.option(
+            "--fallback",
+            metavar="ADDRESS",
+            help="custom Fallback Handler address",
+        )
+        @functools.wraps(f)
+        def wrapper(*args: object, **kwargs: object) -> object:
+            f(*args, **kwargs)
+
+        return cast(FC, wrapper)
+
+    return outer
 
 
 force = click.option(

@@ -10,23 +10,46 @@ from typing import (
     cast,
 )
 
+from eth_abi.abi import encode as abi_encode
+from eth_abi.packed import encode_packed
 from eth_account.messages import (
     _hash_eip191_message,  # pyright: ignore[reportPrivateUsage]
     encode_typed_data,
 )
-from eth_typing import ChecksumAddress
+from eth_typing import ChecksumAddress, HexStr
 from eth_utils.address import to_checksum_address
+from eth_utils.crypto import keccak
 from eth_utils.currency import denoms
 from hexbytes import (
     HexBytes,
 )
 from safe_eth.eth import EthereumClient
 from safe_eth.eth.constants import NULL_ADDRESS
+from safe_eth.eth.contracts import (
+    load_contract_interface,
+)
 from safe_eth.safe import SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
+from web3.constants import ADDRESS_ZERO
 from web3.types import Wei
+from web3.utils.address import get_create2_address
+
+from simple_safe.constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
 from .chain import ChainData
+
+
+class DeployParams(NamedTuple):
+    # deployment
+    proxy_factory: ChecksumAddress
+    singleton: ChecksumAddress
+    chain_specific: bool
+    chain_id: Optional[int]
+    salt_nonce: int
+    # initialization
+    owners: list[ChecksumAddress]
+    threshold: int
+    fallback: ChecksumAddress
 
 
 class SafeTxData(NamedTuple):
@@ -50,6 +73,76 @@ class SignatureData(NamedTuple):
 def as_checksum(checksum_str: str) -> ChecksumAddress:
     """Cast to satisfy type checker."""
     return cast(ChecksumAddress, checksum_str)
+
+
+def compute_safe_address(
+    proxy_factory: ChecksumAddress,
+    singleton: ChecksumAddress,
+    chain_specific: bool,
+    salt_nonce: int,
+    owners: list[ChecksumAddress],
+    threshold: int,
+    fallback: ChecksumAddress,
+    chain_id: Optional[int],
+) -> ChecksumAddress:
+    """Compute Safe address via SafeProxyFactory v1.4.1."""
+    if (chain_specific and chain_id is None) or (
+        not chain_specific and chain_id is not None
+    ):
+        raise ValueError(
+            f"Invalid combination: chain_specific={chain_specific}, chain_id={chain_id}"
+        )
+    initializer_args = abi_encode(
+        SAFE_SETUP_FUNC_TYPES,
+        (
+            owners,
+            threshold,
+            ADDRESS_ZERO,
+            b"",
+            fallback,
+            ADDRESS_ZERO,
+            0,
+            ADDRESS_ZERO,
+        ),
+    )
+    initializer = HexBytes(HexBytes(SAFE_SETUP_FUNC_SELECTOR) + initializer_args)
+    if not chain_specific:
+        # bytes32 salt = keccak256(abi.encodePacked(keccak256(initializer), saltNonce));
+        salt_preimage = encode_packed(
+            (
+                "bytes32",
+                "uint256",
+            ),
+            (
+                keccak(initializer),
+                salt_nonce,
+            ),
+        )
+    else:
+        # bytes32 salt = keccak256(abi.encodePacked(keccak256(initializer), saltNonce, getChainId()));
+        salt_preimage = encode_packed(
+            (
+                "bytes32",
+                "uint256",
+                "uint256",
+            ),
+            (
+                keccak(initializer),
+                salt_nonce,
+                chain_id,
+            ),
+        )
+    salt = keccak(salt_preimage)
+    bytecode = HexBytes(load_contract_interface("Proxy_V1_4_1.json")["bytecode"])
+    deployment_data = encode_packed(
+        ["bytes", "uint256"], [bytecode, int(singleton, 16)]
+    )
+    address = get_create2_address(
+        proxy_factory,
+        cast(HexStr, salt.hex()),
+        cast(HexStr, deployment_data.hex()),
+    )
+    return address
 
 
 def format_native_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:

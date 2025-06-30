@@ -27,6 +27,7 @@ from web3.types import Timestamp, TxParams, TxReceipt, Wei
 from .abi import Function
 from .chain import ChainData
 from .util import (
+    DeployParams,
     SafeTxData,
     SignatureData,
     format_gwei_value,

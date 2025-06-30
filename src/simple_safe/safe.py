@@ -8,6 +8,7 @@ import typing
 from decimal import Decimal
 from types import TracebackType
 from typing import (
+    Any,
     Optional,
     cast,
 )
@@ -41,6 +42,15 @@ from web3.exceptions import ContractLogicError
 from web3.providers.auto import load_provider_from_uri
 from web3.types import Wei
 
+from simple_safe.constants import (
+    DEFAULT_FALLBACK_ADDRESS,
+    DEFAULT_PROXYFACTORY_ADDRESS,
+    DEFAULT_SAFE_SINGLETON_ADDRESS,
+    DEFAULT_SAFEL2_SINGLETON_ADDRESS,
+    DEPLOY_SAFE_VERSION,
+    SALT_NONCE_SENTINEL,
+)
+
 from . import params
 from .abi import find_function, parse_args
 from .auth import get_authenticator
@@ -57,7 +67,7 @@ from .console import (
     print_version,
 )
 from .util import (
-    as_checksum,
+    compute_safe_address,
     format_native_value,
     hash_eip712_data,
     hexbytes_json_encoder,
@@ -70,18 +80,8 @@ from .workflows import (
     execute_calltx,
     handle_function_match_failure,
     prepare_calltx,
+    validate_deploy_options,
     validate_safetx_options,
-)
-
-DEPLOY_SAFE_VERSION = "1.4.1"
-SALT_NONCE_SENTINEL = "random"
-DEFAULT_PROXYFACTORY_ADDRESS = as_checksum("0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67")
-DEFAULT_FALLBACK_ADDRESS = as_checksum("0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99")
-DEFAULT_SAFEL2_SINGLETON_ADDRESS = as_checksum(
-    "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
-)
-DEFAULT_SAFE_SINGLETON_ADDRESS = as_checksum(
-    "0x41675C099F32341bf84BFc5382aF534df5C7461a"
 )
 
 # ┌───────┐
@@ -389,66 +389,14 @@ def build_safe_call(
 @main.command(add_help_option=False)
 # pyright: reportUntypedFunctionDecorator=false
 # pyright: reportUnknownMemberType=false
-@optgroup.group(
-    "Safe configuration",
-)
-@optgroup.option(
-    "--owner",
-    "owners",
-    required=True,
-    multiple=True,
-    metavar="ADDRESS",
-    type=str,
-    help="add an owner (repeat option to add more)",
-)
-@optgroup.option(
-    "--threshold",
-    type=int,
-    default=1,
-    help="number of required confirmations",
-)
-@optgroup.option(
-    "--fallback",
-    metavar="ADDRESS",
-    help="custom Fallback Handler address",
-)
-@optgroup.group(
-    "Deployment settings",
-)
-@optgroup.option(
-    "--chain-specific",
-    is_flag=True,
-    default=False,
-    help="account address will depend on Chain ID",
-)
-@optgroup.option(
-    "--salt-nonce",
-    type=str,
-    metavar="BYTES32",
-    default=SALT_NONCE_SENTINEL,
-    help="nonce used to generate CREATE2 salt",
-)
-@optgroup.option(
-    "--without-events",
-    is_flag=True,
-    help="use implementation that does not emit events",
-)
-@optgroup.option(
-    "--custom-singleton",
-    metavar="ADDRESS",
-    help="use non-canonical Safe Singleton address",
-)
-@optgroup.option(
-    "--custom-proxy-factory",
-    metavar="ADDRESS",
-    help="use non-canonical ProxyFactory address",
-)
+@params.deployment(offline=False)
 @params.web3tx
 @params.authentication
 @params.rpc(click.option, required=True)
 @params.force
 @params.common
 def deploy(
+    chain_id: None,
     chain_specific: Optional[bool],
     custom_proxy_factory: Optional[str],
     custom_singleton: Optional[str],
@@ -490,18 +438,19 @@ def deploy(
                 raise click.ClickException(
                     "Option --without-events incompatible with --custom-singleton."
                 )
-            singleton_address = to_checksum_address(custom_singleton)
+            singleton_address = custom_singleton
         elif without_events:
             singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
         else:
             singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
-        fallback_address = (
-            DEFAULT_FALLBACK_ADDRESS if not fallback else to_checksum_address(fallback)
+        singleton_address = to_checksum_address(singleton_address)
+        fallback_address = to_checksum_address(
+            DEFAULT_FALLBACK_ADDRESS if not fallback else fallback
         )
-        proxy_factory_address = (
+        proxy_factory_address = to_checksum_address(
             DEFAULT_PROXYFACTORY_ADDRESS
             if not custom_proxy_factory
-            else to_checksum_address(custom_proxy_factory)
+            else custom_proxy_factory
         )
         safe_contract = get_safe_V1_4_1_contract(w3)
         initializer = HexBytes(
@@ -722,6 +671,28 @@ def inspect(address: str, rpc: str):
             "Balance": format_native_value(Wei(balance), chaindata),
         },
     )
+
+
+@main.command(add_help_option=False)
+@params.deployment(offline=True)
+@params.output_file
+@params.common
+def precompute(**kwargs: Any):
+    """Compute a Safe address offline."""
+    output = kwargs.pop("output")
+    data = validate_deploy_options(**kwargs)
+    address = compute_safe_address(
+        proxy_factory=data.proxy_factory,
+        singleton=data.singleton,
+        chain_specific=data.chain_specific,
+        salt_nonce=data.salt_nonce,
+        owners=data.owners,
+        threshold=data.threshold,
+        fallback=data.fallback,
+        chain_id=data.chain_id,
+    )
+    output_console = get_output_console(output)
+    output_console.print(address)
 
 
 @main.command(add_help_option=False)

@@ -1,4 +1,5 @@
 import logging
+import secrets
 from decimal import Decimal
 from typing import (
     Optional,
@@ -7,6 +8,7 @@ from typing import (
 
 import click
 from eth_typing import ChecksumAddress
+from eth_utils.address import to_checksum_address
 from hexbytes import (
     HexBytes,
 )
@@ -17,6 +19,15 @@ from web3 import Web3
 from web3.contract import Contract
 from web3.contract.contract import ContractFunction
 from web3.types import TxParams
+
+from simple_safe.constants import (
+    DEFAULT_FALLBACK_ADDRESS,
+    DEFAULT_PROXYFACTORY_ADDRESS,
+    DEFAULT_SAFE_SINGLETON_ADDRESS,
+    DEFAULT_SAFEL2_SINGLETON_ADDRESS,
+    SALT_NONCE_SENTINEL,
+)
+from simple_safe.util import DeployParams
 
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
@@ -146,6 +157,57 @@ def handle_function_match_failure(
         raise click.ClickException(
             "Matched multiple functions. Please specify unique identifier."
         )
+
+
+def validate_deploy_options(
+    chain_specific: bool,
+    custom_proxy_factory: Optional[str],
+    custom_singleton: Optional[str],
+    salt_nonce: str,
+    without_events: bool,
+    owners: list[str],
+    threshold: int,
+    fallback: Optional[str],
+    chain_id: Optional[int],
+) -> DeployParams:
+    if custom_singleton is not None:
+        if without_events:
+            raise click.ClickException(
+                "Option --without-events incompatible with --custom-singleton. "
+            )
+        singleton_address = custom_singleton
+    elif without_events:
+        singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
+    else:
+        singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
+    if salt_nonce == SALT_NONCE_SENTINEL:
+        salt_nonce_int = secrets.randbits(256)  # uint256
+    else:
+        salt_nonce_int = int.from_bytes(HexBytes(salt_nonce))
+    if chain_specific and chain_id is None:
+        raise click.ClickException(
+            "Requested chain-specific address but no Chain ID provided."
+        )
+    elif not chain_specific and chain_id is not None:
+        logger.warning(
+            f"Ignoring --chain-id {chain_id} because chain-specific address not requested"
+        )
+    return DeployParams(
+        proxy_factory=to_checksum_address(
+            DEFAULT_PROXYFACTORY_ADDRESS
+            if custom_proxy_factory is None
+            else custom_proxy_factory
+        ),
+        singleton=to_checksum_address(singleton_address),
+        chain_specific=chain_specific,
+        chain_id=chain_id,
+        salt_nonce=salt_nonce_int,
+        owners=[to_checksum_address(owner) for owner in owners],
+        threshold=threshold,
+        fallback=to_checksum_address(
+            DEFAULT_FALLBACK_ADDRESS if not fallback else fallback
+        ),
+    )
 
 
 def validate_safetx_options(
