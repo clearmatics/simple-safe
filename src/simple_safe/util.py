@@ -83,6 +83,11 @@ def hexbytes_json_encoder(obj: Any):
 
 
 def hash_eip712_data(data: Any) -> HexBytes:  # using eth_account
+    """Compute EIP-712 typed data hash.
+
+    This replicates `eth_account.account.sign_typed_data()` except it
+    doesn't require a private key.
+    """
     encoded = encode_typed_data(full_message=data)
     return HexBytes(_hash_eip191_message(encoded))
 
