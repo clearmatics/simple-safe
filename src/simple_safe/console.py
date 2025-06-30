@@ -26,7 +26,6 @@ from web3.types import Timestamp, TxParams, TxReceipt, Wei
 
 from .abi import Function
 from .chain import ChainData
-from .characters import CHECK, CROSS
 from .util import (
     SafeTxData,
     SignatureData,
@@ -50,6 +49,9 @@ console = rich.get_console()
 
 
 logger = logging.getLogger(__name__)
+
+CHECK = "✔"
+CROSS = "✖"
 
 CUSTOM_BOX: Box = Box(
     "    \n"  # top
