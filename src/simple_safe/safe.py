@@ -62,6 +62,7 @@ from .console import (
     get_output_console,
     make_status_logger,
     print_kvtable,
+    print_safe_deploy_info,
     print_safetx,
     print_signatures,
     print_version,
@@ -691,6 +692,10 @@ def precompute(**kwargs: Any):
         fallback=data.fallback,
         chain_id=data.chain_id,
     )
+    console.line()
+    print_safe_deploy_info(data, address)
+    if not output:
+        console.line()
     output_console = get_output_console(output)
     output_console.print(address)
 

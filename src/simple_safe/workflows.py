@@ -27,7 +27,7 @@ from simple_safe.constants import (
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
     SALT_NONCE_SENTINEL,
 )
-from simple_safe.util import DeployParams
+from simple_safe.util import DeployParams, SafeVariant
 
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
@@ -176,10 +176,13 @@ def validate_deploy_options(
                 "Option --without-events incompatible with --custom-singleton. "
             )
         singleton_address = custom_singleton
+        variant = SafeVariant.UNKNOWN
     elif without_events:
         singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
+        variant = SafeVariant.SAFE
     else:
         singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
+        variant = SafeVariant.SAFE_L2
     if salt_nonce == SALT_NONCE_SENTINEL:
         salt_nonce_int = secrets.randbits(256)  # uint256
     else:
@@ -202,6 +205,7 @@ def validate_deploy_options(
         chain_specific=chain_specific,
         chain_id=chain_id,
         salt_nonce=salt_nonce_int,
+        variant=variant,
         owners=[to_checksum_address(owner) for owner in owners],
         threshold=threshold,
         fallback=to_checksum_address(

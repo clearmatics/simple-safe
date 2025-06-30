@@ -12,6 +12,7 @@ from click import Context, Parameter
 from eth_typing import ChecksumAddress
 from eth_typing.abi import ABIElement
 from eth_utils.abi import get_abi_input_names
+from hexbytes import HexBytes
 from rich.box import HORIZONTALS, ROUNDED, Box
 from rich.console import Console, RenderableType
 from rich.highlighter import JSONHighlighter
@@ -24,11 +25,18 @@ from safe_eth.safe import SafeOperationEnum
 from web3.contract.contract import ContractFunction
 from web3.types import Timestamp, TxParams, TxReceipt, Wei
 
+from simple_safe.constants import (
+    DEFAULT_PROXYFACTORY_ADDRESS,
+    DEFAULT_SAFE_SINGLETON_ADDRESS,
+    DEFAULT_SAFEL2_SINGLETON_ADDRESS,
+)
+
 from .abi import Function
 from .chain import ChainData
 from .util import (
     DeployParams,
     SafeTxData,
+    SafeVariant,
     SignatureData,
     format_gwei_value,
     format_native_value,
@@ -186,6 +194,46 @@ def print_kvtable(
 ) -> None:
     table = get_kvtable(*args, draw_divider=draw_divider)
     console.print(get_panel(title, subtitle, table))
+
+
+def print_safe_deploy_info(data: DeployParams, safe_address: ChecksumAddress):
+    variant = {
+        SafeVariant.SAFE: "Safe.sol (without events)",
+        SafeVariant.SAFE_L2: "SafeL2.sol (emits events)",
+        SafeVariant.UNKNOWN: "unknown",
+    }[data.variant]
+    base_params: dict[str, RenderableType] = {
+        "Proxy Factory": data.proxy_factory
+        + (
+            f" [ok]{CHECK} CANONICAL[/ok]"
+            if data.proxy_factory == DEFAULT_PROXYFACTORY_ADDRESS
+            else ""
+        ),
+        "Singleton": data.singleton
+        + (
+            f" [ok]{CHECK} CANONICAL[/ok]"
+            if data.singleton
+            in (DEFAULT_SAFE_SINGLETON_ADDRESS, DEFAULT_SAFEL2_SINGLETON_ADDRESS)
+            else ""
+        ),
+        "Safe Variant": variant,
+        "Salt Nonce": HexBytes(data.salt_nonce).to_0x_hex(),
+    }
+    if data.chain_specific:
+        base_params["Chain ID"] = str(data.chain_id)
+    print_kvtable(
+        "Safe Deployment Parameters",
+        "",
+        base_params,
+        {
+            f"Owners({len(data.owners)})": ", ".join(data.owners),
+            "Threshold": str(data.threshold),
+            "Fallback Handler": data.fallback,
+        },
+        {
+            "Safe Address": f"{safe_address}",
+        },
+    )
 
 
 def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) -> None:

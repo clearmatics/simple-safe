@@ -6,7 +6,7 @@ from simple_safe.constants import (
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
 )
-from simple_safe.util import DeployParams, compute_safe_address
+from simple_safe.util import DeployParams, SafeVariant, compute_safe_address
 from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
 
@@ -45,12 +45,14 @@ def test_happy_path():
         singleton=to_checksum_address(DEFAULT_SAFEL2_SINGLETON_ADDRESS),
         chain_specific=False,
         salt_nonce=0,
+        variant=SafeVariant.SAFE_L2,
         owners=[owner],
         threshold=1,
         fallback=to_checksum_address(DEFAULT_FALLBACK_ADDRESS),
         chain_id=None,
     )
     params = params._asdict()
+    params.pop("variant")
     address = compute_safe_address(**params)
     assert address == "0x1B751A15d6aEd26aC3e2A5320548F390ccE76ED2"
 

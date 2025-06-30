@@ -2,6 +2,7 @@ import json
 import logging
 from contextlib import contextmanager
 from decimal import Decimal, localcontext
+from enum import Enum
 from typing import (
     Any,
     NamedTuple,
@@ -46,10 +47,17 @@ class DeployParams(NamedTuple):
     chain_specific: bool
     chain_id: Optional[int]
     salt_nonce: int
+    variant: "SafeVariant"
     # initialization
     owners: list[ChecksumAddress]
     threshold: int
     fallback: ChecksumAddress
+
+
+class SafeVariant(Enum):
+    SAFE = 1
+    SAFE_L2 = 2
+    UNKNOWN = 3
 
 
 class SafeTxData(NamedTuple):
