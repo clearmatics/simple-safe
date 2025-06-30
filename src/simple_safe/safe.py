@@ -424,7 +424,7 @@ def build_safe_call(
 @optgroup.option(
     "--salt-nonce",
     type=str,
-    metavar="INTEGER",
+    metavar="BYTES32",
     default=SALT_NONCE_SENTINEL,
     help="nonce used to generate CREATE2 salt",
 )
@@ -477,7 +477,7 @@ def deploy(
         if salt_nonce == SALT_NONCE_SENTINEL:
             salt_nonce_int = secrets.randbits(256)  # uint256
         else:
-            salt_nonce_int = int(salt_nonce)
+            salt_nonce_int = int.from_bytes(HexBytes(salt_nonce))
         owner_addresses = {to_checksum_address(owner) for owner in owners}
         if threshold <= 0:
             raise click.ClickException(f"Invalid threshold '{threshold}'.")
@@ -548,7 +548,7 @@ def deploy(
             f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
             "Threshold": str(threshold),
             "Fallback Handler": fallback_address,
-            "Salt Nonce": str(salt_nonce_int),
+            "Salt Nonce": HexBytes(salt_nonce_int).to_0x_hex(),
             "Singleton": singleton_address,
         },
         {
