@@ -44,7 +44,6 @@ class DeployParams(NamedTuple):
     # deployment
     proxy_factory: ChecksumAddress
     singleton: ChecksumAddress
-    chain_specific: bool
     chain_id: Optional[int]
     salt_nonce: int
     variant: "SafeVariant"
@@ -86,7 +85,6 @@ def as_checksum(checksum_str: str) -> ChecksumAddress:
 def compute_safe_address(
     proxy_factory: ChecksumAddress,
     singleton: ChecksumAddress,
-    chain_specific: bool,
     salt_nonce: int,
     owners: list[ChecksumAddress],
     threshold: int,
@@ -94,12 +92,6 @@ def compute_safe_address(
     chain_id: Optional[int],
 ) -> ChecksumAddress:
     """Compute Safe address via SafeProxyFactory v1.4.1."""
-    if (chain_specific and chain_id is None) or (
-        not chain_specific and chain_id is not None
-    ):
-        raise ValueError(
-            f"Invalid combination: chain_specific={chain_specific}, chain_id={chain_id}"
-        )
     initializer_args = abi_encode(
         SAFE_SETUP_FUNC_TYPES,
         (
@@ -114,7 +106,7 @@ def compute_safe_address(
         ),
     )
     initializer = HexBytes(HexBytes(SAFE_SETUP_FUNC_SELECTOR) + initializer_args)
-    if not chain_specific:
+    if chain_id is None:
         # bytes32 salt = keccak256(abi.encodePacked(keccak256(initializer), saltNonce));
         salt_preimage = encode_packed(
             (

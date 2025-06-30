@@ -685,7 +685,6 @@ def precompute(**kwargs: Any):
     address = compute_safe_address(
         proxy_factory=data.proxy_factory,
         singleton=data.singleton,
-        chain_specific=data.chain_specific,
         salt_nonce=data.salt_nonce,
         owners=data.owners,
         threshold=data.threshold,

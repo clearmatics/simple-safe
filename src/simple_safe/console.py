@@ -219,7 +219,7 @@ def print_safe_deploy_info(data: DeployParams, safe_address: ChecksumAddress):
         "Safe Variant": variant,
         "Salt Nonce": HexBytes(data.salt_nonce).to_0x_hex(),
     }
-    if data.chain_specific:
+    if data.chain_id is not None:
         base_params["Chain ID"] = str(data.chain_id)
     print_kvtable(
         "Safe Deployment Parameters",

@@ -202,7 +202,6 @@ def validate_deploy_options(
             else custom_proxy_factory
         ),
         singleton=to_checksum_address(singleton_address),
-        chain_specific=chain_specific,
         chain_id=chain_id,
         salt_nonce=salt_nonce_int,
         variant=variant,

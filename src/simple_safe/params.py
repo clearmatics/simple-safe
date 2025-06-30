@@ -75,13 +75,14 @@ def deployment(offline: bool) -> Callable[[FC], FC]:
         @optgroup.option(
             "--chain-specific",
             is_flag=True,
-            help="account address will depend on Chain ID",
+            hidden=offline,
+            help="account address based on RPC node Chain ID",
         )
         @optgroup.option(
             "--chain-id",
             type=int,
             hidden=not offline,
-            help="Chain ID (only for chain-specific address)",
+            help="Chain ID (required for chain-specific address)",
         )
         @optgroup.option(
             "--salt-nonce",
