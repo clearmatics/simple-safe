@@ -177,9 +177,9 @@ def build_abi_call(
     rpc: str,
     safe: str,
     safe_nonce: Optional[int],
+    safe_version: Optional[str],
     str_args: list[str],
     value: str,
-    safe_version: Optional[str],
 ) -> None:
     """Build a contract call Safe transaction.
 
@@ -230,9 +230,9 @@ def build_custom(
     rpc: str,
     safe: str,
     safe_nonce: Optional[int],
+    safe_version: Optional[str],
     to_str: str,
     value: str,
-    safe_version: Optional[str],
 ) -> None:
     """Build a custom Safe transaction."""
     with status("Building Safe transaction..."):
@@ -288,10 +288,10 @@ def build_erc20_call(
     rpc: str,
     safe: str,
     safe_nonce: Optional[int],
+    safe_version: Optional[str],
     str_args: list[str],
     token_str: str,
     value: str,
-    safe_version: Optional[str],
 ) -> None:
     """Build an ERC-20 token Safe transaction.
 
@@ -337,9 +337,9 @@ def build_safe_call(
     rpc: str,
     safe: str,
     safe_nonce: Optional[int],
+    safe_version: Optional[str],
     str_args: list[str],
     value: str,
-    safe_version: Optional[str],
 ) -> None:
     """Build a Safe transaction to call the Safe.
 
@@ -390,13 +390,13 @@ def deploy(
     custom_proxy_factory: Optional[str],
     custom_singleton: Optional[str],
     fallback: Optional[str],
+    force: bool,
     keyfile: Optional[str],
     owners: list[str],
     rpc: str,
     salt_nonce: str,
     threshold: int,
     without_events: bool,
-    force: bool,
 ):
     """Deploy a new Safe account.
 
@@ -696,8 +696,8 @@ def sign(
     keyfile: str,
     output: typing.TextIO | None,
     rpc: str,
-    txfile: typing.TextIO,
     safe_version: Optional[str],
+    txfile: typing.TextIO,
 ):
     """Sign a Safe transaction."""
     with status("Loading Safe transaction..."):
