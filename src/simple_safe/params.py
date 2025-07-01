@@ -75,6 +75,7 @@ def deployment(offline: bool) -> Callable[[FC], FC]:
         @optgroup.option(
             "--chain-specific",
             is_flag=True,
+            default=False,
             hidden=offline,
             help="account address based on RPC node Chain ID",
         )
@@ -94,6 +95,7 @@ def deployment(offline: bool) -> Callable[[FC], FC]:
         @optgroup.option(
             "--without-events",
             is_flag=True,
+            default=False,
             help="use implementation that does not emit events",
         )
         @optgroup.option(

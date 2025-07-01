@@ -398,7 +398,7 @@ def build_safe_call(
 @params.common
 def deploy(
     chain_id: None,
-    chain_specific: Optional[bool],
+    chain_specific: bool,
     custom_proxy_factory: Optional[str],
     custom_singleton: Optional[str],
     fallback: Optional[str],
@@ -407,7 +407,7 @@ def deploy(
     rpc: str,
     salt_nonce: str,
     threshold: int,
-    without_events: Optional[bool],
+    without_events: bool,
     force: bool = False,
 ):
     """Deploy a new Safe account.
