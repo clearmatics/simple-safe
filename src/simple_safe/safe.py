@@ -396,7 +396,7 @@ def deploy(
     salt_nonce: str,
     threshold: int,
     without_events: bool,
-    force: bool = False,
+    force: bool,
 ):
     """Deploy a new Safe account.
 
