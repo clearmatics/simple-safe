@@ -403,10 +403,12 @@ def print_web3_tx_params(
             "To Address": str(params["to"]),
             "Value": format_native_value(params["value"], chaindata),
             "Gas Limit": str(params["gas"]),
-            "Max Total Fee": format_gwei_value(
+            "Total Fees": "Max "
+            + format_gwei_value(
                 Wei(int(params["maxFeePerGas"])), units=("Wei/Gas", "Gwei/Gas")
             ),
-            "Max Priority Fee": format_gwei_value(
+            "Priority Fee": "Max "
+            + format_gwei_value(
                 Wei(int(params["maxPriorityFeePerGas"])), units=("Wei/Gas", "Gwei/Gas")
             ),
             "Data": str(params["data"]),
