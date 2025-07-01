@@ -1,3 +1,4 @@
+import dataclasses
 import json
 import logging
 from contextlib import contextmanager
@@ -40,7 +41,8 @@ from simple_safe.constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPE
 from .chain import ChainData
 
 
-class DeployParams(NamedTuple):
+@dataclasses.dataclass(kw_only=True)
+class DeployParams:
     # deployment
     proxy_factory: ChecksumAddress
     singleton: ChecksumAddress
@@ -83,13 +85,14 @@ def as_checksum(checksum_str: str) -> ChecksumAddress:
 
 
 def compute_safe_address(
-    proxy_factory: ChecksumAddress,
-    singleton: ChecksumAddress,
-    salt_nonce: int,
-    owners: list[ChecksumAddress],
-    threshold: int,
-    fallback: ChecksumAddress,
+    *,
     chain_id: Optional[int],
+    fallback: ChecksumAddress,
+    owners: list[ChecksumAddress],
+    proxy_factory: ChecksumAddress,
+    salt_nonce: int,
+    singleton: ChecksumAddress,
+    threshold: int,
 ) -> tuple[HexBytes, ChecksumAddress]:
     """Compute Safe address via SafeProxyFactory v1.4.1."""
     initializer_args = abi_encode(

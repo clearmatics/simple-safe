@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from eth_utils.address import to_checksum_address
 
 from simple_safe.constants import (
@@ -21,7 +22,7 @@ def test_happy_path():
         fallback=to_checksum_address(DEFAULT_FALLBACK_ADDRESS),
         chain_id=None,
     )
-    params = params._asdict()
+    params = asdict(params)
     params.pop("variant")
     _, address = compute_safe_address(**params)
     assert address == "0x1B751A15d6aEd26aC3e2A5320548F390ccE76ED2"

@@ -160,15 +160,16 @@ def handle_function_match_failure(
 
 
 def validate_deploy_options(
+    *,
+    chain_id: Optional[int],
     chain_specific: bool,
     custom_proxy_factory: Optional[str],
     custom_singleton: Optional[str],
-    salt_nonce: str,
-    without_events: bool,
-    owners: list[str],
-    threshold: int,
     fallback: Optional[str],
-    chain_id: Optional[int],
+    owners: list[str],
+    salt_nonce: str,
+    threshold: int,
+    without_events: bool,
 ) -> DeployParams:
     if custom_singleton is not None:
         if without_events:

@@ -412,15 +412,15 @@ def deploy(
         w3 = Web3(load_provider_from_uri(URI(rpc)))
 
         data = validate_deploy_options(
+            chain_id=w3.eth.chain_id if chain_specific else None,
             chain_specific=chain_specific,
             custom_proxy_factory=custom_proxy_factory,
             custom_singleton=custom_singleton,
-            salt_nonce=salt_nonce,
-            without_events=without_events,
-            owners=owners,
-            threshold=threshold,
             fallback=fallback,
-            chain_id=w3.eth.chain_id if chain_specific else None,
+            owners=owners,
+            salt_nonce=salt_nonce,
+            threshold=threshold,
+            without_events=without_events,
         )
         initializer, address = compute_safe_address(
             proxy_factory=data.proxy_factory,
