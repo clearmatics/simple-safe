@@ -90,7 +90,7 @@ def compute_safe_address(
     threshold: int,
     fallback: ChecksumAddress,
     chain_id: Optional[int],
-) -> ChecksumAddress:
+) -> tuple[HexBytes, ChecksumAddress]:
     """Compute Safe address via SafeProxyFactory v1.4.1."""
     initializer_args = abi_encode(
         SAFE_SETUP_FUNC_TYPES,
@@ -142,7 +142,7 @@ def compute_safe_address(
         cast(HexStr, salt.hex()),
         cast(HexStr, deployment_data.hex()),
     )
-    return address
+    return (initializer, address)
 
 
 def format_native_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:

@@ -1,7 +1,6 @@
 import json
 import logging
 import logging.config
-import secrets
 import shutil
 import sys
 import typing
@@ -31,25 +30,14 @@ from safe_eth.eth import EthereumClient
 from safe_eth.eth.contracts import (
     get_erc20_contract,
     get_proxy_factory_V1_4_1_contract,
-    get_safe_V1_4_1_contract,
 )
 from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
 from safe_eth.safe.safe_signature import SafeSignature
 from web3 import Web3
-from web3.constants import ADDRESS_ZERO
 from web3.contract.contract import Contract
 from web3.exceptions import ContractLogicError
 from web3.providers.auto import load_provider_from_uri
 from web3.types import Wei
-
-from simple_safe.constants import (
-    DEFAULT_FALLBACK_ADDRESS,
-    DEFAULT_PROXYFACTORY_ADDRESS,
-    DEFAULT_SAFE_SINGLETON_ADDRESS,
-    DEFAULT_SAFEL2_SINGLETON_ADDRESS,
-    DEPLOY_SAFE_VERSION,
-    SALT_NONCE_SENTINEL,
-)
 
 from . import params
 from .abi import find_function, parse_args
@@ -403,7 +391,7 @@ def deploy(
     custom_singleton: Optional[str],
     fallback: Optional[str],
     keyfile: Optional[str],
-    owners: tuple[str],
+    owners: list[str],
     rpc: str,
     salt_nonce: str,
     threshold: int,
@@ -423,88 +411,45 @@ def deploy(
     with status("Preparing Safe deployment parameters..."):
         w3 = Web3(load_provider_from_uri(URI(rpc)))
 
-        if salt_nonce == SALT_NONCE_SENTINEL:
-            salt_nonce_int = secrets.randbits(256)  # uint256
-        else:
-            salt_nonce_int = int.from_bytes(HexBytes(salt_nonce))
-        owner_addresses = {to_checksum_address(owner) for owner in owners}
-        if threshold <= 0:
-            raise click.ClickException(f"Invalid threshold '{threshold}'.")
-        elif threshold > len(owners):
-            raise click.ClickException(
-                f"Threshold '{threshold}' exceeds number of unique owners {len(owner_addresses)}."
-            )
-        if custom_singleton:
-            if without_events:
-                raise click.ClickException(
-                    "Option --without-events incompatible with --custom-singleton."
-                )
-            singleton_address = custom_singleton
-        elif without_events:
-            singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
-        else:
-            singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
-        singleton_address = to_checksum_address(singleton_address)
-        fallback_address = to_checksum_address(
-            DEFAULT_FALLBACK_ADDRESS if not fallback else fallback
+        data = validate_deploy_options(
+            chain_specific=chain_specific,
+            custom_proxy_factory=custom_proxy_factory,
+            custom_singleton=custom_singleton,
+            salt_nonce=salt_nonce,
+            without_events=without_events,
+            owners=owners,
+            threshold=threshold,
+            fallback=fallback,
+            chain_id=w3.eth.chain_id if chain_specific else None,
         )
-        proxy_factory_address = to_checksum_address(
-            DEFAULT_PROXYFACTORY_ADDRESS
-            if not custom_proxy_factory
-            else custom_proxy_factory
-        )
-        safe_contract = get_safe_V1_4_1_contract(w3)
-        initializer = HexBytes(
-            safe_contract.encode_abi(
-                "setup",
-                [
-                    list(owner_addresses),
-                    threshold,
-                    ADDRESS_ZERO,
-                    b"",
-                    fallback_address,
-                    ADDRESS_ZERO,
-                    0,
-                    ADDRESS_ZERO,
-                ],
-            )
+        initializer, address = compute_safe_address(
+            proxy_factory=data.proxy_factory,
+            singleton=data.singleton,
+            salt_nonce=data.salt_nonce,
+            owners=data.owners,
+            threshold=data.threshold,
+            fallback=data.fallback,
+            chain_id=data.chain_id,
         )
         proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
-            w3, proxy_factory_address
+            w3, data.proxy_factory
         )
         proxy_factory_method = (
             proxy_factory_contract.functions.createProxyWithNonce
-            if not chain_specific
+            if not data.chain_id
             else proxy_factory_contract.functions.createChainSpecificProxyWithNonce
         )
         deployment_call = proxy_factory_method(
-            singleton_address, initializer, salt_nonce_int
+            data.singleton, initializer, data.salt_nonce
         )
-        computed_address = deployment_call.call()
-
-        existing_code = w3.eth.get_code(computed_address)
+        existing_code = w3.eth.get_code(address)
         if existing_code != b"":
             raise click.ClickException(
-                f"Safe account computed address {computed_address} already contains code."
+                f"Safe account computed address {address} already contains code."
             )
 
     console.line()
-    print_kvtable(
-        "Safe Deployment Parameters",
-        "",
-        {
-            "Safe Address": f"{computed_address} (computed)",
-            "Version": DEPLOY_SAFE_VERSION,
-            f"Owners({len(owner_addresses)})": ", ".join(owner_addresses),
-            "Threshold": str(threshold),
-            "Fallback Handler": fallback_address,
-            "Salt Nonce": HexBytes(salt_nonce_int).to_0x_hex(),
-            "Singleton": singleton_address,
-        },
-        {
-            "Proxy Factory": proxy_factory_address,
-        },
-    )
+    print_safe_deploy_info(data, address)
     console.line()
     if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
@@ -686,7 +631,7 @@ def precompute(**kwargs: Any):
     """Compute a Safe address offline."""
     output = kwargs.pop("output")
     data = validate_deploy_options(**kwargs)
-    address = compute_safe_address(
+    _, address = compute_safe_address(
         proxy_factory=data.proxy_factory,
         singleton=data.singleton,
         salt_nonce=data.salt_nonce,
