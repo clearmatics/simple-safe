@@ -511,6 +511,8 @@ def deploy(
 
     auth = get_authenticator(keyfile)
     txhash = execute_calltx(w3, deployment_call, auth, force)
+
+    console.line()
     output_console = get_output_console()
     output_console.print(txhash.to_0x_hex())
 
@@ -614,6 +616,8 @@ def exec(
 
     auth = get_authenticator(keyfile)
     txhash = execute_calltx(client.w3, safetxdata.safetx.w3_tx, auth, force)
+
+    console.line()
     output_console = get_output_console()
     output_console.print(txhash.to_0x_hex())
 
