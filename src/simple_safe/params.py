@@ -1,5 +1,5 @@
 import functools
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, Callable, TypeVar
 
 import click
 from click import Command
@@ -12,11 +12,12 @@ from .constants import DEPLOY_SAFE_VERSION, SALT_NONCE_SENTINEL
 from .validation import help_callback, verbose_callback
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
+Decorator = Callable[[FC], Any]
 
 
 # pyright: reportUntypedFunctionDecorator=false
 # pyright: reportUnknownMemberType=false
-def authentication(f: FC) -> FC:
+def authentication(f: FC) -> Decorator[FC]:
     @optgroup.group(
         "Authentication",
         cls=RequiredAnyOptionGroup,
@@ -28,13 +29,13 @@ def authentication(f: FC) -> FC:
         help="local Ethereum keyfile",
     )
     @functools.wraps(f)
-    def wrapper(*args: object, **kwargs: object) -> object:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         f(*args, **kwargs)
 
-    return cast(FC, wrapper)
+    return wrapper
 
 
-def build_safetx(f: FC) -> FC:
+def build_safetx(f: FC) -> Decorator[FC]:
     @click.option("--value", default="0.0", help="tx value in decimals")
     @optgroup.group("Build offline")
     @optgroup.option("--chain-id", "chain_id", type=int, metavar="ID", help="chain ID")
@@ -46,10 +47,10 @@ def build_safetx(f: FC) -> FC:
     def wrapper(*args: object, **kwargs: object) -> object:
         f(*args, **kwargs)
 
-    return cast(FC, wrapper)
+    return wrapper
 
 
-def common(f: FC) -> FC:
+def common(f: FC) -> Decorator[FC]:
     @help
     @click.option(
         "--verbose",
@@ -64,11 +65,11 @@ def common(f: FC) -> FC:
     def wrapper(*args: object, **kwargs: object) -> object:
         f(*args, **kwargs)
 
-    return cast(FC, wrapper)
+    return wrapper
 
 
-def deployment(offline: bool) -> Callable[[FC], FC]:
-    def outer(f: FC) -> FC:
+def deployment(offline: bool) -> Callable[[FC], Decorator[FC]]:
+    def outer(f: FC) -> Decorator[FC]:
         @optgroup.group(
             "Deployment settings",
         )
@@ -135,7 +136,7 @@ def deployment(offline: bool) -> Callable[[FC], FC]:
         def wrapper(*args: object, **kwargs: object) -> object:
             f(*args, **kwargs)
 
-        return cast(FC, wrapper)
+        return wrapper
 
     return outer
 
@@ -197,9 +198,9 @@ sigfile = click.argument(
 )
 
 
-def web3tx(f: FC) -> FC:
+def web3tx(f: FC) -> Decorator[FC]:
     @functools.wraps(f)
     def wrapper(*args: object, **kwargs: object) -> object:
         f(*args, **kwargs)
 
-    return cast(FC, wrapper)
+    return wrapper
