@@ -187,7 +187,7 @@ safe = click.option(
 
 
 # click_option_group is not well-typed
-safe_version: Any = optgroup.option("--safe-version", help="Safe version")
+safe_version: Any = optgroup.option("--safe-version", help="Safe version")  # pyright: ignore[reportUnknownVariableType]
 
 
 sigfile = click.argument(

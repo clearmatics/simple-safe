@@ -1,6 +1,5 @@
 import json
 import logging
-import logging.config
 import shutil
 import sys
 import typing
