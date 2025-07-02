@@ -14,7 +14,6 @@ from eth_utils.abi import (
 )
 from eth_utils.address import to_checksum_address
 from hexbytes import HexBytes
-from web3._utils.abi import is_array_type
 
 
 class Function(NamedTuple):
@@ -94,6 +93,8 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
 
     Reference: <https://docs.soliditylang.org/en/stable/abi-spec.html#types>
     """
+    from web3._utils.abi import is_array_type
+
     if abi_type.startswith("uint") or abi_type.startswith("int"):
         return int(val_str)
     elif abi_type == "address":

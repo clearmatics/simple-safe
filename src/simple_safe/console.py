@@ -5,7 +5,7 @@ import sys
 import typing
 from datetime import datetime, timezone
 from importlib.metadata import version
-from typing import Any, Optional, Sequence, cast
+from typing import TYPE_CHECKING, Any, Optional, Sequence, cast
 
 import rich
 from click import Context, Parameter
@@ -21,8 +21,6 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
-from web3.contract.contract import ContractFunction
-from web3.types import Timestamp, TxParams, TxReceipt, Wei
 
 from simple_safe.constants import (
     DEFAULT_PROXYFACTORY_ADDRESS,
@@ -41,6 +39,11 @@ from .util import (
     format_native_value,
     hexbytes_json_encoder,
 )
+
+if TYPE_CHECKING:
+    from web3.contract.contract import ContractFunction
+    from web3.types import Timestamp, TxParams, TxReceipt
+
 
 custom_theme = Theme({
     "ok": "green",
@@ -237,6 +240,7 @@ def print_safe_deploy_info(data: DeployParams, safe_address: ChecksumAddress):
 
 def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) -> None:
     from safe_eth.safe import SafeOperationEnum
+    from web3.types import Wei
 
     safetx = safetxdata.safetx
     table_data: list[dict[str, RenderableType]] = []
@@ -328,7 +332,7 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
     ctx.exit()
 
 
-def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
+def print_web3_call_data(function: "ContractFunction", calldata: str) -> None:
     argdata: dict[str, RenderableType] = {}
     for i, arg in enumerate(function.arguments):
         if function.argument_types[i] == "bytes":
@@ -358,8 +362,10 @@ def print_web3_call_data(function: ContractFunction, calldata: str) -> None:
 
 
 def print_web3_tx_fees(
-    params: TxParams, gasprice: int, chaindata: Optional[ChainData]
+    params: "TxParams", gasprice: int, chaindata: Optional[ChainData]
 ) -> None:
+    from web3.types import Wei
+
     # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
     # TxParams fields being optional.
     assert "gas" in params
@@ -380,10 +386,12 @@ def print_web3_tx_fees(
 
 
 def print_web3_tx_params(
-    params: TxParams,
+    params: "TxParams",
     from_: ChecksumAddress,
     chaindata: Optional[ChainData] = None,
 ) -> None:
+    from web3.types import Wei
+
     # Silence Pyright 'reportTypedDictNotRequiredAccess' error due to
     # TxParams fields being optional.
     assert "chainId" in params
@@ -418,8 +426,12 @@ def print_web3_tx_params(
 
 
 def print_web3_tx_receipt(
-    timestamp: Optional[Timestamp], txreceipt: TxReceipt, chaindata: Optional[ChainData]
+    timestamp: Optional["Timestamp"],
+    txreceipt: "TxReceipt",
+    chaindata: Optional[ChainData],
 ) -> None:
+    from web3.types import Wei
+
     timestamp_str = (
         datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
         if timestamp

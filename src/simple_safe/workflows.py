@@ -14,10 +14,6 @@ from hexbytes import (
     HexBytes,
 )
 from rich.prompt import Confirm
-from web3 import Web3
-from web3.contract import Contract
-from web3.contract.contract import ContractFunction
-from web3.types import TxParams
 
 from simple_safe.constants import (
     DEFAULT_FALLBACK_ADDRESS,
@@ -44,6 +40,10 @@ from .console import (
 if TYPE_CHECKING:
     from safe_eth.eth import EthereumClient
     from safe_eth.safe import SafeTx
+    from web3 import Web3
+    from web3.contract import Contract
+    from web3.contract.contract import ContractFunction
+    from web3.types import TxParams
 
 SAFE_CONTRACT_VERSIONS = (
     "0.0.1",
@@ -60,7 +60,7 @@ status = make_status_logger(logger)
 
 def prepare_calltx(
     client: "EthereumClient",
-    contract: Contract,
+    contract: "Contract",
     fn_identifier: str,
     str_args: list[str],
     safe: ChecksumAddress,
@@ -101,7 +101,9 @@ def prepare_calltx(
     )
 
 
-def execute_tx(w3: Web3, tx: TxParams, auth: Authenticator, force: bool) -> HexBytes:
+def execute_tx(
+    w3: "Web3", tx: "TxParams", auth: Authenticator, force: bool
+) -> HexBytes:
     with status("Preparing Web3 transaction..."):
         tx["nonce"] = w3.eth.get_transaction_count(auth.address)
         chaindata = fetch_chaindata(w3.eth.chain_id)
@@ -133,13 +135,13 @@ def execute_tx(w3: Web3, tx: TxParams, auth: Authenticator, force: bool) -> HexB
 
 
 def execute_calltx(
-    w3: Web3,
-    contractfn: ContractFunction,
+    w3: "Web3",
+    contractfn: "ContractFunction",
     auth: Authenticator,
     force: bool,
 ) -> HexBytes:
     with status("Building Web3 transaction..."):
-        tx: TxParams = contractfn.build_transaction()
+        tx: "TxParams" = contractfn.build_transaction()
     assert "data" in tx
     console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())

@@ -26,11 +26,6 @@ from hexbytes import (
 from rich.json import JSON
 from rich.prompt import Confirm
 from rich.traceback import Traceback
-from web3 import Web3
-from web3.contract.contract import Contract
-from web3.exceptions import ContractLogicError
-from web3.providers.auto import load_provider_from_uri
-from web3.types import Wei
 
 from . import params
 from .abi import find_function, parse_args
@@ -79,6 +74,8 @@ def handle_crash(
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> None:
+    from web3.exceptions import ContractLogicError
+
     if not SAFE_DEBUG:
         if exc_type is ContractLogicError:
             exc = cast(ContractLogicError, exc_value)
@@ -349,6 +346,7 @@ def build_safe_call(
     with status("Building Safe transaction..."):
         from safe_eth.eth import EthereumClient
         from safe_eth.safe import Safe
+        from web3.contract.contract import Contract
 
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
@@ -413,6 +411,9 @@ def deploy(
     --without-events.
     """
     with status("Preparing Safe deployment parameters..."):
+        from web3 import Web3
+        from web3.providers.auto import load_provider_from_uri
+
         w3 = Web3(load_provider_from_uri(URI(rpc)))
 
         data = validate_deploy_options(
@@ -499,6 +500,8 @@ def encode(
         if match is None:
             handle_function_match_failure(identifier, partials)
         assert match is not None
+
+        from web3 import Web3
 
         w3 = Web3()
         contract = w3.eth.contract(abi=abi)
@@ -619,6 +622,9 @@ def inspect(address: str, rpc: str):
         chaindata = fetch_chaindata(client.w3.eth.chain_id)
 
     console.line()
+
+    from web3.types import Wei
+
     print_kvtable(
         "Safe Account",
         f"[Block {str(block)}]",

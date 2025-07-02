@@ -1,7 +1,7 @@
 import logging
 import sys
 from getpass import getpass
-from typing import Any, Optional, Protocol, cast
+from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
 
 import click
 from eth_account import Account
@@ -9,9 +9,12 @@ from eth_account.datastructures import SignedTransaction
 from eth_account.signers.local import LocalAccount
 from eth_account.types import TransactionDictType
 from eth_typing import ChecksumAddress
-from web3.types import TxParams
 
 from .console import make_status_logger
+
+if TYPE_CHECKING:
+    from web3.types import TxParams
+
 
 logger = logging.getLogger(__name__)
 status = make_status_logger(logger)
@@ -20,7 +23,7 @@ status = make_status_logger(logger)
 class Authenticator(Protocol):
     address: ChecksumAddress
 
-    def sign_transaction(self, params: TxParams) -> SignedTransaction: ...
+    def sign_transaction(self, params: "TxParams") -> SignedTransaction: ...
 
     def sign_typed_data(self, data: dict[str, Any]) -> bytes: ...
 
@@ -43,7 +46,7 @@ class KeyfileAuthenticator:
             f"Keyfile Authenticator: keyfile='{self.keyfile}', account='{self.address}'"
         )
 
-    def sign_transaction(self, params: TxParams) -> SignedTransaction:
+    def sign_transaction(self, params: "TxParams") -> SignedTransaction:
         with status("Signing Web3 transaction..."):
             return self.account.sign_transaction(cast(TransactionDictType, params))
 

@@ -26,9 +26,6 @@ from eth_utils.currency import denoms
 from hexbytes import (
     HexBytes,
 )
-from web3.constants import ADDRESS_ZERO
-from web3.types import Wei
-from web3.utils.address import get_create2_address
 
 from simple_safe.constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
@@ -38,6 +35,7 @@ if TYPE_CHECKING:
     from safe_eth.eth import EthereumClient
     from safe_eth.safe import SafeTx
     from safe_eth.safe.safe_signature import SafeSignature
+    from web3.types import Wei
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -94,6 +92,9 @@ def compute_safe_address(
     threshold: int,
 ) -> tuple[HexBytes, ChecksumAddress]:
     """Compute Safe address via SafeProxyFactory v1.4.1."""
+    from web3.constants import ADDRESS_ZERO
+    from web3.utils.address import get_create2_address
+
     initializer_args = abi_encode(
         SAFE_SETUP_FUNC_TYPES,
         (
@@ -149,7 +150,7 @@ def compute_safe_address(
     return (initializer, address)
 
 
-def format_native_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:
+def format_native_value(value: "Wei", chaindata: Optional[ChainData] = None) -> str:
     symbol = chaindata.symbol if chaindata else "ETH"
     if chaindata:
         symbol, decimals = chaindata.symbol, chaindata.decimals
@@ -161,11 +162,11 @@ def format_native_value(value: Wei, chaindata: Optional[ChainData] = None) -> st
     return f"{converted:,f} {symbol}"
 
 
-def format_wei_value(value: Wei, chaindata: Optional[ChainData] = None) -> str:
+def format_wei_value(value: "Wei", chaindata: Optional[ChainData] = None) -> str:
     return f"{value} Wei ({format_native_value(value, chaindata)})"
 
 
-def format_gwei_value(value: Wei, units: tuple[str, str] = ("Wei", "Gwei")) -> str:
+def format_gwei_value(value: "Wei", units: tuple[str, str] = ("Wei", "Gwei")) -> str:
     with localcontext() as ctx:
         ctx.prec = 78
         converted = (Decimal(value) / denoms.gwei).normalize()
@@ -231,6 +232,7 @@ def parse_signatures(
 ) -> list[SignatureData]:
     sigdata: list[SignatureData] = []
     from safe_eth.safe.safe_signature import SafeSignature
+    from web3.constants import ADDRESS_ZERO
 
     for sigfile in sigfiles:
         with open(sigfile, "r") as sf:
