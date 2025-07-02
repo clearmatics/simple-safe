@@ -2,6 +2,7 @@ import logging
 import secrets
 from decimal import Decimal
 from typing import (
+    TYPE_CHECKING,
     Optional,
     Sequence,
 )
@@ -13,8 +14,6 @@ from hexbytes import (
     HexBytes,
 )
 from rich.prompt import Confirm
-from safe_eth.eth import EthereumClient
-from safe_eth.safe import SafeOperationEnum, SafeTx
 from web3 import Web3
 from web3.contract import Contract
 from web3.contract.contract import ContractFunction
@@ -42,6 +41,10 @@ from .console import (
     print_web3_tx_receipt,
 )
 
+if TYPE_CHECKING:
+    from safe_eth.eth import EthereumClient
+    from safe_eth.safe import SafeTx
+
 SAFE_CONTRACT_VERSIONS = (
     "0.0.1",
     "1.0.0",
@@ -56,7 +59,7 @@ status = make_status_logger(logger)
 
 
 def prepare_calltx(
-    client: EthereumClient,
+    client: "EthereumClient",
     contract: Contract,
     fn_identifier: str,
     str_args: list[str],
@@ -65,7 +68,9 @@ def prepare_calltx(
     safe_version: Optional[str],
     chain_id: Optional[int],
     safe_nonce: Optional[int],
-) -> SafeTx:
+) -> "SafeTx":
+    from safe_eth.safe import SafeOperationEnum, SafeTx
+
     match, partials = find_function(contract.abi, fn_identifier)
     if match is None:
         handle_function_match_failure(fn_identifier, partials)

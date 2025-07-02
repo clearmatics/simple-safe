@@ -26,13 +26,6 @@ from hexbytes import (
 from rich.json import JSON
 from rich.prompt import Confirm
 from rich.traceback import Traceback
-from safe_eth.eth import EthereumClient
-from safe_eth.eth.contracts import (
-    get_erc20_contract,
-    get_proxy_factory_V1_4_1_contract,
-)
-from safe_eth.safe import Safe, SafeOperationEnum, SafeTx
-from safe_eth.safe.safe_signature import SafeSignature
 from web3 import Web3
 from web3.contract.contract import Contract
 from web3.exceptions import ContractLogicError
@@ -191,6 +184,8 @@ def build_abi_call(
         )
         with open(abi_file, "r") as f:
             abi = json.load(f)
+        from safe_eth.eth import EthereumClient
+
         client = EthereumClient(URI(rpc))
         contract = client.w3.eth.contract(
             address=to_checksum_address(contract_str), abi=abi
@@ -239,6 +234,9 @@ def build_custom(
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
+        from safe_eth.eth import EthereumClient
+        from safe_eth.safe import SafeOperationEnum, SafeTx
+
         client = EthereumClient(URI(rpc))
         chaindata = fetch_chaindata(chain_id if chain_id else client.w3.eth.chain_id)
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
@@ -298,6 +296,9 @@ def build_erc20_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
+        from safe_eth.eth import EthereumClient
+        from safe_eth.eth.contracts import get_erc20_contract
+
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
@@ -346,6 +347,9 @@ def build_safe_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
+        from safe_eth.eth import EthereumClient
+        from safe_eth.safe import Safe
+
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
@@ -431,6 +435,10 @@ def deploy(
             fallback=data.fallback,
             chain_id=data.chain_id,
         )
+        from safe_eth.eth.contracts import (
+            get_proxy_factory_V1_4_1_contract,
+        )
+
         proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
             w3, data.proxy_factory
         )
@@ -524,6 +532,9 @@ def exec(
         raise click.ClickException("Cannot execute SafeTx without signatures.")
 
     with status("Loading Safe transaction..."):
+        from safe_eth.eth import EthereumClient
+        from safe_eth.safe import Safe
+
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
         safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
@@ -538,6 +549,8 @@ def exec(
     print_safetx(safetxdata, chaindata)
     console.line()
     print_signatures(sigdata, threshold)
+
+    from safe_eth.safe.safe_signature import SafeSignature
 
     good: list[SafeSignature] = []
     for sd in sigdata:
@@ -587,6 +600,9 @@ def inspect(address: str, rpc: str):
     """Inspect a Safe account."""
     with status("Retrieving Safe account data..."):
         checksum_addr = to_checksum_address(address)
+        from safe_eth.eth import EthereumClient
+        from safe_eth.safe import Safe
+
         client = EthereumClient(URI(rpc))
         try:
             safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
@@ -663,6 +679,8 @@ def preview(
     A SIGFILE must be a valid owner signature.
     """
     with status("Loading Safe transaction..."):
+        from safe_eth.eth import EthereumClient
+
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
 
@@ -671,6 +689,8 @@ def preview(
 
     console.line()
     print_safetx(safetxdata, chaindata)
+
+    from safe_eth.safe import Safe
 
     if sigfiles:
         safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
@@ -710,6 +730,8 @@ def sign(
                 f"Invalid or unsupported Safe version {safe_version}."
             )
 
+        from safe_eth.eth import EthereumClient
+
         client = EthereumClient(URI(rpc))
         safetxdata = reconstruct_safetx(client, txfile, safe_version)
 
@@ -722,6 +744,8 @@ def sign(
     console.line()
     if not force and not Confirm.ask("Sign Safe transaction?", default=False):
         raise click.Abort()
+
+    from safe_eth.safe.safe_signature import SafeSignature
 
     auth = get_authenticator(keyfile)
     sigbytes = auth.sign_typed_data(safetxdata.data)

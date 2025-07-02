@@ -21,7 +21,6 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
-from safe_eth.safe import SafeOperationEnum
 from web3.contract.contract import ContractFunction
 from web3.types import Timestamp, TxParams, TxReceipt, Wei
 
@@ -237,6 +236,8 @@ def print_safe_deploy_info(data: DeployParams, safe_address: ChecksumAddress):
 
 
 def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) -> None:
+    from safe_eth.safe import SafeOperationEnum
+
     safetx = safetxdata.safetx
     table_data: list[dict[str, RenderableType]] = []
     table_data.append({

@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from decimal import Decimal, localcontext
 from enum import Enum
 from typing import (
+    TYPE_CHECKING,
     Any,
     NamedTuple,
     Optional,
@@ -25,13 +26,6 @@ from eth_utils.currency import denoms
 from hexbytes import (
     HexBytes,
 )
-from safe_eth.eth import EthereumClient
-from safe_eth.eth.constants import NULL_ADDRESS
-from safe_eth.eth.contracts import (
-    load_contract_interface,
-)
-from safe_eth.safe import SafeTx
-from safe_eth.safe.safe_signature import SafeSignature
 from web3.constants import ADDRESS_ZERO
 from web3.types import Wei
 from web3.utils.address import get_create2_address
@@ -39,6 +33,11 @@ from web3.utils.address import get_create2_address
 from simple_safe.constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
 from .chain import ChainData
+
+if TYPE_CHECKING:
+    from safe_eth.eth import EthereumClient
+    from safe_eth.safe import SafeTx
+    from safe_eth.safe.safe_signature import SafeSignature
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -62,7 +61,7 @@ class SafeVariant(Enum):
 
 
 class SafeTxData(NamedTuple):
-    safetx: SafeTx
+    safetx: "SafeTx"
     data: dict[str, Any]
     preimage: HexBytes
     hash: HexBytes
@@ -74,7 +73,7 @@ class SignatureData(NamedTuple):
     valid: bool
     is_owner: bool
     # Invalid signature may not have these fields.
-    sig: Optional[SafeSignature]
+    sig: Optional["SafeSignature"]
     sigtype: Optional[str]
     address: Optional[ChecksumAddress]
 
@@ -136,6 +135,8 @@ def compute_safe_address(
             ),
         )
     salt = keccak(salt_preimage)
+    from safe_eth.eth.contracts import load_contract_interface
+
     bytecode = HexBytes(load_contract_interface("Proxy_V1_4_1.json")["bytecode"])
     deployment_data = encode_packed(
         ["bytes", "uint256"], [bytecode, int(singleton, 16)]
@@ -189,8 +190,10 @@ def hash_eip712_data(data: Any) -> HexBytes:  # using eth_account
 
 
 def eip712_data_to_safetx(
-    client: EthereumClient, message: Any, version: str | None = None
-) -> SafeTx:
+    client: "EthereumClient", message: Any, version: str | None = None
+) -> "SafeTx":
+    from safe_eth.safe import SafeTx
+
     return SafeTx(
         ethereum_client=client,
         safe_address=message["domain"]["verifyingContract"],
@@ -211,7 +214,7 @@ def eip712_data_to_safetx(
 
 
 def reconstruct_safetx(
-    client: EthereumClient, txfile: TextIO, version: Optional[str]
+    client: "EthereumClient", txfile: TextIO, version: Optional[str]
 ) -> SafeTxData:
     safetx_json = json.loads(txfile.read())
     safetx = eip712_data_to_safetx(client, safetx_json, version)
@@ -227,6 +230,8 @@ def parse_signatures(
     owners: list[str], safetxdata: SafeTxData, sigfiles: list[str]
 ) -> list[SignatureData]:
     sigdata: list[SignatureData] = []
+    from safe_eth.safe.safe_signature import SafeSignature
+
     for sigfile in sigfiles:
         with open(sigfile, "r") as sf:
             sigtext = sf.read().rstrip()
@@ -245,7 +250,7 @@ def parse_signatures(
             sigtype = sig.__class__.__name__
             owner = sig.owner  # pyright: ignore
             is_owner = owner in owners
-            if owner == NULL_ADDRESS:
+            if owner == ADDRESS_ZERO:
                 valid = False
                 address = None
             else:
