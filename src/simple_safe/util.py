@@ -15,12 +15,7 @@ from typing import (
 
 from eth_abi.abi import encode as abi_encode
 from eth_abi.packed import encode_packed
-from eth_account.messages import (
-    _hash_eip191_message,  # pyright: ignore[reportPrivateUsage]
-    encode_typed_data,
-)
 from eth_typing import ChecksumAddress, HexStr
-from eth_utils.address import to_checksum_address
 from eth_utils.crypto import keccak
 from eth_utils.currency import denoms
 from hexbytes import (
@@ -92,6 +87,7 @@ def compute_safe_address(
     threshold: int,
 ) -> tuple[HexBytes, ChecksumAddress]:
     """Compute Safe address via SafeProxyFactory v1.4.1."""
+    from eth_utils.crypto import keccak
     from web3.constants import ADDRESS_ZERO
     from web3.utils.address import get_create2_address
 
@@ -186,6 +182,11 @@ def hash_eip712_data(data: Any) -> HexBytes:  # using eth_account
     This replicates `eth_account.account.sign_typed_data()` except it
     doesn't require a private key.
     """
+    from eth_account.messages import (
+        _hash_eip191_message,  # pyright: ignore[reportPrivateUsage]
+        encode_typed_data,
+    )
+
     encoded = encode_typed_data(full_message=data)
     return HexBytes(_hash_eip191_message(encoded))
 
@@ -231,6 +232,7 @@ def parse_signatures(
     owners: list[str], safetxdata: SafeTxData, sigfiles: list[str]
 ) -> list[SignatureData]:
     sigdata: list[SignatureData] = []
+    from eth_utils.address import to_checksum_address
     from safe_eth.safe.safe_signature import SafeSignature
     from web3.constants import ADDRESS_ZERO
 
