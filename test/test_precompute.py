@@ -1,4 +1,5 @@
 from dataclasses import asdict
+
 from eth_utils.address import to_checksum_address
 
 from simple_safe.constants import (

@@ -45,15 +45,17 @@ if TYPE_CHECKING:
     from web3.types import Timestamp, TxParams, TxReceipt
 
 
-custom_theme = Theme({
-    "ok": "green",
-    "panel_ok": "green bold italic",
-    "info": "dim cyan",
-    "important": "cyan bold",
-    "warning": "magenta",
-    "danger": "bold red",
-    "panel_danger": "red bold italic",
-})
+custom_theme = Theme(
+    {
+        "ok": "green",
+        "panel_ok": "green bold italic",
+        "info": "dim cyan",
+        "important": "cyan bold",
+        "warning": "magenta",
+        "danger": "bold red",
+        "panel_danger": "red bold italic",
+    }
+)
 
 rich.reconfigure(stderr=True, theme=custom_theme)
 console = rich.get_console()
@@ -244,25 +246,31 @@ def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) 
 
     safetx = safetxdata.safetx
     table_data: list[dict[str, RenderableType]] = []
-    table_data.append({
-        "Safe Address": safetx.safe_address,
-        "Chain ID": str(safetx.chain_id),
-        "Safe Nonce": str(safetx.safe_nonce),
-        "To Address": str(safetx.to),
-        "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
-        "Value": format_native_value(Wei(safetx.value), chaindata),
-        "Gas Limit": format_gwei_value(Wei(safetx.safe_tx_gas)),
-        "Data": safetx.data.to_0x_hex(),
-    })
+    table_data.append(
+        {
+            "Safe Address": safetx.safe_address,
+            "Chain ID": str(safetx.chain_id),
+            "Safe Nonce": str(safetx.safe_nonce),
+            "To Address": str(safetx.to),
+            "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
+            "Value": format_native_value(Wei(safetx.value), chaindata),
+            "Gas Limit": format_gwei_value(Wei(safetx.safe_tx_gas)),
+            "Data": safetx.data.to_0x_hex(),
+        }
+    )
     if safetx.gas_price > 0:
-        table_data.append({
-            "Gas Price": format_gwei_value(Wei(safetx.gas_price)),
-            "Gas Token": safetx.gas_token,
-            "Refund Receiver": safetx.refund_receiver,
-        })
-    table_data.append({
-        "SafeTx Hash": safetxdata.hash.to_0x_hex(),
-    })
+        table_data.append(
+            {
+                "Gas Price": format_gwei_value(Wei(safetx.gas_price)),
+                "Gas Token": safetx.gas_token,
+                "Refund Receiver": safetx.refund_receiver,
+            }
+        )
+    table_data.append(
+        {
+            "SafeTx Hash": safetxdata.hash.to_0x_hex(),
+        }
+    )
     print_kvtable("Safe Transaction", "", *table_data)
 
 
@@ -453,9 +461,11 @@ def print_web3_tx_receipt(
         }
     ]
     if "contractAddress" in txreceipt and txreceipt["contractAddress"]:
-        table_data.append({
-            "Contract Address": txreceipt["contractAddress"],
-        })
+        table_data.append(
+            {
+                "Contract Address": txreceipt["contractAddress"],
+            }
+        )
     table = get_kvtable(*table_data)
     panel = get_panel(
         "Web3 Transaction Receipt",

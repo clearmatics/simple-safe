@@ -62,6 +62,5 @@
     uv python install $PYTHON_VERSIONS
   '';
 
-
   # See full reference at https://devenv.sh/reference/options/
 }
