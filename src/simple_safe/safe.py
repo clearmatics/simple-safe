@@ -12,9 +12,6 @@ from typing import (
 )
 
 import click
-from click_option_group import (
-    optgroup,
-)
 from eth_typing import (
     URI,
 )
@@ -42,6 +39,7 @@ from .console import (
     print_signatures,
     print_version,
 )
+from .params import optgroup
 from .util import (
     compute_safe_address,
     format_native_value,
@@ -355,7 +353,7 @@ def build_safe_call(
         safe = Safe(safe_address, client)  # type: ignore[abstract]
         safe_contract = cast(
             Contract,
-            safe.get_contract_fn()(client.w3, address=safe_address),  # pyright: ignore[reportAttributeAccessIssue]
+            safe.get_contract_fn()(client.w3, address=safe_address),  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
         )
         safetx = prepare_calltx(
             client=client,
@@ -377,8 +375,6 @@ def build_safe_call(
 
 
 @main.command(add_help_option=False)
-# pyright: reportUntypedFunctionDecorator=false
-# pyright: reportUnknownMemberType=false
 @params.deployment(offline=False)
 @params.web3tx
 @params.authentication
