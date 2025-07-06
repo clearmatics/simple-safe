@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import NamedTuple, Optional
 
 import platformdirs
-import requests
 import tomli_w
 
 APP_NAME = "simple-safe"
@@ -64,6 +63,8 @@ def lookup_chaindata(datafile: Path, chain_id: int) -> Optional[ChainData]:
 
 
 def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
+    import requests
+
     paths = get_paths()
     if not paths.cache_dir.exists():
         logger.debug(f"Creating cache dir '{paths.cache_dir}'")
