@@ -8,8 +8,6 @@ from typing import (
 )
 
 import click
-from eth_typing import ChecksumAddress
-from eth_utils.address import to_checksum_address
 from hexbytes import (
     HexBytes,
 )
@@ -36,8 +34,10 @@ from .console import (
     print_web3_tx_params,
     print_web3_tx_receipt,
 )
+from .util import to_checksum_address
 
 if TYPE_CHECKING:
+    from eth_typing import ChecksumAddress
     from safe_eth.eth import EthereumClient
     from safe_eth.safe import SafeTx
     from web3 import Web3
@@ -63,7 +63,7 @@ def prepare_calltx(
     contract: "Contract",
     fn_identifier: str,
     str_args: list[str],
-    safe: ChecksumAddress,
+    safe: "ChecksumAddress",
     value: str,
     safe_version: Optional[str],
     chain_id: Optional[int],

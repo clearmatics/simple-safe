@@ -6,16 +6,13 @@ import typing
 from decimal import Decimal
 from types import TracebackType
 from typing import (
+    TYPE_CHECKING,
     Any,
     Optional,
     cast,
 )
 
 import click
-from eth_typing import (
-    URI,
-)
-from eth_utils.address import to_checksum_address
 from hexbytes import (
     HexBytes,
 )
@@ -48,6 +45,7 @@ from .util import (
     parse_signatures,
     reconstruct_safetx,
     silence_logging,
+    to_checksum_address,
 )
 from .workflows import (
     SAFE_CONTRACT_VERSIONS,
@@ -57,6 +55,9 @@ from .workflows import (
     validate_deploy_options,
     validate_safetx_options,
 )
+
+if TYPE_CHECKING:
+    from eth_typing import URI
 
 # ┌───────┐
 # │ Setup │
@@ -180,7 +181,7 @@ def build_abi_call(
             abi = json.load(f)
         from safe_eth.eth import EthereumClient
 
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         contract = client.w3.eth.contract(
             address=to_checksum_address(contract_str), abi=abi
         )
@@ -231,7 +232,7 @@ def build_custom(
         from safe_eth.eth import EthereumClient
         from safe_eth.safe import SafeOperationEnum, SafeTx
 
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         chaindata = fetch_chaindata(chain_id if chain_id else client.w3.eth.chain_id)
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
         safetx = SafeTx(
@@ -296,7 +297,7 @@ def build_erc20_call(
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(client.w3, address=token_address)
         safetx = prepare_calltx(
@@ -348,7 +349,7 @@ def build_safe_call(
         validate_safetx_options(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         safe_address = to_checksum_address(safe)
         safe = Safe(safe_address, client)  # type: ignore[abstract]
         safe_contract = cast(
@@ -409,7 +410,7 @@ def deploy(
         from web3 import Web3
         from web3.providers.auto import load_provider_from_uri
 
-        w3 = Web3(load_provider_from_uri(URI(rpc)))
+        w3 = Web3(load_provider_from_uri(cast("URI", rpc)))
 
         data = validate_deploy_options(
             chain_id=w3.eth.chain_id if chain_specific else None,
@@ -533,7 +534,7 @@ def exec(
         from safe_eth.eth import EthereumClient
         from safe_eth.safe import Safe
 
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
         safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
         owners = safe.retrieve_owners()
@@ -601,7 +602,7 @@ def inspect(address: str, rpc: str):
         from safe_eth.eth import EthereumClient
         from safe_eth.safe import Safe
 
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         try:
             safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
             block = client.w3.eth.block_number
@@ -682,7 +683,7 @@ def preview(
     with status("Loading Safe transaction..."):
         from safe_eth.eth import EthereumClient
 
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         safetxdata = reconstruct_safetx(client, txfile, version=None)
 
     with status("Retrieving chain data..."):
@@ -733,7 +734,7 @@ def sign(
 
         from safe_eth.eth import EthereumClient
 
-        client = EthereumClient(URI(rpc))
+        client = EthereumClient(cast("URI", rpc))
         safetxdata = reconstruct_safetx(client, txfile, safe_version)
 
     with status("Retrieving chain data..."):

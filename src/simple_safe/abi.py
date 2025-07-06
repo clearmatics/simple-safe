@@ -1,32 +1,34 @@
 import json
 from itertools import chain
-from typing import Any, NamedTuple, Optional, Sequence
+from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Sequence
 
-from eth_typing import ABI
-from eth_typing.abi import ABIConstructor, ABIFunction, ABIFunctionType
-from eth_utils.abi import (
-    abi_to_signature,
-    filter_abi_by_type,
-    function_signature_to_4byte_selector,
-    get_abi_input_names,
-    get_aligned_abi_inputs,
-    get_all_function_abis,
-)
-from eth_utils.address import to_checksum_address
 from hexbytes import HexBytes
+
+from .util import to_checksum_address
+
+if TYPE_CHECKING:
+    from eth_typing import ABI
+    from eth_typing.abi import ABIConstructor, ABIFunction, ABIFunctionType
 
 
 class Function(NamedTuple):
     name: str
-    abi: ABIFunctionType
+    abi: "ABIFunctionType"
     sig: str
     selector: HexBytes
 
 
 def find_function(
-    abi: ABI, fn_identifier: str
+    abi: "ABI", fn_identifier: str
 ) -> tuple[Optional[Function], Sequence[Function]]:
     """Find a function by an identifier in the Contract ABI."""
+    from eth_utils.abi import (
+        abi_to_signature,
+        filter_abi_by_type,
+        function_signature_to_4byte_selector,
+        get_all_function_abis,
+    )
+
     exact_name_matches: list[Function] = []
     partial_name_matches: list[Function] = []
     for fn_abi in chain(
@@ -58,9 +60,14 @@ def find_function(
 
 
 def parse_args(
-    fn_abi: ABIFunction | ABIConstructor, str_args: Sequence[str]
+    fn_abi: "ABIFunction | ABIConstructor", str_args: Sequence[str]
 ) -> tuple[Any, ...]:
     """Parse a sequence of web3.py pytypes for an ABIElement input."""
+    from eth_utils.abi import (
+        get_abi_input_names,
+        get_aligned_abi_inputs,
+    )
+
     arg_names = map(str, get_abi_input_names(fn_abi))
     abi_types = [input["type"] for input in fn_abi.get("inputs", [])]
     if len(abi_types) != len(str_args):

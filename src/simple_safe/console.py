@@ -9,9 +9,6 @@ from typing import TYPE_CHECKING, Any, Optional, Sequence, cast
 
 import rich
 from click import Context, Parameter
-from eth_typing import ChecksumAddress
-from eth_typing.abi import ABIElement
-from eth_utils.abi import get_abi_input_names
 from hexbytes import HexBytes
 from rich.box import HORIZONTALS, ROUNDED, Box
 from rich.console import Console, RenderableType
@@ -41,6 +38,8 @@ from .util import (
 )
 
 if TYPE_CHECKING:
+    from eth_typing import ChecksumAddress
+    from eth_typing.abi import ABIElement
     from web3.contract.contract import ContractFunction
     from web3.types import Timestamp, TxParams, TxReceipt
 
@@ -164,6 +163,8 @@ def make_status_logger(logger: logging.Logger):
 
 
 def print_function_matches(matches: Sequence[Function]):
+    from eth_utils.abi import get_abi_input_names
+
     table = Table(
         show_edge=False,
         show_header=True,
@@ -174,7 +175,7 @@ def print_function_matches(matches: Sequence[Function]):
     table.add_column("Signature")
     table.add_column("Arguments")
     for match in matches:
-        fn_abi = cast(ABIElement, match.abi)
+        fn_abi = cast("ABIElement", match.abi)
         if fn_abi["type"] == "fallback":
             arguments = []
         else:
@@ -200,7 +201,7 @@ def print_kvtable(
     console.print(get_panel(title, subtitle, table))
 
 
-def print_safe_deploy_info(data: DeployParams, safe_address: ChecksumAddress):
+def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
     variant = {
         SafeVariant.SAFE: "Safe.sol (without events)",
         SafeVariant.SAFE_L2: "SafeL2.sol (emits events)",
@@ -395,7 +396,7 @@ def print_web3_tx_fees(
 
 def print_web3_tx_params(
     params: "TxParams",
-    from_: ChecksumAddress,
+    from_: "ChecksumAddress",
     chaindata: Optional[ChainData] = None,
 ) -> None:
     from web3.types import Wei

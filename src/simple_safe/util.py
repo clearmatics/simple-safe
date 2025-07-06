@@ -13,11 +13,6 @@ from typing import (
     cast,
 )
 
-from eth_abi.abi import encode as abi_encode
-from eth_abi.packed import encode_packed
-from eth_typing import ChecksumAddress, HexStr
-from eth_utils.crypto import keccak
-from eth_utils.currency import denoms
 from hexbytes import (
     HexBytes,
 )
@@ -27,6 +22,7 @@ from simple_safe.constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPE
 from .chain import ChainData
 
 if TYPE_CHECKING:
+    from eth_typing import ChecksumAddress, HexStr
     from safe_eth.eth import EthereumClient
     from safe_eth.safe import SafeTx
     from safe_eth.safe.safe_signature import SafeSignature
@@ -36,15 +32,15 @@ if TYPE_CHECKING:
 @dataclasses.dataclass(kw_only=True)
 class DeployParams:
     # deployment
-    proxy_factory: ChecksumAddress
-    singleton: ChecksumAddress
+    proxy_factory: "ChecksumAddress"
+    singleton: "ChecksumAddress"
     chain_id: Optional[int]
     salt_nonce: int
     variant: "SafeVariant"
     # initialization
-    owners: list[ChecksumAddress]
+    owners: list["ChecksumAddress"]
     threshold: int
-    fallback: ChecksumAddress
+    fallback: "ChecksumAddress"
 
 
 class SafeVariant(Enum):
@@ -68,25 +64,27 @@ class SignatureData(NamedTuple):
     # Invalid signature may not have these fields.
     sig: Optional["SafeSignature"]
     sigtype: Optional[str]
-    address: Optional[ChecksumAddress]
+    address: Optional["ChecksumAddress"]
 
 
-def as_checksum(checksum_str: str) -> ChecksumAddress:
+def as_checksum(checksum_str: str) -> "ChecksumAddress":
     """Cast to satisfy type checker."""
-    return cast(ChecksumAddress, checksum_str)
+    return cast("ChecksumAddress", checksum_str)
 
 
 def compute_safe_address(
     *,
     chain_id: Optional[int],
-    fallback: ChecksumAddress,
-    owners: list[ChecksumAddress],
-    proxy_factory: ChecksumAddress,
+    fallback: "ChecksumAddress",
+    owners: list["ChecksumAddress"],
+    proxy_factory: "ChecksumAddress",
     salt_nonce: int,
-    singleton: ChecksumAddress,
+    singleton: "ChecksumAddress",
     threshold: int,
-) -> tuple[HexBytes, ChecksumAddress]:
+) -> tuple[HexBytes, "ChecksumAddress"]:
     """Compute Safe address via SafeProxyFactory v1.4.1."""
+    from eth_abi.abi import encode as abi_encode
+    from eth_abi.packed import encode_packed
     from eth_utils.crypto import keccak
     from web3.constants import ADDRESS_ZERO
     from web3.utils.address import get_create2_address
@@ -140,8 +138,8 @@ def compute_safe_address(
     )
     address = get_create2_address(
         proxy_factory,
-        cast(HexStr, salt.hex()),
-        cast(HexStr, deployment_data.hex()),
+        cast("HexStr", salt.hex()),
+        cast("HexStr", deployment_data.hex()),
     )
     return (initializer, address)
 
@@ -163,6 +161,8 @@ def format_wei_value(value: "Wei", chaindata: Optional[ChainData] = None) -> str
 
 
 def format_gwei_value(value: "Wei", units: tuple[str, str] = ("Wei", "Gwei")) -> str:
+    from eth_utils.currency import denoms
+
     with localcontext() as ctx:
         ctx.prec = 78
         converted = (Decimal(value) / denoms.gwei).normalize()
@@ -286,3 +286,9 @@ def silence_logging():
         yield
     finally:
         logging.disable(log_level)
+
+
+def to_checksum_address(address: str) -> "ChecksumAddress":
+    from eth_utils.address import to_checksum_address
+
+    return to_checksum_address(address)

@@ -4,7 +4,6 @@ from getpass import getpass
 from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
 
 import click
-from eth_typing import ChecksumAddress
 
 from .console import make_status_logger
 
@@ -12,6 +11,7 @@ if TYPE_CHECKING:
     from eth_account.datastructures import SignedTransaction
     from eth_account.signers.local import LocalAccount
     from eth_account.types import TransactionDictType
+    from eth_typing import ChecksumAddress
     from web3.types import TxParams
 
 
@@ -20,7 +20,7 @@ status = make_status_logger(logger)
 
 
 class Authenticator(Protocol):
-    address: ChecksumAddress
+    address: "ChecksumAddress"
 
     def sign_transaction(self, params: "TxParams") -> "SignedTransaction": ...
 
