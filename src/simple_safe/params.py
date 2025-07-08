@@ -55,7 +55,6 @@ def build_safetx(f: FC) -> FC:
 def common(f: FC) -> FC:
     for option in reversed(
         [
-            help,
             click.option(
                 "--verbose",
                 "-v",

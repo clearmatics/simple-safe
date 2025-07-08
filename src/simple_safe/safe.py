@@ -24,6 +24,7 @@ from . import params
 from .abi import find_function, parse_args
 from .auth import get_authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
+from .click import Group
 from .console import (
     SAFE_DEBUG,
     activate_logging,
@@ -101,12 +102,12 @@ sys.excepthook = handle_crash
 
 
 @click.group(
+    cls=Group,
     context_settings=dict(
         show_default=True,
         max_content_width=shutil.get_terminal_size().columns,
         help_option_names=["-h", "--help"],
     ),
-    add_help_option=False,
 )
 @click.option(
     "--version",
@@ -116,7 +117,6 @@ sys.excepthook = handle_crash
     is_eager=True,
     help="print version info and exit",
 )
-@params.help
 def main():
     """A simple Web3-native CLI for Safe accounts."""
     if SAFE_DEBUG:
@@ -128,14 +128,13 @@ def main():
 # └──────────┘
 
 
-@main.group(add_help_option=False)
-@params.help
+@main.group()
 def build():
     """Build a Safe transaction."""
     pass
 
 
-@build.command(name="abi-call", add_help_option=False)
+@build.command(name="abi-call")
 @click.option(
     "--abi",
     "abi_file",
@@ -204,7 +203,7 @@ def build_abi_call(
     )
 
 
-@build.command(name="custom", add_help_option=False)
+@build.command(name="custom")
 @click.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
 )
@@ -260,7 +259,7 @@ def build_custom(
     )
 
 
-@build.command(name="erc20-call", add_help_option=False)
+@build.command(name="erc20-call")
 @click.option(
     "--token",
     "token_str",
@@ -319,7 +318,7 @@ def build_erc20_call(
     )
 
 
-@build.command(name="safe-call", add_help_option=False)
+@build.command(name="safe-call")
 @params.safe
 @params.build_safetx
 @params.output_file
@@ -375,7 +374,7 @@ def build_safe_call(
     )
 
 
-@main.command(add_help_option=False)
+@main.command()
 @params.deployment(offline=False)
 @params.web3tx
 @params.authentication
@@ -467,7 +466,7 @@ def deploy(
     output_console.print(txhash.to_0x_hex())
 
 
-@main.command(add_help_option=False)
+@main.command()
 @click.option(
     "--abi",
     "abi_file",
@@ -508,7 +507,7 @@ def encode(
     output_console.print(calldata)
 
 
-@main.command(add_help_option=False)
+@main.command()
 @params.web3tx
 @params.authentication
 @params.rpc(click.option, required=True)
@@ -579,7 +578,7 @@ def exec(
     output_console.print(txhash.to_0x_hex())
 
 
-@main.command(add_help_option=False)
+@main.command()
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.common
 def hash(txfile: typing.TextIO) -> None:
@@ -591,7 +590,7 @@ def hash(txfile: typing.TextIO) -> None:
     output_console.print(safetx_hash.to_0x_hex())
 
 
-@main.command(add_help_option=False)
+@main.command()
 @params.rpc(click.option)
 @click.argument("address")
 @params.common
@@ -641,7 +640,7 @@ def inspect(address: str, rpc: str):
     )
 
 
-@main.command(add_help_option=False)
+@main.command()
 @params.deployment(offline=True)
 @params.output_file
 @params.common
@@ -666,7 +665,7 @@ def precompute(**kwargs: Any):
     output_console.print(address)
 
 
-@main.command(add_help_option=False)
+@main.command()
 @params.rpc(click.option, required=True)
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.sigfile
@@ -703,7 +702,7 @@ def preview(
         print_signatures(sigdata, threshold)
 
 
-@main.command(add_help_option=False)
+@main.command()
 @optgroup.group("Sign offline")
 @params.safe_version
 @optgroup.group("Sign online")
