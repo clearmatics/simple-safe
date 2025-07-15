@@ -64,6 +64,7 @@ logger = logging.getLogger(__name__)
 
 CHECK = "✔"
 CROSS = "✖"
+WARNING = "⚠️"
 
 CUSTOM_BOX: Box = Box(
     "    \n"  # top

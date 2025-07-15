@@ -26,6 +26,7 @@ from .abi import Function, find_function, parse_args
 from .auth import Authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
+    WARNING,
     console,
     make_status_logger,
     print_function_matches,
@@ -201,8 +202,9 @@ def validate_deploy_options(
         )
     elif not chain_specific and chain_id is not None:
         logger.warning(
-            f"Ignoring --chain-id {chain_id} because chain-specific address not requested"
+            f"{WARNING} Ignoring --chain-id {chain_id} because chain-specific address not requested"
         )
+        chain_id = None
     return DeployParams(
         proxy_factory=to_checksum_address(
             DEFAULT_PROXYFACTORY_ADDRESS
