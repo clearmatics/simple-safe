@@ -1,42 +1,47 @@
 """Custom Click command Command and Group with properly-formatted help text."""
 
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import click
-from click.decorators import FC
+from click.decorators import HelpOption
 
 
-def help_option(*param_decls: str, **kwargs: Any) -> Callable[[FC], FC]:
+# Match Click 8.1.8 implementation. Revise when Click is upgraded.
+class CustomHelpOption(HelpOption):
+    def __init__(
+        self,
+        **kwargs: Any,
+    ) -> None:
+        param_decls = (
+            "-h",
+            "--help",
+        )
+
+        kwargs.setdefault("is_flag", True)
+        kwargs.setdefault("expose_value", False)
+        kwargs.setdefault("is_eager", True)
+        kwargs.setdefault("help", "show this message and exit")
+        kwargs.setdefault("callback", self.show_help)
+
+        return super().__init__(param_decls, **kwargs)
+
+    @staticmethod
     def show_help(ctx: click.Context, param: click.Parameter, value: bool) -> None:
         """Callback that print the help page on ``<stdout>`` and exits."""
         if value and not ctx.resilient_parsing:
             click.echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
 
-    if not param_decls:
-        param_decls = ("--help",)
-
-    kwargs.setdefault("is_flag", True)
-    kwargs.setdefault("expose_value", False)
-    kwargs.setdefault("is_eager", True)
-    kwargs.setdefault("help", "show this message and exit")
-    kwargs.setdefault("callback", show_help)
-
-    return click.option(*param_decls, **kwargs)
-
 
 class Command(click.Command):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
+    # Match Click 8.1.8 implementation. Revise when Click is upgraded.
     def get_help_option(self, ctx: click.Context) -> click.Option | None:
-        help_option_names = self.get_help_option_names(ctx)
-
-        if self._help_option is None:  # pyright: ignore[reportUnnecessaryComparison]
-            # Apply help_option decorator and pop resulting option
-            help_option(*help_option_names)(self)
-            self._help_option = self.params.pop()
-        return self._help_option  # pyright: ignore[reportReturnType]
+        if self._help_option is None:
+            self._help_option = CustomHelpOption()
+        return self._help_option
 
 
 class Group(click.Group):
@@ -51,11 +56,8 @@ class Group(click.Group):
         kwargs.setdefault("cls", Command)
         return cast(click.Command, super().command(*args, **kwargs))
 
+    # Match Click 8.1.8 implementation. Revise when Click is upgraded.
     def get_help_option(self, ctx: click.Context) -> click.Option | None:
-        help_option_names = self.get_help_option_names(ctx)
-
-        if self._help_option is None:  # pyright: ignore[reportUnnecessaryComparison]
-            # Apply help_option decorator and pop resulting option
-            help_option(*help_option_names)(self)
-            self._help_option = self.params.pop()
-        return self._help_option  # pyright: ignore[reportReturnType]
+        if self._help_option is None:
+            self._help_option = CustomHelpOption()
+        return self._help_option

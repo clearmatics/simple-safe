@@ -5,7 +5,7 @@ description = "A simple Web3-native CLI for Safe accounts"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "click>=8.2.1",
+  "click>=8.1.8",
   "click-option-group>=0.5.7",
   "devtools>=0.12.2",
   "platformdirs>=4.3.8",
