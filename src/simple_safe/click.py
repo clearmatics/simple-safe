@@ -1,6 +1,7 @@
 """Custom Click command Command and Group with properly-formatted help text."""
 
 from typing import Any, Callable, cast
+
 import click
 from click.decorators import FC
 
