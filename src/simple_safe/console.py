@@ -48,6 +48,7 @@ custom_theme = Theme(
     {
         "ok": "green",
         "panel_ok": "green bold italic",
+        "secondary": "grey50",
         "info": "dim cyan",
         "important": "cyan bold",
         "warning": "magenta",
@@ -349,12 +350,12 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
 
 def print_web3_call_data(function: "ContractFunction", calldata: str) -> None:
     argdata: dict[str, RenderableType] = {}
-    for i, arg in enumerate(function.arguments):
+    for i, argval in enumerate(function.arguments):
         if function.argument_types[i] == "bytes":
-            arg_str = arg.to_0x_hex()
+            argval_str = argval.to_0x_hex()
         else:
-            arg_str = str(arg)
-        argdata[function.argument_names[i]] = arg_str
+            argval_str = str(argval)
+        argdata[function.argument_names[i]] = argval_str
 
     function_signature = function.signature
     if (
@@ -369,7 +370,10 @@ def print_web3_call_data(function: "ContractFunction", calldata: str) -> None:
             "Selector": function.selector,
             "Function": function_signature,
         },
-        argdata,
+        {
+            arg + r" [secondary](" + f"{1 + i})[/secondary]": val
+            for i, (arg, val) in enumerate(argdata.items())
+        },
         {
             "ABI Encoding": calldata,
         },
