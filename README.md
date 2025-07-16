@@ -57,12 +57,13 @@ Options:
   -h, --help  show this message and exit
 
 Commands:
-  build    Build a Safe transaction.
-  deploy   Deploy a new Safe account.
-  encode   Encode contract call data.
-  exec     Execute a signed Safe transaction.
-  hash     Compute hash of Safe transaction.
-  inspect  Inspect a Safe account.
-  preview  Preview a Safe transaction.
-  sign     Sign a Safe transaction.
+  build       Build a Safe transaction.
+  deploy      Deploy a new Safe account.
+  encode      Encode contract call data.
+  exec        Execute a signed Safe transaction.
+  hash        Compute hash of Safe transaction.
+  inspect     Inspect a Safe account.
+  precompute  Compute a Safe address offline.
+  preview     Preview a Safe transaction.
+  sign        Sign a Safe transaction.
 ```
