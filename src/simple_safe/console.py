@@ -470,7 +470,11 @@ def print_web3_tx_receipt(
                 Wei(txreceipt["gasUsed"] * txreceipt["effectiveGasPrice"]), chaindata
             ),
             "Status": str(txreceipt["status"])
-            + (" (SUCCESS)" if success else " (FAILURE)"),
+            + (
+                f" [ok]{CHECK} SUCCESS[/ok]"
+                if success
+                else f" [danger]{CROSS} FAILURE[/danger]"
+            ),
         }
     ]
     if "contractAddress" in txreceipt and txreceipt["contractAddress"]:
