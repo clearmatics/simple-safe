@@ -25,6 +25,12 @@
 
   env.SOURCE_DIRS = "src/simple_safe test";
 
+  scripts.autofix.exec = ''
+    set -ux
+    uv sync --dev
+    uv run ruff check --fix
+  '';
+
   scripts.check.exec = ''
     set -ux
     uv sync --dev
