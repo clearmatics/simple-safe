@@ -58,6 +58,13 @@
     RUST_LOG=warn taplo fmt --check --diff pyproject.toml
   '';
 
+  scripts.profile.exec = ''
+    set -ux
+    IMPORT_LOG=$(mktemp)
+    uv run python -X importtime -m simple_safe.safe 2>$IMPORT_LOG
+    uv run tuna $IMPORT_LOG
+  '';
+
   env.PYTHON_VERSIONS = "3.11 3.12 3.13";
   env.PYTEST_COMMAND = "pytest -l -s -v --no-header --disable-warnings ./test";
   scripts.runtests.exec = "uv run $PYTEST_COMMAND";
