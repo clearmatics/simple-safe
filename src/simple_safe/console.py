@@ -49,13 +49,10 @@ if TYPE_CHECKING:
 custom_theme = Theme(
     {
         "ok": "green",
+        "danger": "red",
         "panel_ok": "green bold italic",
-        "secondary": "grey50",
-        "info": "dim cyan",
-        "important": "cyan bold",
-        "warning": "magenta",
-        "danger": "bold red",
         "panel_danger": "red bold italic",
+        "secondary": "grey50",
     }
 )
 
