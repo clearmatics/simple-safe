@@ -19,14 +19,13 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 
-from simple_safe.constants import (
+from .abi import Function
+from .chain import ChainData
+from .constants import (
     DEFAULT_PROXYFACTORY_ADDRESS,
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
 )
-
-from .abi import Function
-from .chain import ChainData
 from .util import (
     DeployParams,
     SafeTxData,

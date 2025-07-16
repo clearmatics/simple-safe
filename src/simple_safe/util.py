@@ -17,9 +17,8 @@ from hexbytes import (
     HexBytes,
 )
 
-from simple_safe.constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
-
 from .chain import ChainData
+from .constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
 if TYPE_CHECKING:
     from eth_typing import ChecksumAddress, HexStr

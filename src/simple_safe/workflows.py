@@ -13,15 +13,6 @@ from hexbytes import (
 )
 from rich.prompt import Confirm
 
-from simple_safe.constants import (
-    DEFAULT_FALLBACK_ADDRESS,
-    DEFAULT_PROXYFACTORY_ADDRESS,
-    DEFAULT_SAFE_SINGLETON_ADDRESS,
-    DEFAULT_SAFEL2_SINGLETON_ADDRESS,
-    SALT_NONCE_SENTINEL,
-)
-from simple_safe.util import DeployParams, SafeVariant
-
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
@@ -35,7 +26,14 @@ from .console import (
     print_web3_tx_params,
     print_web3_tx_receipt,
 )
-from .util import to_checksum_address
+from .constants import (
+    DEFAULT_FALLBACK_ADDRESS,
+    DEFAULT_PROXYFACTORY_ADDRESS,
+    DEFAULT_SAFE_SINGLETON_ADDRESS,
+    DEFAULT_SAFEL2_SINGLETON_ADDRESS,
+    SALT_NONCE_SENTINEL,
+)
+from .util import DeployParams, SafeVariant, to_checksum_address
 
 if TYPE_CHECKING:
     from eth_typing import ChecksumAddress
