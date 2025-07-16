@@ -7,7 +7,6 @@ from decimal import Decimal
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
-    Any,
     Optional,
     cast,
 )
@@ -644,10 +643,30 @@ def inspect(address: str, rpc: str):
 @params.deployment(offline=True)
 @params.output_file
 @params.common
-def precompute(**kwargs: Any):
+def precompute(
+    chain_id: Optional[int],
+    chain_specific: bool,
+    custom_proxy_factory: Optional[str],
+    custom_singleton: Optional[str],
+    fallback: Optional[str],
+    output: typing.TextIO | None,
+    owners: list[str],
+    salt_nonce: str,
+    threshold: int,
+    without_events: bool,
+):
     """Compute a Safe address offline."""
-    output = kwargs.pop("output")
-    data = validate_deploy_options(**kwargs)
+    data = validate_deploy_options(
+        chain_id=chain_id,
+        chain_specific=chain_specific,
+        custom_proxy_factory=custom_proxy_factory,
+        custom_singleton=custom_singleton,
+        fallback=fallback,
+        owners=owners,
+        salt_nonce=salt_nonce,
+        threshold=threshold,
+        without_events=without_events,
+    )
     _, address = compute_safe_address(
         proxy_factory=data.proxy_factory,
         singleton=data.singleton,
