@@ -22,6 +22,7 @@ from rich.theme import Theme
 from .abi import Function
 from .chain import ChainData
 from .constants import (
+    DEFAULT_FALLBACK_ADDRESS,
     DEFAULT_PROXYFACTORY_ADDRESS,
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
@@ -233,7 +234,12 @@ def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
         {
             f"Owners({len(data.owners)})": ", ".join(data.owners),
             "Threshold": str(data.threshold),
-            "Fallback Handler": data.fallback,
+            "Fallback Handler": data.fallback
+            + (
+                f" [ok]{CHECK} DEFAULT[/ok]"
+                if data.fallback == DEFAULT_FALLBACK_ADDRESS
+                else ""
+            ),
         },
         {
             "Safe Address": f"{safe_address}",
