@@ -4,24 +4,7 @@ from getpass import getpass
 from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
 
 import click
-import trezorlib.ethereum as trezor_eth
-from eth_account._utils.legacy_transactions import (
-    encode_transaction,
-)
-from eth_account.datastructures import SignedTransaction
-from eth_account.signers.local import LocalAccount
-from eth_account.typed_transactions.typed_transaction import TypedTransaction
-from eth_account.types import TransactionDictType
-from eth_typing import ChecksumAddress
-from eth_utils.address import to_checksum_address
-from eth_utils.conversions import to_int
-from eth_utils.crypto import keccak
 from hexbytes import HexBytes
-from trezorlib.client import get_default_client
-from trezorlib.exceptions import Cancelled
-from trezorlib.messages import Features
-from trezorlib.tools import parse_path
-from trezorlib.transport import DeviceIsBusy
 
 from .console import make_status_logger
 
@@ -30,6 +13,7 @@ if TYPE_CHECKING:
     from eth_account.signers.local import LocalAccount
     from eth_account.types import TransactionDictType
     from eth_typing import ChecksumAddress
+    from trezorlib.messages import Features
     from web3.types import TxParams
 
 
@@ -76,12 +60,20 @@ class KeyfileAuthenticator:
 
 class TrezorAuthenticator:
     def __init__(self, path_str: str):
+        import trezorlib.ethereum as trezor_eth
+        from eth_utils.address import to_checksum_address
+        from trezorlib.client import get_default_client
+        from trezorlib.exceptions import Cancelled
+        from trezorlib.tools import parse_path
+        from trezorlib.transport import DeviceIsBusy
+
         try:
             self.path = parse_path(path_str)
         except ValueError as exc:
             raise click.ClickException(
                 f"Invalid Trezor BIP32 derivation path '{path_str}'."
             ) from exc
+
         try:
             self.client = get_default_client()
         except DeviceIsBusy as exc:
@@ -101,12 +93,12 @@ class TrezorAuthenticator:
         self.address = to_checksum_address(address_str)
         self.path_str = path_str
 
-    def device_info(self, features: Features) -> str:
+    def device_info(self, features: "Features") -> str:
         model = str(features.model) or "1"
         label = features.label or "(none)"
         return f"model='{model}', device_id='{features.device_id}', label='{label}'"
 
-    def sign_transaction(self, params: "TxParams") -> SignedTransaction:
+    def sign_transaction(self, params: "TxParams") -> "SignedTransaction":
         assert "chainId" in params
         assert "data" in params
         assert "gas" in params
@@ -115,6 +107,8 @@ class TrezorAuthenticator:
         assert "nonce" in params
         assert "to" in params
         assert "value" in params
+        import trezorlib.ethereum as trezor_eth
+
         v_int, r_bytes, s_bytes = trezor_eth.sign_tx_eip1559(
             self.client,
             self.path,
@@ -127,6 +121,14 @@ class TrezorAuthenticator:
             max_gas_fee=int(params["maxFeePerGas"]),
             max_priority_fee=int(params["maxPriorityFeePerGas"]),
         )
+        from eth_account._utils.legacy_transactions import (
+            encode_transaction,
+        )
+        from eth_account.typed_transactions.typed_transaction import TypedTransaction
+        from eth_account.types import TransactionDictType
+        from eth_utils.conversions import to_int
+        from eth_utils.crypto import keccak
+
         r_int = to_int(r_bytes)
         s_int = to_int(s_bytes)
         tx_unsigned = TypedTransaction.from_dict(cast(TransactionDictType, params))
@@ -141,6 +143,8 @@ class TrezorAuthenticator:
         )
 
     def sign_typed_data(self, data: dict[str, Any]) -> bytes:
+        import trezorlib.ethereum as trezor_eth
+
         sigdata = trezor_eth.sign_typed_data(self.client, self.path, data)
         return sigdata.signature
 
