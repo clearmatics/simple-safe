@@ -43,9 +43,7 @@ class KeyfileAuthenticator:
             self.address = self.account.address
 
     def __repr__(self):
-        return (
-            f"Keyfile Authenticator: keyfile='{self.keyfile}', account='{self.address}'"
-        )
+        return f"keyfile: {self.keyfile}"
 
     def sign_transaction(self, params: "TxParams") -> "SignedTransaction":
         with status("Signing Web3 transaction..."):
@@ -62,5 +60,5 @@ def validate_authenticator(
     if keyfile is None:
         raise RuntimeError("No keyfile supplied.")
     auth = KeyfileAuthenticator(keyfile)
-    logger.info(f"Using {auth}")
+    logger.info(f"Using authenticator: {auth}")
     return auth

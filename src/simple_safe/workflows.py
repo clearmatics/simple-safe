@@ -109,7 +109,7 @@ def execute_tx(
         gasprice = w3.eth.gas_price
 
     console.line()
-    print_web3_tx_params(tx, auth.address, chaindata)
+    print_web3_tx_params(tx, auth, chaindata)
     console.line()
     print_web3_tx_fees(tx, gasprice, chaindata)
 

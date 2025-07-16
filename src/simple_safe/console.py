@@ -43,6 +43,8 @@ if TYPE_CHECKING:
     from web3.contract.contract import ContractFunction
     from web3.types import Timestamp, TxParams, TxReceipt
 
+    from .auth import Authenticator
+
 
 custom_theme = Theme(
     {
@@ -406,7 +408,7 @@ def print_web3_tx_fees(
 
 def print_web3_tx_params(
     params: "TxParams",
-    from_: "ChecksumAddress",
+    auth: "Authenticator",
     chaindata: Optional[ChainData] = None,
 ) -> None:
     from web3.types import Wei
@@ -425,7 +427,7 @@ def print_web3_tx_params(
         "Web3 Transaction Parameters",
         "",
         {
-            "From Address": from_,
+            "From Address": auth.address + r" [secondary]\[" + f"{auth}][/secondary]",
             "Chain ID": str(params["chainId"]),
             "Nonce": str(params["nonce"]),
             "To Address": str(params["to"]),
