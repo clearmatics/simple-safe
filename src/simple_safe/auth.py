@@ -56,7 +56,7 @@ class KeyfileAuthenticator:
             return self.account.sign_typed_data(full_message=data).signature
 
 
-def get_authenticator(
+def validate_authenticator(
     keyfile: Optional[str],
 ) -> Authenticator:
     if keyfile is None:

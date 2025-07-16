@@ -21,7 +21,7 @@ from rich.traceback import Traceback
 
 from . import params
 from .abi import find_function, parse_args
-from .auth import get_authenticator
+from .auth import validate_authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .click import Group
 from .console import (
@@ -457,7 +457,7 @@ def deploy(
     if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
-    auth = get_authenticator(keyfile)
+    auth = validate_authenticator(keyfile)
     txhash = execute_calltx(w3, deployment_call, auth, force)
 
     console.line()
@@ -569,7 +569,7 @@ def exec(
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
-    auth = get_authenticator(keyfile)
+    auth = validate_authenticator(keyfile)
     txhash = execute_calltx(client.w3, safetxdata.safetx.w3_tx, auth, force)
 
     console.line()
@@ -767,7 +767,7 @@ def sign(
 
     from safe_eth.safe.safe_signature import SafeSignature
 
-    auth = get_authenticator(keyfile)
+    auth = validate_authenticator(keyfile)
     sigbytes = auth.sign_typed_data(safetxdata.data)
     sigobj = SafeSignature.parse_signature(sigbytes, safetxdata.hash)[0]
     signature = sigobj.export_signature()
