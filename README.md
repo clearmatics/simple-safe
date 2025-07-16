@@ -9,6 +9,7 @@ Functionality:
 `🔏` Sign a Safe transaction<br/>
 `⚙️` Execute a Safe transaction<br/>
 `🔌` Build and sign offline<br/>
+`🪪` Authenticate with a Trezor<br/>
 `🪪` Authenticate with a keyfile<br/>
 
 Benefits:
