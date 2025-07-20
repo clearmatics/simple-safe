@@ -13,6 +13,7 @@ from hexbytes import HexBytes
 from rich.box import HORIZONTALS, ROUNDED, Box
 from rich.console import Console, RenderableType
 from rich.highlighter import JSONHighlighter
+from rich.json import JSON
 from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.table import Table
@@ -78,6 +79,7 @@ CUSTOM_BOX: Box = Box(
 )
 
 
+JSON_INDENT_LEVEL = 2
 SAFE_DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 
@@ -96,14 +98,12 @@ def activate_logging():
 
 
 def get_json_data_renderable(
-    data: dict[str, Any], indent: Optional[int] = None
-) -> Text:
-    return JSONHighlighter()(
-        json.dumps(
-            data,
-            default=hexbytes_json_encoder,
-            indent=indent,
-        )
+    data: dict[str, Any], indent: Optional[int] = 2
+) -> RenderableType:
+    return JSON.from_data(
+        data,
+        default=hexbytes_json_encoder,
+        indent=JSON_INDENT_LEVEL,
     )
 
 
