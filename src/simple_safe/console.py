@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import sys
@@ -12,7 +11,6 @@ from click import Context, Parameter
 from hexbytes import HexBytes
 from rich.box import HORIZONTALS, ROUNDED, Box
 from rich.console import Console, RenderableType
-from rich.highlighter import JSONHighlighter
 from rich.json import JSON
 from rich.logging import RichHandler
 from rich.panel import Panel

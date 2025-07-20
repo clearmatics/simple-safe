@@ -5,6 +5,7 @@ from typing import (
     TYPE_CHECKING,
     Optional,
     Sequence,
+    TextIO,
 )
 
 import click
@@ -40,7 +41,6 @@ from .util import DeployParams, SafeVariant, to_checksum_address
 if TYPE_CHECKING:
     from eth_typing import ChecksumAddress
     from safe_eth.eth import EthereumClient
-    from safe_eth.safe import SafeTx
     from web3 import Web3
     from web3.contract import Contract
     from web3.contract.contract import ContractFunction
@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 status = make_status_logger(logger)
 
 
-def prepare_call_safetx(
+def process_call_safetx(
     client: "EthereumClient",
     contract: "Contract",
     fn_identifier: str,
@@ -69,7 +69,8 @@ def prepare_call_safetx(
     safe_version: Optional[str],
     chain_id: Optional[int],
     safe_nonce: Optional[int],
-) -> "SafeTx":
+    output: Optional[TextIO],
+):
     from safe_eth.safe import SafeOperationEnum, SafeTx
 
     match, partials = find_function(contract.abi, fn_identifier)
@@ -83,7 +84,7 @@ def prepare_call_safetx(
     chaindata = fetch_chaindata(chain_id if chain_id else client.w3.eth.chain_id)
     decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
 
-    return SafeTx(
+    safetx = SafeTx(
         ethereum_client=client,
         safe_address=safe,
         to=contract.address,
@@ -100,10 +101,19 @@ def prepare_call_safetx(
         safe_version=safe_version,
         chain_id=chain_id,
     )
+    output_console = get_output_console(output)
+    output_console.print(
+        get_json_data_renderable(safetx.eip712_structured_data),
+    )
 
 
 def process_web3tx(
-    w3: "Web3", tx: "TxParams", auth: Authenticator, force: bool, sign_only: bool
+    w3: "Web3",
+    tx: "TxParams",
+    auth: Authenticator,
+    force: bool,
+    sign_only: bool,
+    output: Optional[TextIO],
 ):
     with status("Preparing Web3 transaction..."):
         tx["nonce"] = w3.eth.get_transaction_count(auth.address)
@@ -121,7 +131,7 @@ def process_web3tx(
         raise click.Abort()
 
     signed_tx = auth.sign_transaction(tx)
-    output_console = get_output_console()
+    output_console = get_output_console(output)
 
     if sign_only:
         console.line()
@@ -149,13 +159,14 @@ def process_call_web3tx(
     auth: Authenticator,
     force: bool,
     sign_only: bool,
+    output: Optional[TextIO],
 ):
     with status("Building Web3 transaction..."):
         tx: "TxParams" = contractfn.build_transaction()
     assert "data" in tx
     console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
-    process_web3tx(w3, tx, auth, force, sign_only)
+    process_web3tx(w3, tx, auth, force, sign_only, output)
 
 
 def handle_function_match_failure(

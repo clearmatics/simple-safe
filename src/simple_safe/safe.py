@@ -50,7 +50,7 @@ from .util import (
 from .workflows import (
     SAFE_CONTRACT_VERSIONS,
     handle_function_match_failure,
-    prepare_call_safetx,
+    process_call_safetx,
     process_call_web3tx,
     validate_deploy_options,
     validate_safetx_options,
@@ -183,7 +183,7 @@ def build_abi_call(
         contract = client.w3.eth.contract(
             address=to_checksum_address(contract_str), abi=abi
         )
-        safetx = prepare_call_safetx(
+        process_call_safetx(
             client=client,
             contract=contract,
             fn_identifier=identifier,
@@ -193,13 +193,8 @@ def build_abi_call(
             safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
+            output=output,
         )
-    output_console = get_output_console(output)
-    output_console.print(
-        JSON.from_data(
-            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
-        )
-    )
 
 
 @build.command(name="custom")
@@ -298,7 +293,7 @@ def build_erc20_call(
         client = EthereumClient(cast("URI", rpc))
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(client.w3, address=token_address)
-        safetx = prepare_call_safetx(
+        process_call_safetx(
             client=client,
             contract=ERC20,
             fn_identifier=identifier,
@@ -308,13 +303,8 @@ def build_erc20_call(
             safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
+            output=output,
         )
-    output_console = get_output_console(output)
-    output_console.print(
-        JSON.from_data(
-            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
-        )
-    )
 
 
 @build.command(name="safe-call")
@@ -354,7 +344,7 @@ def build_safe_call(
             Contract,
             safe.get_contract_fn()(client.w3, address=safe_address),  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
         )
-        safetx = prepare_call_safetx(
+        process_call_safetx(
             client=client,
             contract=safe_contract,
             fn_identifier=identifier,
@@ -364,13 +354,8 @@ def build_safe_call(
             safe_version=safe_version,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
+            output=output,
         )
-    output_console = get_output_console(output)
-    output_console.print(
-        JSON.from_data(
-            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
-        ),
-    )
 
 
 @main.command()
@@ -379,6 +364,7 @@ def build_safe_call(
 @params.authentication
 @params.rpc(click.option, required=True)
 @params.force
+@params.output_file
 @params.common
 def deploy(
     chain_id: None,
@@ -389,6 +375,7 @@ def deploy(
     force: bool,
     keyfile: Optional[str],
     owners: list[str],
+    output: typing.TextIO | None,
     rpc: str,
     salt_nonce: str,
     sign_only: bool,
@@ -460,7 +447,7 @@ def deploy(
         raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    process_call_web3tx(w3, deployment_call, auth, force, sign_only)
+    process_call_web3tx(w3, deployment_call, auth, force, sign_only, output)
 
 
 @main.command()
@@ -511,10 +498,12 @@ def encode(
 @params.force
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.sigfile
+@params.output_file
 @params.common
 def exec(
     force: bool,
     keyfile: str,
+    output: typing.TextIO | None,
     rpc: str,
     sigfiles: list[str],
     sign_only: bool,
@@ -570,7 +559,9 @@ def exec(
             raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    process_call_web3tx(client.w3, safetxdata.safetx.w3_tx, auth, force, sign_only)
+    process_call_web3tx(
+        client.w3, safetxdata.safetx.w3_tx, auth, force, sign_only, output
+    )
 
 
 @main.command()
