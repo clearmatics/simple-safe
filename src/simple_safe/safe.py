@@ -49,9 +49,9 @@ from .util import (
 )
 from .workflows import (
     SAFE_CONTRACT_VERSIONS,
-    execute_calltx,
     handle_function_match_failure,
-    prepare_calltx,
+    prepare_call_safetx,
+    process_call_web3tx,
     validate_deploy_options,
     validate_safetx_options,
 )
@@ -183,7 +183,7 @@ def build_abi_call(
         contract = client.w3.eth.contract(
             address=to_checksum_address(contract_str), abi=abi
         )
-        safetx = prepare_calltx(
+        safetx = prepare_call_safetx(
             client=client,
             contract=contract,
             fn_identifier=identifier,
@@ -298,7 +298,7 @@ def build_erc20_call(
         client = EthereumClient(cast("URI", rpc))
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(client.w3, address=token_address)
-        safetx = prepare_calltx(
+        safetx = prepare_call_safetx(
             client=client,
             contract=ERC20,
             fn_identifier=identifier,
@@ -354,7 +354,7 @@ def build_safe_call(
             Contract,
             safe.get_contract_fn()(client.w3, address=safe_address),  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
         )
-        safetx = prepare_calltx(
+        safetx = prepare_call_safetx(
             client=client,
             contract=safe_contract,
             fn_identifier=identifier,
@@ -459,7 +459,7 @@ def deploy(
         raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    txhash = execute_calltx(w3, deployment_call, auth, force)
+    txhash = process_call_web3tx(w3, deployment_call, auth, force)
 
     console.line()
     output_console = get_output_console()
@@ -572,7 +572,7 @@ def exec(
             raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    txhash = execute_calltx(client.w3, safetxdata.safetx.w3_tx, auth, force)
+    txhash = process_call_web3tx(client.w3, safetxdata.safetx.w3_tx, auth, force)
 
     console.line()
     output_console = get_output_console()

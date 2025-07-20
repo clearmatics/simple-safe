@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 status = make_status_logger(logger)
 
 
-def prepare_calltx(
+def prepare_call_safetx(
     client: "EthereumClient",
     contract: "Contract",
     fn_identifier: str,
@@ -100,7 +100,7 @@ def prepare_calltx(
     )
 
 
-def execute_tx(
+def process_web3tx(
     w3: "Web3", tx: "TxParams", auth: Authenticator, force: bool
 ) -> HexBytes:
     with status("Preparing Web3 transaction..."):
@@ -133,7 +133,7 @@ def execute_tx(
     return tx_hash
 
 
-def execute_calltx(
+def process_call_web3tx(
     w3: "Web3",
     contractfn: "ContractFunction",
     auth: Authenticator,
@@ -144,7 +144,7 @@ def execute_calltx(
     assert "data" in tx
     console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
-    return execute_tx(w3, tx, auth, force)
+    return process_web3tx(w3, tx, auth, force)
 
 
 def handle_function_match_failure(
