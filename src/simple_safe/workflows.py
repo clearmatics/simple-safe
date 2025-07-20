@@ -19,6 +19,8 @@ from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     WARNING,
     console,
+    get_json_data_renderable,
+    get_output_console,
     make_status_logger,
     print_function_matches,
     print_web3_call_data,
@@ -101,8 +103,8 @@ def prepare_call_safetx(
 
 
 def process_web3tx(
-    w3: "Web3", tx: "TxParams", auth: Authenticator, force: bool
-) -> HexBytes:
+    w3: "Web3", tx: "TxParams", auth: Authenticator, force: bool, sign_only: bool
+):
     with status("Preparing Web3 transaction..."):
         tx["nonce"] = w3.eth.get_transaction_count(auth.address)
         chaindata = fetch_chaindata(w3.eth.chain_id)
@@ -114,23 +116,31 @@ def process_web3tx(
     print_web3_tx_fees(tx, gasprice, chaindata)
 
     console.line()
-    if not force and not Confirm.ask("Execute Web3 transaction?", default=False):
+    prompt = ("Sign" if sign_only else "Execute") + " Web3 transaction?"
+    if not force and not Confirm.ask(prompt, default=False):
         raise click.Abort()
 
     signed_tx = auth.sign_transaction(tx)
+    output_console = get_output_console()
 
-    with status("Executing Web3 transaction..."):
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+    if sign_only:
+        console.line()
+        output_console.print(get_json_data_renderable(signed_tx._asdict()))
+    else:
+        with status("Executing Web3 transaction..."):
+            tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
-    with status("Waiting for Web3 transaction receipt..."):
-        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-    timestamp = w3.eth.get_block(
-        tx_receipt["blockNumber"], full_transactions=False
-    ).get("timestamp")
+        with status("Waiting for Web3 transaction receipt..."):
+            tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+        timestamp = w3.eth.get_block(
+            tx_receipt["blockNumber"], full_transactions=False
+        ).get("timestamp")
 
-    console.line()
-    print_web3_tx_receipt(timestamp, tx_receipt, chaindata)
-    return tx_hash
+        console.line()
+        print_web3_tx_receipt(timestamp, tx_receipt, chaindata)
+
+        console.line()
+        output_console.print(tx_hash.to_0x_hex())
 
 
 def process_call_web3tx(
@@ -138,13 +148,14 @@ def process_call_web3tx(
     contractfn: "ContractFunction",
     auth: Authenticator,
     force: bool,
-) -> HexBytes:
+    sign_only: bool,
+):
     with status("Building Web3 transaction..."):
         tx: "TxParams" = contractfn.build_transaction()
     assert "data" in tx
     console.line()
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
-    return process_web3tx(w3, tx, auth, force)
+    process_web3tx(w3, tx, auth, force, sign_only)
 
 
 def handle_function_match_failure(

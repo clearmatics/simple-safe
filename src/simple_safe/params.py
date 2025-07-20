@@ -208,4 +208,17 @@ sigfile = click.argument(
 
 
 def web3tx(f: FC) -> FC:
+    for option in reversed(
+        [
+            optgroup.group(
+                "Web3 Transaction",
+            ),
+            optgroup.option(
+                "--sign-only",
+                is_flag=True,
+                help="sign but do not broadcast transaction to the network",
+            ),
+        ]
+    ):
+        f = option(f)
     return f

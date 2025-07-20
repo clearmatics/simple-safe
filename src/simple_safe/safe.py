@@ -391,6 +391,7 @@ def deploy(
     owners: list[str],
     rpc: str,
     salt_nonce: str,
+    sign_only: bool,
     threshold: int,
     trezor: Optional[str],
     without_events: bool,
@@ -459,11 +460,7 @@ def deploy(
         raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    txhash = process_call_web3tx(w3, deployment_call, auth, force)
-
-    console.line()
-    output_console = get_output_console()
-    output_console.print(txhash.to_0x_hex())
+    process_call_web3tx(w3, deployment_call, auth, force, sign_only)
 
 
 @main.command()
@@ -520,6 +517,7 @@ def exec(
     keyfile: str,
     rpc: str,
     sigfiles: list[str],
+    sign_only: bool,
     trezor: Optional[str],
     txfile: typing.TextIO,
 ):
@@ -572,11 +570,7 @@ def exec(
             raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    txhash = process_call_web3tx(client.w3, safetxdata.safetx.w3_tx, auth, force)
-
-    console.line()
-    output_console = get_output_console()
-    output_console.print(txhash.to_0x_hex())
+    process_call_web3tx(client.w3, safetxdata.safetx.w3_tx, auth, force, sign_only)
 
 
 @main.command()
