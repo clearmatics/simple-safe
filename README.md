@@ -76,3 +76,34 @@ Commands:
   preview     Preview a Safe transaction.
   sign        Sign a Safe transaction.
 ```
+
+## Authentication
+
+Simple Safe supports the following authentication methods for signing messages
+and transactions:
+
+- Trezor device
+- local keyfile
+
+### Trezor authentication
+
+Before using a Trezor device with Simple Safe, ensure it is running the latest
+firmware version, or a firmware version that is supported by
+[trezorlib](https://github.com/trezor/trezor-firmware/blob/main/python/README.md#firmware-version-requirements).
+
+To authenticate with a connected Trezor device, pass the `--trezor ACCOUNT`
+option to the relevant command, where `ACCOUNT` is either:
+
+- the _full derivation path_ of the account, for example: `m/44h/60h/0h/123`
+- the _index of the account_ at the default Trezor derivation prefix for
+  Ethereum coins `m/44h/60h/0h`, for example: `123`
+
+The following two options are equivalent:
+
+- `--trezor 123`
+- `--trezor m/44h/60h/0h/123`
+
+### Local keyfile authentication
+
+To authenticate with a local keyfile, pass the `--keyfile PATH` option, where
+`PATH` is the relative or absolute path of the encrypted keyfile to use.
