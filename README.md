@@ -4,22 +4,26 @@ A simple Web3-native CLI for Safe accounts.
 
 Functionality:
 
-`🚀` Deploy a Safe account<br/>
-`📝` Build a Safe transaction<br/>
-`🔏` Sign a Safe transaction<br/>
-`⚙️` Execute a Safe transaction<br/>
-`🔌` Build and sign offline<br/>
-`🪪` Authenticate with a Trezor<br/>
-`🪪` Authenticate with a keyfile<br/>
+<div>
+<code>🚀</code> Deploy a Safe account<br/>
+<code>📝</code> Build a Safe transaction<br/>
+<code>🔏</code> Sign a Safe transaction<br/>
+<code>⚙️</code> Execute a Safe transaction<br/>
+<code>🔌</code> Build and sign offline<br/>
+<code>🪪</code> Authenticate with a Trezor<br/>
+<code>🪪</code> Authenticate with a keyfile<br/>
+</div><br/>
 
 Benefits:
 
-`✅` Runs in the terminal<br/>
-`✅` No Terms of Use to accept<br/>
-`✅` No Privacy Policy to accept<br/>
-`✅` All commands can be scripted<br/>
-`✅` Not reliant on centralized services<br/>
-`✅` No need for chain to be officially supported<br/>
+<div>
+<code>✅</code> Runs in the terminal<br/>
+<code>✅</code> No Terms of Use to accept<br/>
+<code>✅</code> No Privacy Policy to accept<br/>
+<code>✅</code> All commands can be scripted<br/>
+<code>✅</code> Not reliant on centralized services<br/>
+<code>✅</code> No need for chain to be officially supported<br/>
+</div>
 
 ## Quick Start
 
