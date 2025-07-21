@@ -25,15 +25,19 @@ Benefits:
 <code>✅</code> No need for chain to be officially supported<br/>
 </div>
 
-## Quick Start
+## Getting started
 
-To get started, you will need:
+You will need:
 
-- [ ] EVM-compatible chain that implements EIP-1559
-- [ ] JSON-RPC endpoint over HTTP (not Websocket)
-- [ ] [Safe contracts](https://github.com/safe-global/safe-smart-account)
+- [ ] an EVM-compatible chain that supports EIP-1559
+- [ ] a JSON-RPC endpoint over HTTP (not Websocket)
+- [ ] the [Safe contracts](https://github.com/safe-global/safe-smart-account)
       deployed (preferably at
       [canonical addresses](https://github.com/safe-global/safe-singleton-factory?tab=readme-ov-file#how-to-get-the-singleton-deployed-to-your-network))
+- [ ] an understanding of the
+      [Safe Protocol](https://github.com/safe-global/safe-smart-account/blob/v1.4.1/docs/overview.md)
+      and
+      [Safe Smart Accounts](https://docs.safe.global/advanced/smart-account-overview)
 
 Install Simple Safe using `pipx`:
 
