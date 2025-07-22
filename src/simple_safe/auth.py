@@ -124,6 +124,7 @@ class TrezorAuthenticator:
         from eth_account._utils.legacy_transactions import (
             encode_transaction,
         )
+        from eth_account.datastructures import SignedTransaction
         from eth_account.typed_transactions.typed_transaction import TypedTransaction
         from eth_account.types import TransactionDictType
         from eth_utils.conversions import to_int
