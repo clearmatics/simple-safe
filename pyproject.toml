@@ -1,6 +1,6 @@
 [project]
 name = "simple-safe"
-version = "0.1.5"
+version = "0.1.6"
 description = "A simple Web3-native CLI for Safe accounts"
 readme = "README.md"
 requires-python = ">=3.11"
