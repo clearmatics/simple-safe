@@ -1,4 +1,5 @@
-from typing import Any, Callable, TypeVar
+import dataclasses
+from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 
 import click
 from click import Command
@@ -12,7 +13,44 @@ from .validation import help_callback, verbose_callback
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
+Decorator = Callable[[FC], FC]
+
 optgroup = _OptGroup()
+
+# ┌─────────────┐
+# │ Option Info │
+# └─────────────┘
+
+
+@dataclasses.dataclass(kw_only=True)
+class OptionInfo:
+    args: Iterable[str]
+    help: str
+    # defaults should match click.Option
+    metavar: Optional[str] = None
+    type: Optional[Union[click.types.ParamType, Any]] = None
+
+
+def make_option(
+    option: OptionInfo, cls: Decorator[Any] = click.option, **overrides: Any
+) -> Decorator[FC]:
+    info = dataclasses.asdict(option)
+    info.update(**overrides)
+    args = info.pop("args")
+    return cls(*args, **info)
+
+
+chain_id_option_info = OptionInfo(
+    args=["--chain-id"],
+    help="the chain ID to use",
+    type=int,
+    metavar="ID",
+)
+
+
+# ┌─────────┐
+# │ Options │
+# └─────────┘
 
 
 def authentication(f: FC) -> FC:
@@ -44,9 +82,7 @@ def build_safetx(f: FC) -> FC:
         [
             click.option("--value", default="0.0", help="tx value in decimals"),
             optgroup.group("Build offline"),
-            optgroup.option(
-                "--chain-id", "chain_id", type=int, metavar="ID", help="chain ID"
-            ),
+            make_option(chain_id_option_info, cls=optgroup.option),
             safe_version,
             optgroup.option("--safe-nonce", type=int, help="Safe nonce"),
             optgroup.group("Build online"),
@@ -75,7 +111,8 @@ def common(f: FC) -> FC:
     return f
 
 
-def deployment(offline: bool) -> Callable[[FC], FC]:
+# Reuse the same decorator for `safe deploy` and `safe precompute`.
+def deployment(precompute: bool) -> Callable[[FC], FC]:
     def decorator(f: FC) -> FC:
         for option in reversed(
             [
@@ -86,15 +123,18 @@ def deployment(offline: bool) -> Callable[[FC], FC]:
                     "--chain-specific",
                     is_flag=True,
                     default=False,
-                    hidden=offline,
-                    help="account address based on RPC node Chain ID",
+                    help="account address will depend on "
+                    + ("RPC node chain ID" if not precompute else "--chain-id"),
                 ),
-                optgroup.option(
-                    "--chain-id",
-                    type=int,
-                    hidden=not offline,
-                    help="Chain ID (required for chain-specific address)",
-                ),
+                # In `safe deploy`, the `--chain-id` option is in the Web3
+                # section, not here, so don't duplicate it here.
+                make_option(
+                    chain_id_option_info,
+                    cls=optgroup.option,
+                    help=chain_id_option_info.help + " (required for --chain-specific)",
+                )
+                if precompute
+                else None,
                 optgroup.option(
                     "--salt-nonce",
                     type=str,
@@ -143,7 +183,8 @@ def deployment(offline: bool) -> Callable[[FC], FC]:
                 ),
             ]
         ):
-            f = option(f)
+            if option is not None:
+                f = option(f)
         return f
 
     return decorator

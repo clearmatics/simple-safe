@@ -359,7 +359,7 @@ def build_safe_call(
 
 
 @main.command()
-@params.deployment(offline=False)
+@params.deployment(precompute=False)
 @params.web3tx
 @params.authentication
 @params.rpc(click.option, required=True)
@@ -627,7 +627,7 @@ def inspect(address: str, rpc: str):
 
 
 @main.command()
-@params.deployment(offline=True)
+@params.deployment(precompute=True)
 @params.output_file
 @params.common
 def precompute(
