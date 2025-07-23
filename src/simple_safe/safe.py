@@ -399,7 +399,7 @@ def deploy(
 
     The Safe account is deployed with CREATE2, which makes it possible to
     own the same address on different chains. If this is not desirable, pass the
-    --chain-specific option to include the Chain ID in the CREATE2 salt derivation.
+    --chain-specific option to include the chain ID in the CREATE2 salt derivation.
 
     The account uses the 'SafeL2.sol' implementation by default, which
     emits events. To use the gas-saving 'Safe.sol' variant instead, pass
