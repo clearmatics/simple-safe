@@ -592,7 +592,7 @@ def hash(txfile: typing.TextIO) -> None:
 
 
 @main.command()
-@params.rpc(click.option)
+@params.rpc(click.option, required=True)
 @click.argument("address")
 @params.common
 def inspect(address: str, rpc: str):
