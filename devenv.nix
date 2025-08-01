@@ -32,20 +32,20 @@
 
   scripts.autofix.exec = ''
     set -ux
-    uv sync --dev
+    uv sync -q --dev
     uv run ruff check --fix
   '';
 
   scripts.check.exec = ''
     set -ux
-    uv sync --dev
+    uv sync -q --dev
     uv run ruff check $SOURCE_DIRS
     uv run pyright $SOURCE_DIRS
   '';
 
   scripts.format.exec = ''
     set -ux
-    uv sync --dev
+    uv sync -q --dev
     uv run ruff check --fix --select I $SOURCE_DIRS
     uv run ruff format $SOURCE_DIRS
     RUST_LOG=warn taplo fmt pyproject.toml
