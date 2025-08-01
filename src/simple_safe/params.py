@@ -47,6 +47,11 @@ chain_id_option_info = OptionInfo(
     metavar="ID",
 )
 
+safe_version_option_info = OptionInfo(
+    args=["--safe-version"],
+    help="Safe version",
+)
+
 
 # ┌─────────┐
 # │ Options │
@@ -236,9 +241,7 @@ safe = click.option(
     help="Safe account address",
 )
 
-
-safe_version = optgroup.option("--safe-version", help="Safe version")
-
+safe_version = make_option(safe_version_option_info, cls=optgroup.option)
 
 sigfile = click.argument(
     "sigfiles",
