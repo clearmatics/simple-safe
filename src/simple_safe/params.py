@@ -129,7 +129,7 @@ def deployment(precompute: bool) -> Callable[[FC], FC]:
                     is_flag=True,
                     default=False,
                     help="account address will depend on "
-                    + ("RPC node chain ID" if not precompute else "--chain-id"),
+                    + ("Web3 chain ID" if not precompute else "--chain-id"),
                 ),
                 # In `safe deploy`, the `--chain-id` option is in the Web3
                 # section, not here, so don't duplicate it here.
