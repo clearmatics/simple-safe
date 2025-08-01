@@ -86,12 +86,12 @@ def build_safetx(f: FC) -> FC:
     for option in reversed(
         [
             click.option("--value", default="0.0", help="tx value in decimals"),
+            optgroup.group("Build online"),
+            rpc(optgroup.option),
             optgroup.group("Build offline"),
             make_option(chain_id_option_info, cls=optgroup.option),
             safe_version,
             optgroup.option("--safe-nonce", type=int, help="Safe nonce"),
-            optgroup.group("Build online"),
-            rpc(optgroup.option),
         ]
     ):
         f = option(f)
@@ -251,18 +251,48 @@ sigfile = click.argument(
 )
 
 
-def web3tx(f: FC) -> FC:
-    for option in reversed(
-        [
-            optgroup.group(
-                "Web3 Transaction",
-            ),
-            optgroup.option(
-                "--sign-only",
-                is_flag=True,
-                help="sign but do not broadcast transaction to the network",
-            ),
-        ]
-    ):
-        f = option(f)
-    return f
+def web3tx() -> Callable[[FC], FC]:
+    def decorator(f: FC) -> FC:
+        for option in reversed(
+            [
+                optgroup.group(
+                    "Web3 transaction",
+                ),
+                make_option(
+                    chain_id_option_info,
+                    cls=optgroup.option,
+                    help=chain_id_option_info.help + " [default: eth_chainId]",
+                ),
+                optgroup.option(
+                    "--gas-limit",
+                    type=int,
+                    help="transaction gas limit [default: eth_estimateGas]",
+                ),
+                optgroup.option(
+                    "--nonce",
+                    type=int,
+                    help="account nonce [default: eth_getTransactionCount]",
+                ),
+                optgroup.option(
+                    "--max-fee",
+                    help="max total fee per gas in Gwei [default: 2*baseFee+eth_maxPriorityFeePerGas]",
+                ),
+                optgroup.option(
+                    "--max-pri-fee",
+                    help="max priority fee per gas in Gwei [default: eth_maxPriorityFeePerGas]",
+                ),
+                optgroup.group(
+                    "Web3 parameters",
+                ),
+                optgroup.option(
+                    "--sign-only",
+                    is_flag=True,
+                    help="sign but do not broadcast transaction to the network",
+                ),
+                rpc(optgroup.option),
+            ]
+        ):
+            f = option(f)
+        return f
+
+    return decorator

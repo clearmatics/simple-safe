@@ -15,7 +15,6 @@ import click
 from hexbytes import (
     HexBytes,
 )
-from rich.json import JSON
 from rich.prompt import Confirm
 from rich.traceback import Traceback
 
@@ -28,36 +27,42 @@ from .console import (
     SAFE_DEBUG,
     activate_logging,
     console,
+    get_json_data_renderable,
     get_output_console,
     make_status_logger,
     print_kvtable,
     print_safe_deploy_info,
-    print_safetx,
+    print_safetxdata,
     print_signatures,
     print_version,
 )
 from .params import optgroup
 from .util import (
+    SafeInfo,
+    SafeTx,
     compute_safe_address,
     format_native_value,
     hash_eip712_data,
-    hexbytes_json_encoder,
+    make_offline_web3,
     parse_signatures,
-    reconstruct_safetx,
+    query_safe_info,
     silence_logging,
     to_checksum_address,
 )
 from .workflows import (
-    SAFE_CONTRACT_VERSIONS,
     handle_function_match_failure,
     process_call_safetx,
     process_call_web3tx,
     validate_deploy_options,
-    validate_safetx_options,
+    validate_rpc_option,
+    validate_safe,
+    validate_safetxfile,
+    validate_web3tx_options,
 )
 
 if TYPE_CHECKING:
     from eth_typing import URI
+    from web3 import Web3
 
 # ┌───────┐
 # │ Setup │
@@ -172,27 +177,26 @@ def build_abi_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
-        validate_safetx_options(
-            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+        offline = rpc is None
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, _ = validate_safe(
+            safe_address=to_checksum_address(safe_address),
+            offline=offline,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
+            safe_version=safe_version,
+            w3=w3,
         )
         with open(abi_file, "r") as f:
             abi = json.load(f)
-        from safe_eth.eth import EthereumClient
-
-        client = EthereumClient(cast("URI", rpc))
-        contract = client.w3.eth.contract(
-            address=to_checksum_address(contract_str), abi=abi
-        )
+        contract = w3.eth.contract(address=to_checksum_address(contract_str), abi=abi)
         process_call_safetx(
-            client=client,
+            w3=w3,
             contract=contract,
             fn_identifier=identifier,
             str_args=str_args,
-            safe=to_checksum_address(safe),
+            safe=safe,
             value=value,
-            safe_version=safe_version,
-            chain_id=chain_id,
-            safe_nonce=safe_nonce,
             output=output,
         )
 
@@ -219,18 +223,22 @@ def build_custom(
 ) -> None:
     """Build a custom Safe transaction."""
     with status("Building Safe transaction..."):
-        validate_safetx_options(
-            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
-        )
-        from safe_eth.eth import EthereumClient
-        from safe_eth.safe import SafeOperationEnum, SafeTx
+        from safe_eth.safe import SafeOperationEnum
+        from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
-        client = EthereumClient(cast("URI", rpc))
-        chaindata = fetch_chaindata(chain_id if chain_id else client.w3.eth.chain_id)
+        offline = rpc is None
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, _ = validate_safe(
+            safe_address=to_checksum_address(safe_address),
+            offline=offline,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
+            safe_version=safe_version,
+            w3=w3,
+        )
+        chaindata = fetch_chaindata(safe.chain_id)
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
         safetx = SafeTx(
-            ethereum_client=client,
-            safe_address=to_checksum_address(safe_address),
             to=to_checksum_address(to_str),
             value=int(Decimal(value).scaleb(decimals)),
             data=HexBytes(data),
@@ -238,19 +246,12 @@ def build_custom(
             safe_tx_gas=0,
             base_gas=0,
             gas_price=0,
-            gas_token=None,
-            refund_receiver=None,
-            signatures=None,
-            safe_nonce=safe_nonce,
-            safe_version=safe_version,
-            chain_id=chain_id,
+            gas_token=CHECKSUM_ADDRESSS_ZERO,
+            refund_receiver=CHECKSUM_ADDRESSS_ZERO,
         )
+        eip712_data = safetx.to_eip712_message(safe)
     output_console = get_output_console(output)
-    output_console.print(
-        JSON.from_data(
-            safetx.eip712_structured_data, default=hexbytes_json_encoder, indent=2
-        )
-    )
+    output_console.print(get_json_data_renderable(eip712_data))
 
 
 @build.command(name="erc20-call")
@@ -284,25 +285,27 @@ def build_erc20_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
-        from safe_eth.eth import EthereumClient
         from safe_eth.eth.contracts import get_erc20_contract
 
-        validate_safetx_options(
-            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
+        offline = rpc is None
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, _ = validate_safe(
+            safe_address=to_checksum_address(safe_address),
+            offline=offline,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
+            safe_version=safe_version,
+            w3=w3,
         )
-        client = EthereumClient(cast("URI", rpc))
         token_address = to_checksum_address(token_str)
-        ERC20 = get_erc20_contract(client.w3, address=token_address)
+        ERC20 = get_erc20_contract(w3, address=token_address)
         process_call_safetx(
-            client=client,
+            w3=w3,
             contract=ERC20,
             fn_identifier=identifier,
             str_args=str_args,
-            safe=to_checksum_address(safe),
+            safe=safe,
             value=value,
-            safe_version=safe_version,
-            chain_id=chain_id,
-            safe_nonce=safe_nonce,
             output=output,
         )
 
@@ -330,50 +333,46 @@ def build_safe_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
-        from safe_eth.eth import EthereumClient
-        from safe_eth.safe import Safe
-        from web3.contract.contract import Contract
-
-        validate_safetx_options(
-            safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
-        )
-        client = EthereumClient(cast("URI", rpc))
-        safe_address = to_checksum_address(safe_address)
-        safe = Safe(safe_address, client)  # type: ignore[abstract]
-        safe_contract = cast(
-            Contract,
-            safe.get_contract_fn()(client.w3, address=safe_address),  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
-        )
-        process_call_safetx(
-            client=client,
-            contract=safe_contract,
-            fn_identifier=identifier,
-            str_args=str_args,
-            safe=safe_address,
-            value=value,
-            safe_version=safe_version,
+        offline = rpc is None
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, contract = validate_safe(
+            safe_address=to_checksum_address(safe_address),
+            offline=offline,
             chain_id=chain_id,
             safe_nonce=safe_nonce,
+            safe_version=safe_version,
+            w3=w3,
+        )
+        process_call_safetx(
+            w3=w3,
+            contract=contract,
+            fn_identifier=identifier,
+            str_args=str_args,
+            safe=safe,
+            value=value,
             output=output,
         )
 
 
 @main.command()
 @params.deployment(precompute=False)
-@params.web3tx
+@params.web3tx()
 @params.authentication
-@params.rpc(click.option, required=True)
 @params.force
 @params.output_file
 @params.common
 def deploy(
-    chain_id: None,
+    chain_id: Optional[int],
     chain_specific: bool,
     custom_proxy_factory: Optional[str],
     custom_singleton: Optional[str],
     fallback: Optional[str],
     force: bool,
+    gas_limit: Optional[int],
     keyfile: Optional[str],
+    max_fee: Optional[str],
+    max_pri_fee: Optional[str],
+    nonce: Optional[int],
     owners: list[str],
     output: Optional[typing.TextIO],
     rpc: Optional[str],
@@ -393,14 +392,21 @@ def deploy(
     emits events. To use the gas-saving 'Safe.sol' variant instead, pass
     --without-events.
     """
-    with status("Preparing Safe deployment parameters..."):
-        from web3 import Web3
-        from web3.providers.auto import load_provider_from_uri
-
-        w3 = Web3(load_provider_from_uri(cast("URI", rpc)))
-
+    offline = rpc is None
+    with status("Checking Safe deployment parameters..."):
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        txopts = validate_web3tx_options(
+            w3=w3,
+            chain_id=chain_id,
+            gas_limit=gas_limit,
+            nonce=nonce,
+            max_fee=max_fee,
+            max_pri_fee=max_pri_fee,
+            sign_only=sign_only,
+            offline=offline,
+        )
         data = validate_deploy_options(
-            chain_id=w3.eth.chain_id if chain_specific else None,
+            chain_id=chain_id if chain_specific else None,
             chain_specific=chain_specific,
             custom_proxy_factory=custom_proxy_factory,
             custom_singleton=custom_singleton,
@@ -419,9 +425,8 @@ def deploy(
             fallback=data.fallback,
             chain_id=data.chain_id,
         )
-        from safe_eth.eth.contracts import (
-            get_proxy_factory_V1_4_1_contract,
-        )
+
+        from safe_eth.eth.contracts import get_proxy_factory_V1_4_1_contract
 
         proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
             w3, data.proxy_factory
@@ -434,11 +439,12 @@ def deploy(
         deployment_call = proxy_factory_method(
             data.singleton, initializer, data.salt_nonce
         )
-        existing_code = w3.eth.get_code(address)
-        if existing_code != b"":
-            raise click.ClickException(
-                f"Safe account computed address {address} already contains code."
-            )
+
+        if not offline:
+            if w3.eth.get_code(address) != b"":
+                raise click.ClickException(
+                    f"Safe account computed address {address} already contains code."
+                )
 
     console.line()
     print_safe_deploy_info(data, address)
@@ -447,7 +453,16 @@ def deploy(
         raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    process_call_web3tx(w3, deployment_call, auth, force, sign_only, output)
+    process_call_web3tx(
+        w3,
+        contractfn=deployment_call,
+        auth=auth,
+        force=force,
+        sign_only=sign_only,
+        output=output,
+        txopts=txopts,
+        offline=offline,
+    )
 
 
 @main.command()
@@ -492,19 +507,30 @@ def encode(
 
 
 @main.command()
-@params.web3tx
+@optgroup.group("Safe parameters")
+@params.make_option(
+    params.safe_version_option_info,
+    cls=optgroup.option,
+    help="Safe version (required if no RPC provided)",
+)
+@params.web3tx()
 @params.authentication
-@params.rpc(click.option, required=True)
 @params.force
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.sigfile
 @params.output_file
 @params.common
 def exec(
+    chain_id: Optional[int],
     force: bool,
+    gas_limit: Optional[int],
     keyfile: str,
+    max_fee: Optional[str],
+    max_pri_fee: Optional[str],
+    nonce: Optional[int],
     output: Optional[typing.TextIO],
     rpc: Optional[str],
+    safe_version: Optional[str],
     sigfiles: list[str],
     sign_only: bool,
     trezor: Optional[str],
@@ -514,53 +540,98 @@ def exec(
 
     A SIGFILE must be a valid owner signature.
     """
-    if not sigfiles:
-        raise click.ClickException("Cannot execute SafeTx without signatures.")
-
     with status("Loading Safe transaction..."):
-        from safe_eth.eth import EthereumClient
-        from safe_eth.safe import Safe
+        from safe_eth.safe.safe_signature import SafeSignature
 
-        client = EthereumClient(cast("URI", rpc))
-        safetxdata = reconstruct_safetx(client, txfile, version=None)
-        safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
-        owners = safe.retrieve_owners()
-        threshold = safe.retrieve_threshold()
-        sigdata = parse_signatures(owners, safetxdata, sigfiles)
+        offline = rpc is None
+
+        if not sigfiles:
+            raise click.ClickException("Cannot execute SafeTx without signatures.")
+
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        txopts = validate_web3tx_options(
+            w3=w3,
+            chain_id=chain_id,
+            gas_limit=gas_limit,
+            nonce=nonce,
+            max_fee=max_fee,
+            max_pri_fee=max_pri_fee,
+            sign_only=sign_only,
+            offline=offline,
+        )
+        safe, safetx, contract = validate_safetxfile(
+            w3=w3,
+            txfile=txfile,
+            offline=offline,
+            w3_chain_id=txopts.chain_id,
+            safe_version=safe_version,
+        )
+        if offline:
+            safe_info = SafeInfo()
+        else:
+            safe_info = query_safe_info(contract)
+
+        safetx_hash, safetx_preimage = safetx.hash(safe), safetx.preimage(safe)
+        sigdata = parse_signatures(
+            safetx_hash, safetx_preimage, sigfiles, safe_info.owners
+        )
 
     with status("Retrieving chain data..."):
-        chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
+        chaindata = fetch_chaindata(safe.chain_id)
 
     console.line()
-    print_safetx(safetxdata, chaindata)
+    print_safetxdata(safe, safetx, safetx_hash, chaindata)
     console.line()
-    print_signatures(sigdata, threshold)
+    print_signatures(sigdata, safe_info.threshold, offline)
 
-    from safe_eth.safe.safe_signature import SafeSignature
+    sigs: list[SafeSignature] = []
 
-    good: list[SafeSignature] = []
     for sd in sigdata:
         if not isinstance(sd.sig, SafeSignature):
             continue
-        if sd.valid and sd.is_owner:
-            good.append(sd.sig)
-    if len(good) < len(sigdata):
+        if sd.valid:
+            if offline or sd.is_owner:
+                sigs.append(sd.sig)
+    if len(sigs) < len(sigdata):
         raise click.ClickException(
             "Cannot execute SafeTx with invalid or unknown signatures."
         )
-    elif len(good) < threshold:
-        raise click.ClickException("Insufficient valid owner signatures to execute.")
-
-    safetxdata.safetx.signatures = SafeSignature.export_signatures(good)
+    if not offline:
+        assert safe_info.threshold is not None and safe_info.threshold > 0
+        if len(sigs) < safe_info.threshold:
+            raise click.ClickException(
+                "Insufficient valid owner signatures to execute."
+            )
+    exported_signatures = SafeSignature.export_signatures(sigs)
 
     if not force:
         console.line()
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
+    exec_call = contract.functions.execTransaction(
+        safetx.to,
+        safetx.value,
+        safetx.data,
+        safetx.operation,
+        safetx.safe_tx_gas,
+        safetx.base_gas,
+        safetx.gas_price,
+        safetx.gas_token,
+        safetx.refund_receiver,
+        exported_signatures,
+    )
+
     auth = validate_authenticator(keyfile, trezor)
     process_call_web3tx(
-        client.w3, safetxdata.safetx.w3_tx, auth, force, sign_only, output
+        w3,
+        contractfn=exec_call,
+        auth=auth,
+        force=force,
+        sign_only=sign_only,
+        output=output,
+        txopts=txopts,
+        offline=offline,
     )
 
 
@@ -672,12 +743,16 @@ def precompute(
 
 
 @main.command()
-@params.rpc(click.option, required=True)
+@optgroup.group("Preview online")
+@params.rpc(optgroup.option)
+@optgroup.group("Preview offline")
+@params.safe_version
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.sigfile
 @params.common
 def preview(
-    rpc: str,
+    rpc: Optional[str],
+    safe_version: Optional[str],
     sigfiles: list[str],
     txfile: typing.TextIO,
 ):
@@ -686,33 +761,49 @@ def preview(
     A SIGFILE must be a valid owner signature.
     """
     with status("Loading Safe transaction..."):
-        from safe_eth.eth import EthereumClient
+        offline = rpc is None
 
-        client = EthereumClient(cast("URI", rpc))
-        safetxdata = reconstruct_safetx(client, txfile, version=None)
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, safetx, contract = validate_safetxfile(
+            w3=w3,
+            txfile=txfile,
+            offline=offline,
+            w3_chain_id=None if offline else w3.eth.chain_id,
+            safe_version=safe_version,
+        )
+        safetx_hash, safetx_preimage = safetx.hash(safe), safetx.preimage(safe)
+        if sigfiles:
+            if offline:
+                safe_info = SafeInfo()
+            else:
+                safe_info = query_safe_info(contract)
+            sigdata = parse_signatures(
+                safetx_hash, safetx_preimage, sigfiles, safe_info.owners
+            )
+        else:
+            sigdata = []
+            safe_info = SafeInfo()
 
     with status("Retrieving chain data..."):
-        chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
+        chaindata = fetch_chaindata(safe.chain_id)
 
     console.line()
-    print_safetx(safetxdata, chaindata)
-
-    from safe_eth.safe import Safe
+    print_safetxdata(safe, safetx, safetx_hash, chaindata)
 
     if sigfiles:
-        safe = Safe(safetxdata.safetx.safe_address, safetxdata.safetx.ethereum_client)  # type: ignore[abstract]
-        owners = safe.retrieve_owners()
-        threshold = safe.retrieve_threshold()
-        sigdata = parse_signatures(owners, safetxdata, sigfiles)
         console.line()
-        print_signatures(sigdata, threshold)
+        print_signatures(
+            sigdata,
+            safe_info.threshold,
+            offline,
+        )
 
 
 @main.command()
-@optgroup.group("Sign offline")
-@params.safe_version
 @optgroup.group("Sign online")
 @params.rpc(optgroup.option)
+@optgroup.group("Sign offline")
+@params.safe_version
 @params.authentication
 @params.output_file
 @params.force
@@ -729,25 +820,22 @@ def sign(
 ):
     """Sign a Safe transaction."""
     with status("Loading Safe transaction..."):
-        if not rpc and not safe_version:
-            raise click.ClickException(
-                "Cannot determine Safe version and no RPC URL provided."
-            )
-        elif safe_version is not None and safe_version not in SAFE_CONTRACT_VERSIONS:
-            raise click.ClickException(
-                f"Invalid or unsupported Safe version {safe_version}."
-            )
-
-        from safe_eth.eth import EthereumClient
-
-        client = EthereumClient(cast("URI", rpc))
-        safetxdata = reconstruct_safetx(client, txfile, safe_version)
+        offline = rpc is None
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, safetx, _ = validate_safetxfile(
+            w3=w3,
+            txfile=txfile,
+            offline=offline,
+            w3_chain_id=None if offline else w3.eth.chain_id,
+            safe_version=safe_version,
+        )
+        safetx_hash, _ = safetx.hash(safe), safetx.preimage(safe)
 
     with status("Retrieving chain data..."):
-        chaindata = fetch_chaindata(safetxdata.safetx.chain_id)
+        chaindata = fetch_chaindata(safe.chain_id)
 
     console.line()
-    print_safetx(safetxdata, chaindata)
+    print_safetxdata(safe, safetx, safetx_hash, chaindata)
 
     console.line()
     if not force and not Confirm.ask("Sign Safe transaction?", default=False):
@@ -756,8 +844,8 @@ def sign(
     from safe_eth.safe.safe_signature import SafeSignature
 
     auth = validate_authenticator(keyfile, trezor)
-    sigbytes = auth.sign_typed_data(safetxdata.data)
-    sigobj = SafeSignature.parse_signature(sigbytes, safetxdata.hash)[0]
+    sigbytes = auth.sign_typed_data(safetx.to_eip712_message(safe))
+    sigobj = SafeSignature.parse_signature(sigbytes, safetx_hash)[0]
     # This is only needed for non-EOA signature, which are not yet supported:
     signature = sigobj.export_signature()
 

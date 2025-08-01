@@ -1,11 +1,14 @@
+import json
 import logging
 import secrets
 from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
+    NamedTuple,
     Optional,
     Sequence,
     TextIO,
+    cast,
 )
 
 import click
@@ -36,15 +39,20 @@ from .constants import (
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
     SALT_NONCE_SENTINEL,
 )
-from .util import DeployParams, SafeVariant, to_checksum_address
+from .util import (
+    DeployParams,
+    Safe,
+    SafeTx,
+    SafeVariant,
+    to_checksum_address,
+)
 
 if TYPE_CHECKING:
-    from eth_typing import ChecksumAddress
-    from safe_eth.eth import EthereumClient
+    from eth_typing import URI, ChecksumAddress, HexStr
     from web3 import Web3
     from web3.contract import Contract
     from web3.contract.contract import ContractFunction
-    from web3.types import TxParams
+    from web3.types import Nonce, TxParams, Wei
 
 SAFE_CONTRACT_VERSIONS = (
     "0.0.1",
@@ -59,19 +67,72 @@ logger = logging.getLogger(__name__)
 status = make_status_logger(logger)
 
 
+class Web3TxOptions(NamedTuple):
+    chain_id: int
+    gas_limit: Optional[int] = None
+    nonce: Optional[int] = None
+    max_fee: Optional[int] = None
+    max_pri_fee: Optional[int] = None
+
+
+def get_safe_owners(safe_contract: "Contract") -> list[str]:
+    return safe_contract.functions.getOwners().call(block_identifier="latest")
+
+
+def get_safe_threshold(safe_contract: "Contract") -> int:
+    return safe_contract.functions.getThreshold().call(block_identifier="latest")
+
+
+def make_web3tx(
+    w3: "Web3",
+    *,
+    from_: "ChecksumAddress",
+    to: "ChecksumAddress",
+    txopts: "Web3TxOptions",
+    data: "bytes | HexStr",
+    value: "Wei",
+) -> "TxParams":
+    from web3.types import TxParams
+
+    assert txopts.chain_id is not None
+    if (gas_limit := txopts.gas_limit) is None:
+        gas_limit = w3.eth.estimate_gas({"to": to, "data": data})
+    if (nonce := txopts.nonce) is None:
+        nonce = w3.eth.get_transaction_count(from_, block_identifier="pending")
+    if (max_pri_fee := txopts.max_pri_fee) is None:
+        max_pri_fee = w3.eth.max_priority_fee
+    if (max_fee := txopts.max_fee) is None:
+        block = w3.eth.get_block("latest")
+        assert "baseFeePerGas" in block
+        max_fee = (2 * block["baseFeePerGas"]) + max_pri_fee
+    tx = TxParams(
+        type=2,
+        to=to,
+        chainId=txopts.chain_id,
+        gas=gas_limit,
+        nonce=cast("Nonce", nonce),
+        maxFeePerGas=cast("Wei", max_fee),
+        maxPriorityFeePerGas=cast("Wei", max_pri_fee),
+        data=data,
+        value=value,
+    )
+    logging.debug(f"Created Web3Tx: {tx}")
+    return tx
+
+
 def process_call_safetx(
-    client: "EthereumClient",
+    *,
+    w3: "Web3",
     contract: "Contract",
     fn_identifier: str,
     str_args: list[str],
-    safe: "ChecksumAddress",
+    safe: Safe,
     value: str,
-    safe_version: Optional[str],
-    chain_id: Optional[int],
-    safe_nonce: Optional[int],
     output: Optional[TextIO],
 ):
-    from safe_eth.safe import SafeOperationEnum, SafeTx
+    """Print a SafeTx that represents a contract call."""
+    from safe_eth.safe import SafeOperationEnum
+    from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
     match, partials = find_function(contract.abi, fn_identifier)
     if match is None:
@@ -81,12 +142,10 @@ def process_call_safetx(
     fn_obj = contract.get_function_by_selector(match.selector)
     args = parse_args(fn_obj.abi, str_args)
     calldata = HexBytes(contract.encode_abi(match.sig, args))
-    chaindata = fetch_chaindata(chain_id if chain_id else client.w3.eth.chain_id)
+    chaindata = fetch_chaindata(safe.chain_id)
     decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
 
     safetx = SafeTx(
-        ethereum_client=client,
-        safe_address=safe,
         to=contract.address,
         value=int(Decimal(value).scaleb(decimals)),
         data=calldata,
@@ -94,36 +153,65 @@ def process_call_safetx(
         safe_tx_gas=0,
         base_gas=0,
         gas_price=0,
-        gas_token=None,
-        refund_receiver=None,
-        signatures=None,
-        safe_nonce=safe_nonce,
-        safe_version=safe_version,
-        chain_id=chain_id,
+        gas_token=CHECKSUM_ADDRESSS_ZERO,
+        refund_receiver=CHECKSUM_ADDRESSS_ZERO,
     )
     output_console = get_output_console(output)
     output_console.print(
-        get_json_data_renderable(safetx.eip712_structured_data),
+        get_json_data_renderable(safetx.to_eip712_message(safe)),
     )
 
 
-def process_web3tx(
+def process_call_web3tx(
     w3: "Web3",
-    tx: "TxParams",
+    *,
+    contractfn: "ContractFunction",
     auth: Authenticator,
     force: bool,
     sign_only: bool,
     output: Optional[TextIO],
+    txopts: "Web3TxOptions",
+    offline: bool,
 ):
-    with status("Preparing Web3 transaction..."):
-        tx["nonce"] = w3.eth.get_transaction_count(auth.address)
-        chaindata = fetch_chaindata(w3.eth.chain_id)
-        gasprice = w3.eth.gas_price
+    with status("Building Web3 transaction..."):
+        from eth_utils.abi import abi_to_signature
+        from web3._utils.contracts import prepare_transaction
+
+        tx_value: Wei = cast("Wei", 0)  # be explicit about zero value
+        abi_element_identifier = abi_to_signature(contractfn.abi)
+        tx_data = prepare_transaction(
+            contractfn.address,
+            w3,
+            abi_element_identifier=abi_element_identifier,
+            contract_abi=contractfn.contract_abi,
+            abi_callable=contractfn.abi,
+            transaction=cast("TxParams", {"value": tx_value}),
+            fn_args=contractfn.args,
+            fn_kwargs=contractfn.kwargs,
+        ).get("data")
+        assert tx_data is not None
+        tx = make_web3tx(
+            w3,
+            from_=auth.address,
+            to=contractfn.address,
+            txopts=txopts,
+            data=tx_data,
+            value=tx_value,
+        )
+
+    assert "data" in tx
+    console.line()
+    print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
+
+    assert "chainId" in tx
+    with status("Getting chain data..."):
+        chaindata = fetch_chaindata(tx["chainId"])
+        gasprice = None if offline else w3.eth.gas_price
 
     console.line()
     print_web3_tx_params(tx, auth, chaindata)
     console.line()
-    print_web3_tx_fees(tx, gasprice, chaindata)
+    print_web3_tx_fees(tx, offline, gasprice, chaindata)
 
     console.line()
     prompt = ("Sign" if sign_only else "Execute") + " Web3 transaction?"
@@ -151,22 +239,6 @@ def process_web3tx(
 
         console.line()
         output_console.print(tx_hash.to_0x_hex())
-
-
-def process_call_web3tx(
-    w3: "Web3",
-    contractfn: "ContractFunction",
-    auth: Authenticator,
-    force: bool,
-    sign_only: bool,
-    output: Optional[TextIO],
-):
-    with status("Building Web3 transaction..."):
-        tx: "TxParams" = contractfn.build_transaction()
-    assert "data" in tx
-    console.line()
-    print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
-    process_web3tx(w3, tx, auth, force, sign_only, output)
 
 
 def handle_function_match_failure(
@@ -243,24 +315,179 @@ def validate_deploy_options(
     )
 
 
-def validate_safetx_options(
-    safe_version: Optional[str],
+def validate_safe(
+    *,
+    safe_address: "ChecksumAddress",
+    offline: bool,
     chain_id: Optional[int],
     safe_nonce: Optional[int],
-    rpc: str,
-):
-    missing: list[str] = []
-    if chain_id is None:
-        missing.append("chain ID")
-    if safe_nonce is None:
-        missing.append("Safe nonce")
-    if safe_version is None:
-        missing.append("Safe version")
-    elif safe_version not in SAFE_CONTRACT_VERSIONS:
+    safe_version: Optional[str],
+    w3: "Web3",
+) -> tuple[Safe, "Contract"]:
+    from safe_eth.eth.contracts import get_safe_contract
+
+    for optname, optval in [
+        ("--chain-id", chain_id),
+        ("--safe-nonce", safe_nonce),
+        ("--safe-version", safe_version),
+    ]:
+        if offline and optval is None:
+            raise click.ClickException(f"Missing {optname} for offline SafeTx")
+        elif (not offline) and (optval is not None):
+            raise click.ClickException(f"Invalid option {optname} in online mode.")
+
+    if safe_version is not None and safe_version not in SAFE_CONTRACT_VERSIONS:
         raise click.ClickException(
             f"Invalid or unsupported Safe version {safe_version}."
         )
-    if len(missing) > 0 and not rpc:
+
+    contract = get_safe_contract(w3, address=safe_address)
+
+    safe = Safe(
+        safe_address=safe_address,
+        safe_version=safe_version or contract.functions.VERSION().call(),
+        safe_nonce=safe_nonce
+        if safe_nonce is not None
+        else contract.functions.nonce().call(),
+        chain_id=chain_id if chain_id is not None else w3.eth.chain_id,
+    )
+    return (safe, contract)
+
+
+def validate_rpc_option(rpc: str) -> "Web3":
+    from web3 import Web3
+    from web3.providers.auto import load_provider_from_uri
+
+    return Web3(load_provider_from_uri(cast("URI", rpc)))
+
+
+def validate_safetxfile(
+    *,
+    w3: "Web3",
+    txfile: TextIO,
+    offline: bool,
+    w3_chain_id: Optional[int] = None,
+    safe_version: Optional[str] = None,
+) -> tuple[Safe, SafeTx, "Contract"]:
+    from safe_eth.eth.contracts import get_safe_contract
+
+    message = json.loads(txfile.read())
+    safe_address = message["domain"]["verifyingContract"]
+    if (
+        not offline
+        and (tx_chain_id := message["domain"].get("chainId"))
+        and w3_chain_id != tx_chain_id
+    ):
         raise click.ClickException(
-            f"Missing info for offline SafeTx: {', '.join(missing)}. "
+            f"Inconsistent chain IDs. Web3 chain ID is {w3_chain_id} "
+            f"but Safe TX chain ID is {tx_chain_id}."
         )
+    contract = get_safe_contract(w3, address=safe_address)
+
+    if offline:
+        if safe_version is None:
+            raise click.ClickException(
+                "Missing Safe version, needed when no RPC provided."
+            )
+        elif safe_version not in SAFE_CONTRACT_VERSIONS:
+            raise click.ClickException(
+                f"Invalid or unsupported Safe version {safe_version}."
+            )
+    else:
+        actual_version = contract.functions.VERSION().call(block_identifier="latest")
+        if (safe_version is not None) and (safe_version != actual_version):
+            raise click.ClickException(
+                f"Inconsistent Safe versions. Got --safe-version {safe_version} "
+                f"but Safe at {safe_address} has version {actual_version}."
+            )
+        safe_version = actual_version
+
+    assert safe_version is not None
+
+    safe = Safe(
+        safe_address=message["domain"]["verifyingContract"],
+        safe_version=safe_version,
+        safe_nonce=message["message"]["nonce"],
+        chain_id=message["domain"].get("chainId"),
+    )
+    safetx = SafeTx(
+        to=message["message"]["to"],
+        value=message["message"]["value"],
+        data=HexBytes(message["message"]["data"]),
+        operation=message["message"]["operation"],
+        safe_tx_gas=message["message"]["safeTxGas"],
+        base_gas=message["message"]["dataGas"],  # supports version < 1
+        gas_price=message["message"]["gasPrice"],
+        gas_token=message["message"]["gasToken"],
+        refund_receiver=message["message"]["refundReceiver"],
+    )
+    return (safe, safetx, contract)
+
+
+def validate_web3tx_options(
+    w3: "Web3",
+    *,
+    chain_id: Optional[int],
+    gas_limit: Optional[int],
+    nonce: Optional[int],
+    max_fee: Optional[str],
+    max_pri_fee: Optional[str],
+    sign_only: bool,
+    offline: bool,
+) -> Web3TxOptions:
+    from eth_utils.currency import denoms
+
+    if offline and not sign_only:
+        raise click.ClickException(
+            "Missing RPC node needed to execute Web3 transaction. "
+            "To sign offline without executing, pass --sign-only."
+        )
+
+    if not offline:
+        rpc_chain_id = w3.eth.chain_id
+        if chain_id is None:
+            chain_id = rpc_chain_id
+        elif chain_id != rpc_chain_id:
+            raise click.ClickException(
+                f"Inconsistent chain IDs. Received --chain-id {chain_id} but RPC chain ID is {rpc_chain_id}."
+            )
+
+    txopts = {}
+    for optname, optval, w3key in [
+        ("--chain-id", chain_id, "chain_id"),
+        ("--gas-limit", gas_limit, "gas_limit"),
+        ("--nonce", nonce, "nonce"),
+        ("--max-fee", max_fee, "max_fee"),
+        ("--max-pri-fee", max_pri_fee, "max_pri_fee"),
+    ]:
+        if optval is not None:
+            if w3key in ("max_fee", "max_pri_fee"):
+                try:
+                    txopts[w3key] = int(Decimal(optval) * denoms.gwei)
+                except Exception as exc:
+                    raise click.ClickException(
+                        f"Could not parse {optname} value '{optval}' or convert it to Wei."
+                    ) from exc
+                if txopts[w3key] < 0:
+                    raise ValueError(
+                        f"{optname} must be a positive integer (not '{optval}')."
+                    )
+            else:
+                txopts[w3key] = optval
+        elif offline:
+            raise click.ClickException(
+                f"Missing Web3 parameter {optname} needed to sign offline."
+            )
+
+    if (
+        "max_fee" in txopts
+        and "max_pri_fee" in txopts
+        and (max_fee_wei := cast(Optional[int], txopts["max_fee"])) is not None
+        and (max_pri_fee_wei := cast(Optional[int], txopts["max_pri_fee"])) is not None
+        and (max_pri_fee_wei > max_fee_wei)
+    ):
+        raise ValueError(
+            f"Require max priority fee ({max_pri_fee} Gwei) must be <= max total fee ({max_fee} Gwei)."
+        )
+
+    return Web3TxOptions(**txopts)

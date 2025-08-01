@@ -1,5 +1,4 @@
 import dataclasses
-import json
 import logging
 from contextlib import contextmanager
 from decimal import Decimal, localcontext
@@ -9,7 +8,6 @@ from typing import (
     Any,
     NamedTuple,
     Optional,
-    TextIO,
     cast,
 )
 
@@ -21,10 +19,11 @@ from .chain import ChainData
 from .constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
 if TYPE_CHECKING:
-    from eth_typing import ChecksumAddress, HexStr
-    from safe_eth.eth import EthereumClient
-    from safe_eth.safe import SafeTx
+    from eth_typing import URI, ChecksumAddress, HexStr
+    from safe_eth.safe import SafeTx as SafeLibTx
     from safe_eth.safe.safe_signature import SafeSignature
+    from web3 import Web3
+    from web3.contract import Contract
     from web3.types import Wei
 
 
@@ -48,18 +47,79 @@ class SafeVariant(Enum):
     UNKNOWN = 3
 
 
-class SafeTxData(NamedTuple):
-    safetx: "SafeTx"
-    data: dict[str, Any]
-    preimage: HexBytes
-    hash: HexBytes
+class Safe(NamedTuple):
+    safe_address: "ChecksumAddress"
+    safe_version: str
+    safe_nonce: int
+    chain_id: int
+
+
+class SafeInfo(NamedTuple):
+    owners: Optional[list["ChecksumAddress"]] = None
+    threshold: Optional[int] = None
+
+
+class SafeTx(NamedTuple):
+    to: "ChecksumAddress"
+    value: int
+    data: HexBytes
+    operation: int
+    safe_tx_gas: int
+    base_gas: int
+    gas_price: int
+    gas_token: "ChecksumAddress"
+    refund_receiver: "ChecksumAddress"
+
+    def _to_safelibtx(
+        self,
+        safe: Safe,
+    ) -> "SafeLibTx":
+        from safe_eth.eth import EthereumClient
+        from safe_eth.safe import SafeTx as SafeLibTx
+
+        return SafeLibTx(
+            ethereum_client=EthereumClient(ethereum_node_url=cast("URI", "dummy")),
+            safe_address=safe.safe_address,
+            to=self.to,
+            value=self.value,
+            data=self.data,
+            operation=self.operation,
+            safe_tx_gas=self.safe_tx_gas,
+            base_gas=self.base_gas,
+            gas_price=self.gas_price,
+            gas_token=self.gas_token,
+            refund_receiver=self.refund_receiver,
+            signatures=None,  # signatures are not part of EIP-712 data
+            safe_nonce=safe.safe_nonce,
+            safe_version=safe.safe_version,
+            chain_id=safe.chain_id,
+        )
+
+    def hash(
+        self,
+        safe: Safe,
+    ) -> HexBytes:
+        return self._to_safelibtx(safe).safe_tx_hash
+
+    def preimage(
+        self,
+        safe: Safe,
+    ) -> HexBytes:
+        return self._to_safelibtx(safe).safe_tx_hash_preimage
+
+    def to_eip712_message(
+        self,
+        safe: Safe,
+    ) -> dict[str, Any]:
+        safetx = self._to_safelibtx(safe)
+        return safetx.eip712_structured_data
 
 
 class SignatureData(NamedTuple):
     sigbytes: HexBytes
     path: str
     valid: bool
-    is_owner: bool
+    is_owner: Optional[bool]
     # Invalid signature may not have these fields.
     sig: Optional["SafeSignature"]
     sigtype: Optional[str]
@@ -190,45 +250,18 @@ def hash_eip712_data(data: Any) -> HexBytes:  # using eth_account
     return HexBytes(_hash_eip191_message(encoded))
 
 
-def eip712_data_to_safetx(
-    client: "EthereumClient", message: Any, version: str | None = None
-) -> "SafeTx":
-    from safe_eth.safe import SafeTx
+def make_offline_web3() -> "Web3":
+    from web3 import Web3
+    from web3.providers.base import BaseProvider
 
-    return SafeTx(
-        ethereum_client=client,
-        safe_address=message["domain"]["verifyingContract"],
-        to=message["message"]["to"],
-        value=message["message"]["value"],
-        data=HexBytes(message["message"]["data"]),
-        operation=message["message"]["operation"],
-        safe_tx_gas=message["message"]["safeTxGas"],
-        base_gas=message["message"]["dataGas"],  # supports version < 1
-        gas_price=message["message"]["gasPrice"],
-        gas_token=message["message"]["gasToken"],
-        refund_receiver=message["message"]["refundReceiver"],
-        signatures=None,
-        safe_nonce=message["message"]["nonce"],
-        safe_version=version if version else None,
-        chain_id=message["domain"].get("chainId"),
-    )
-
-
-def reconstruct_safetx(
-    client: "EthereumClient", txfile: TextIO, version: Optional[str]
-) -> SafeTxData:
-    safetx_json = json.loads(txfile.read())
-    safetx = eip712_data_to_safetx(client, safetx_json, version)
-    return SafeTxData(
-        safetx=safetx,
-        data=safetx_json,
-        preimage=safetx.safe_tx_hash_preimage,
-        hash=safetx.safe_tx_hash,
-    )
+    return Web3(provider=BaseProvider())
 
 
 def parse_signatures(
-    owners: list[str], safetxdata: SafeTxData, sigfiles: list[str]
+    safetx_hash: HexBytes,
+    safetx_preimage: HexBytes,
+    sigfiles: list[str],
+    owners: Optional[list["ChecksumAddress"]],
 ) -> list[SignatureData]:
     sigdata: list[SignatureData] = []
     from eth_utils.address import to_checksum_address
@@ -239,9 +272,7 @@ def parse_signatures(
         with open(sigfile, "r") as sf:
             sigtext = sf.read().rstrip()
             sigbytes = HexBytes(sigtext)
-        siglist = SafeSignature.parse_signature(
-            sigbytes, safetxdata.hash, safetxdata.preimage
-        )
+        siglist = SafeSignature.parse_signature(sigbytes, safetx_hash, safetx_preimage)
         if len(siglist) != 1:
             address = None
             sigtype = None
@@ -252,7 +283,10 @@ def parse_signatures(
             sig = siglist[0]
             sigtype = sig.__class__.__name__
             sig_owner = sig.owner  # pyright: ignore
-            is_owner = sig_owner in owners
+            if owners is not None:
+                is_owner = sig_owner in owners
+            else:
+                is_owner = None
             if sig_owner == ADDRESS_ZERO:
                 valid = False
                 address = None
@@ -274,6 +308,15 @@ def parse_signatures(
             )
         )
     return sigdata
+
+
+def query_safe_info(safe_contract: "Contract"):
+    return SafeInfo(
+        owners=safe_contract.functions.getOwners().call(block_identifier="latest"),
+        threshold=safe_contract.functions.getThreshold().call(
+            block_identifier="latest"
+        ),
+    )
 
 
 @contextmanager

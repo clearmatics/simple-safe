@@ -28,7 +28,8 @@ from .constants import (
 )
 from .util import (
     DeployParams,
-    SafeTxData,
+    Safe,
+    SafeTx,
     SafeVariant,
     SignatureData,
     format_gwei_value,
@@ -49,7 +50,9 @@ custom_theme = Theme(
     {
         "ok": "green",
         "danger": "red",
+        "caution": "yellow",
         "panel_ok": "green bold italic",
+        "panel_caution": "yellow bold italic",
         "panel_danger": "red bold italic",
         "secondary": "grey50",
     }
@@ -63,7 +66,9 @@ logger = logging.getLogger(__name__)
 
 CHECK = "✔"
 CROSS = "✖"
+CAUTION = "!"
 WARNING = "⚠️"
+
 
 CUSTOM_BOX: Box = Box(
     "    \n"  # top
@@ -245,17 +250,21 @@ def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
     )
 
 
-def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) -> None:
+def print_safetxdata(
+    safe: Safe,
+    safetx: SafeTx,
+    safetx_hash: HexBytes,
+    chaindata: Optional[ChainData] = None,
+) -> None:
     from safe_eth.safe import SafeOperationEnum
     from web3.types import Wei
 
-    safetx = safetxdata.safetx
     table_data: list[dict[str, RenderableType]] = []
     table_data.append(
         {
-            "Safe Address": safetx.safe_address,
-            "Chain ID": str(safetx.chain_id),
-            "Safe Nonce": str(safetx.safe_nonce),
+            "Safe Address": safe.safe_address,
+            "Chain ID": str(safe.chain_id),
+            "Safe Nonce": str(safe.safe_nonce),
             "To Address": str(safetx.to),
             "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
             "Value": format_native_value(Wei(safetx.value), chaindata),
@@ -273,7 +282,7 @@ def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) 
         )
     table_data.append(
         {
-            "SafeTx Hash": safetxdata.hash.to_0x_hex(),
+            "SafeTx Hash": safetx_hash.to_0x_hex(),
         }
     )
     print_kvtable("Safe Transaction", "", *table_data)
@@ -281,7 +290,8 @@ def print_safetx(safetxdata: SafeTxData, chaindata: Optional[ChainData] = None) 
 
 def print_signatures(
     sigdata: list[SignatureData],
-    threshold: int,
+    threshold: Optional[int],
+    offline: bool,
 ) -> None:
     sigout: list[dict[str, RenderableType]] = []
     num_good, num_invalid, num_unknown = 0, 0, 0
@@ -296,11 +306,13 @@ def print_signatures(
             else f" [danger]{CROSS} INVALID[/danger]"
         )
         if sig.address:
-            row["ECRecover"] = f"{sig.address}" + (
-                f" [ok]{CHECK} OWNER[/ok]"
-                if sig.is_owner
-                else f" [danger]{CROSS} OWNER[/danger]"
-            )
+            if sig.is_owner is True:
+                owner = f" [ok]{CHECK} OWNER[/ok]"
+            elif sig.is_owner is False:
+                owner = f" [danger]{CROSS} OWNER[/danger]"
+            else:
+                owner = f" [caution]{CAUTION} UNVERIFIED[/caution]"
+            row["ECRecover"] = f"{sig.address}" + owner
         if sig.valid and sig.is_owner:
             num_good += 1
         if not sig.valid:
@@ -312,27 +324,40 @@ def print_signatures(
         *sigout,
         draw_divider=True,
     )
-    executable = num_good >= threshold and num_good == len(sigdata)
-    if executable:
+    executable = (
+        (threshold is not None)
+        and (num_good >= threshold)
+        and (num_good == len(sigdata))
+    )
+    if offline:
+        summary = ""
+        border_style = "panel_caution"
+    elif executable:
         summary = f"[{CHECK} EXECUTABLE]"
-    elif num_invalid == 1:
-        summary = f"[{CROSS} INVALID SIGNATURE]"
-    elif num_invalid > 1:
-        summary = f"[{CROSS} INVALID SIGNATURES]"
-    elif num_unknown == 1:
-        summary = f"[{CROSS} UNKNOWN SIGNATURE]"
-    elif num_unknown > 1:
-        summary = f"[{CROSS} UNKNOWN SIGNATURES]"
+        border_style = "panel_ok"
     else:
-        summary = f"[{CROSS} INSUFFICIENT SIGNATURES]"
+        border_style = "panel_danger"
+        if num_invalid == 1:
+            summary = f"[{CROSS} INVALID SIGNATURE]"
+        elif num_invalid > 1:
+            summary = f"[{CROSS} INVALID SIGNATURES]"
+        elif num_unknown == 1:
+            summary = f"[{CROSS} UNKNOWN SIGNATURE]"
+        elif num_unknown > 1:
+            summary = f"[{CROSS} UNKNOWN SIGNATURES]"
+        else:
+            summary = f"[{CROSS} INSUFFICIENT SIGNATURES]"
     console.print(
         get_panel(
             "Signatures",
             summary,
             sigtable,
-            border_style="panel_ok" if executable else "panel_danger",
+            border_style=border_style,
         )
     )
+    if offline:
+        console.line()
+        logger.warning(f"{WARNING} Cannot verify signers when offline.")
 
 
 def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None:
@@ -378,7 +403,10 @@ def print_web3_call_data(function: "ContractFunction", calldata: str) -> None:
 
 
 def print_web3_tx_fees(
-    params: "TxParams", gasprice: int, chaindata: Optional[ChainData]
+    params: "TxParams",
+    offline: bool,
+    gasprice: Optional[int],
+    chaindata: Optional[ChainData],
 ) -> None:
     from web3.types import Wei
 
@@ -386,18 +414,22 @@ def print_web3_tx_fees(
     # TxParams fields being optional.
     assert "gas" in params
     assert "maxFeePerGas" in params
-    est_fee = format_native_value(Wei(params["gas"] * gasprice), chaindata)
-    max_fee = format_native_value(
+    if not offline:
+        assert gasprice is not None
+        est_fee = format_native_value(Wei(params["gas"] * gasprice), chaindata)
+        table_data = {
+            "Current Gas Price": format_gwei_value(Wei(gasprice)),
+            "Estimated Fees": est_fee,
+        }
+    else:
+        table_data: dict[str, RenderableType] = {}
+    table_data["Maximum Fees"] = format_native_value(
         Wei(params["gas"] * int(params["maxFeePerGas"])), chaindata
     )
     print_kvtable(
         "Web3 Transaction Fees",
         "",
-        {
-            "Current Gas Price": format_gwei_value(Wei(gasprice)),
-            "Estimated Fees": est_fee,
-            "Maximum Fees": max_fee,
-        },
+        table_data,
     )
 
 
