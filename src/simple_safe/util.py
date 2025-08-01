@@ -257,9 +257,10 @@ def parse_signatures(
                 valid = False
                 address = None
             else:
-                valid = sig.is_valid(
-                    safetxdata.safetx.ethereum_client, safetxdata.safetx.safe_address
-                )
+                # At this point, because len(siglist)==1, it's a valid ECDSA
+                # signature. It's just the address might not correspond to an
+                # actual owner.
+                valid = True
                 address = to_checksum_address(owner)  # pyright: ignore
         sigdata.append(
             SignatureData(
