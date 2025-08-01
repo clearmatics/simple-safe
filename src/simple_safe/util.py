@@ -273,8 +273,6 @@ def parse_signatures(
                 valid=valid,
             )
         )
-    #     sigobjs.append(siglist[0])
-    # safetxdata.safetx.signatures = SafeSignature.export_signatures(sigobjs)
     return sigdata
 
 
