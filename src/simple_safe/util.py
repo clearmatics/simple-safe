@@ -251,9 +251,9 @@ def parse_signatures(
         else:
             sig = siglist[0]
             sigtype = sig.__class__.__name__
-            owner = sig.owner  # pyright: ignore
-            is_owner = owner in owners
-            if owner == ADDRESS_ZERO:
+            sig_owner = sig.owner  # pyright: ignore
+            is_owner = sig_owner in owners
+            if sig_owner == ADDRESS_ZERO:
                 valid = False
                 address = None
             else:
@@ -261,7 +261,7 @@ def parse_signatures(
                 # signature. It's just the address might not correspond to an
                 # actual owner.
                 valid = True
-                address = to_checksum_address(owner)  # pyright: ignore
+                address = to_checksum_address(sig_owner)  # pyright: ignore
         sigdata.append(
             SignatureData(
                 sig=sig,
