@@ -19,8 +19,6 @@
     pkgs.libusb1
   ];
 
-  dotenv.enable = true;
-
   languages.python = {
     enable = true;
     version = "3.13";
