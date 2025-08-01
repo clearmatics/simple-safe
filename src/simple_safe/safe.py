@@ -159,7 +159,7 @@ def build_abi_call(
     chain_id: Optional[int],
     contract_str: str,
     identifier: str,
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -209,7 +209,7 @@ def build_abi_call(
 def build_custom(
     chain_id: Optional[int],
     data: str,
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -270,7 +270,7 @@ def build_custom(
 def build_erc20_call(
     chain_id: Optional[int],
     identifier: str,
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -317,7 +317,7 @@ def build_erc20_call(
 def build_safe_call(
     chain_id: Optional[int],
     identifier: str,
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -375,7 +375,7 @@ def deploy(
     force: bool,
     keyfile: Optional[str],
     owners: list[str],
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     rpc: Optional[str],
     salt_nonce: str,
     sign_only: bool,
@@ -465,7 +465,7 @@ def deploy(
 def encode(
     abi_file: str,
     identifier: str,
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     str_args: list[str],
 ) -> None:
     """Encode contract call data.
@@ -503,7 +503,7 @@ def encode(
 def exec(
     force: bool,
     keyfile: str,
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     rpc: Optional[str],
     sigfiles: list[str],
     sign_only: bool,
@@ -636,7 +636,7 @@ def precompute(
     custom_proxy_factory: Optional[str],
     custom_singleton: Optional[str],
     fallback: Optional[str],
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     owners: list[str],
     salt_nonce: str,
     threshold: int,
@@ -721,7 +721,7 @@ def preview(
 def sign(
     force: bool,
     keyfile: str,
-    output: typing.TextIO | None,
+    output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_version: Optional[str],
     trezor: Optional[str],
