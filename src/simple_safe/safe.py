@@ -149,7 +149,7 @@ def build():
     help="contract call address",
 )
 @params.build_safetx
-@params.safe
+@params.safe_address
 @params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
@@ -161,7 +161,7 @@ def build_abi_call(
     identifier: str,
     output: typing.TextIO | None,
     rpc: str,
-    safe: str,
+    safe_address: str,
     safe_nonce: Optional[int],
     safe_version: Optional[str],
     str_args: list[str],
@@ -203,7 +203,7 @@ def build_abi_call(
 )
 @click.option("--data", default="0x", help="call data payload")
 @params.build_safetx
-@params.safe
+@params.safe_address
 @params.output_file
 @params.common
 def build_custom(
@@ -211,7 +211,7 @@ def build_custom(
     data: str,
     output: typing.TextIO | None,
     rpc: str,
-    safe: str,
+    safe_address: str,
     safe_nonce: Optional[int],
     safe_version: Optional[str],
     to_str: str,
@@ -230,7 +230,7 @@ def build_custom(
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
         safetx = SafeTx(
             ethereum_client=client,
-            safe_address=to_checksum_address(safe),
+            safe_address=to_checksum_address(safe_address),
             to=to_checksum_address(to_str),
             value=int(Decimal(value).scaleb(decimals)),
             data=HexBytes(data),
@@ -262,7 +262,7 @@ def build_custom(
     help="ERC-20 token address",
 )
 @params.build_safetx
-@params.safe
+@params.safe_address
 @params.output_file
 @click.argument("identifier", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
@@ -272,7 +272,7 @@ def build_erc20_call(
     identifier: str,
     output: typing.TextIO | None,
     rpc: str,
-    safe: str,
+    safe_address: str,
     safe_nonce: Optional[int],
     safe_version: Optional[str],
     str_args: list[str],
@@ -308,7 +308,7 @@ def build_erc20_call(
 
 
 @build.command(name="safe-call")
-@params.safe
+@params.safe_address
 @params.build_safetx
 @params.output_file
 @click.argument("identifier", metavar="FUNCTION")
@@ -319,7 +319,7 @@ def build_safe_call(
     identifier: str,
     output: typing.TextIO | None,
     rpc: str,
-    safe: str,
+    safe_address: str,
     safe_nonce: Optional[int],
     safe_version: Optional[str],
     str_args: list[str],
@@ -338,7 +338,7 @@ def build_safe_call(
             safe_version=safe_version, chain_id=chain_id, safe_nonce=safe_nonce, rpc=rpc
         )
         client = EthereumClient(cast("URI", rpc))
-        safe_address = to_checksum_address(safe)
+        safe_address = to_checksum_address(safe_address)
         safe = Safe(safe_address, client)  # type: ignore[abstract]
         safe_contract = cast(
             Contract,

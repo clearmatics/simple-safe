@@ -227,15 +227,15 @@ def rpc(
         "-r",
         required=required,
         envvar="SAFE_RPC",
-        metavar="URI",
+        metavar="URL",
         show_envvar=True,
         help="HTTP JSON-RPC endpoint",
     )
 
 
-safe = click.option(
+safe_address = click.option(
     "--safe",
-    "safe",
+    "safe_address",
     metavar="ADDRESS",
     required=True,
     help="Safe account address",
