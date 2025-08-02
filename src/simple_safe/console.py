@@ -6,17 +6,8 @@ from datetime import datetime, timezone
 from importlib.metadata import version
 from typing import TYPE_CHECKING, Any, Optional, Sequence, cast
 
-import rich
 from click import Context, Parameter
 from hexbytes import HexBytes
-from rich.box import HORIZONTALS, ROUNDED, Box
-from rich.console import Console, RenderableType
-from rich.json import JSON
-from rich.logging import RichHandler
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-from rich.theme import Theme
 
 from .abi import Function
 from .chain import ChainData
@@ -42,26 +33,14 @@ from .util import (
 if TYPE_CHECKING:
     from eth_typing import ChecksumAddress
     from eth_typing.abi import ABIElement
+    from rich.console import Console, RenderableType
+    from rich.panel import Panel
+    from rich.table import Table
     from web3.contract.contract import ContractFunction
     from web3.types import Timestamp, TxParams, TxReceipt
 
     from .auth import Authenticator
 
-
-custom_theme = Theme(
-    {
-        "ok": "green",
-        "danger": "red",
-        "caution": "yellow",
-        "panel_ok": "green bold italic",
-        "panel_caution": "yellow bold italic",
-        "panel_danger": "red bold italic",
-        "secondary": "grey50",
-    }
-)
-
-rich.reconfigure(stderr=True, theme=custom_theme)
-console = rich.get_console()
 
 logger = logging.getLogger(__name__)
 
@@ -72,21 +51,13 @@ CAUTION = "!"
 WARNING = "⚠️"
 
 # Constants
-CUSTOM_BOX: Box = Box(
-    "    \n"  # top
-    "    \n"  # head
-    "    \n"  # head_row
-    "    \n"  # mid
-    " ── \n"  # row
-    "    \n"  # foot_row
-    "    \n"  # foot
-    "    \n"  # bottom
-)
 JSON_INDENT_LEVEL = 2
 SAFE_DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 
 def activate_logging():
+    from rich.logging import RichHandler
+
     if SAFE_DEBUG:
         level = logging.NOTSET
     else:
@@ -96,13 +67,15 @@ def activate_logging():
         level=level,
         format=format,
         datefmt="[%X]",
-        handlers=[RichHandler(console=console)],
+        handlers=[RichHandler()],
     )
 
 
 def get_json_data_renderable(
     data: dict[str, Any], indent: Optional[int] = 2
-) -> RenderableType:
+) -> "RenderableType":
+    from rich.json import JSON
+
     return JSON.from_data(
         data,
         default=hexbytes_json_encoder,
@@ -110,11 +83,27 @@ def get_json_data_renderable(
     )
 
 
-def get_kvtable(*args: dict[str, RenderableType], draw_divider: bool = True) -> Table:
+def get_kvtable(
+    *args: dict[str, "RenderableType"], draw_divider: bool = True
+) -> "Table":
+    from rich.box import Box
+    from rich.table import Table
+    from rich.text import Text
+
+    custom_box: Box = Box(
+        "    \n"  # top
+        "    \n"  # head
+        "    \n"  # head_row
+        "    \n"  # mid
+        " ── \n"  # row
+        "    \n"  # foot_row
+        "    \n"  # foot
+        "    \n"  # bottom
+    )
     table = Table(
         show_edge=False,
         show_header=False,
-        box=CUSTOM_BOX,
+        box=custom_box,
     )
     table.add_column("Field", justify="right", style="bold", no_wrap=True)
     table.add_column("Value", no_wrap=False)
@@ -133,19 +122,24 @@ def get_kvtable(*args: dict[str, RenderableType], draw_divider: bool = True) -> 
     return table
 
 
-def get_output_console(output: Optional[typing.TextIO] = None) -> Console:
+def get_output_console(output: Optional[typing.TextIO] = None) -> "Console":
     """Return a Console suitable for printing results.
 
     The Console must not insert hard wraps, which Rich normally inserts by
     default. This is important when piping or writing text-encoded data to a
     file such as a hexadecimal string or a JSON object.
     """
+    from rich.console import Console
+
     return Console(file=output if output else sys.stdout, soft_wrap=True)
 
 
 def get_panel(
-    title: str, subtitle: str, renderable: RenderableType, **kwargs: Any
-) -> Panel:
+    title: str, subtitle: str, renderable: "RenderableType", **kwargs: Any
+) -> "Panel":
+    from rich.box import ROUNDED
+    from rich.panel import Panel
+
     base_config = dict(
         title=title,
         title_align="left",
@@ -160,6 +154,9 @@ def get_panel(
 
 def make_status_logger(logger: logging.Logger):
     def status_logger(message: str):
+        import rich
+
+        console = rich.get_console()
         logger.info(message, stacklevel=2)
         return console.status(message)
 
@@ -168,6 +165,12 @@ def make_status_logger(logger: logging.Logger):
 
 def print_function_matches(matches: Sequence[Function]):
     from eth_utils.abi import get_abi_input_names
+    from rich.box import HORIZONTALS
+    from rich.table import Table
+    from rich.text import Text
+    import rich
+
+    console = rich.get_console()
 
     table = Table(
         show_edge=False,
@@ -198,9 +201,12 @@ def print_function_matches(matches: Sequence[Function]):
 def print_kvtable(
     title: str,
     subtitle: str,
-    *args: dict[str, RenderableType],
+    *args: dict[str, "RenderableType"],
     draw_divider: bool = True,
 ) -> None:
+    import rich
+
+    console = rich.get_console()
     table = get_kvtable(*args, draw_divider=draw_divider)
     console.print(get_panel(title, subtitle, table))
 
@@ -211,7 +217,7 @@ def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
         SafeVariant.SAFE_L2: "SafeL2.sol (emits events)",
         SafeVariant.UNKNOWN: "unknown",
     }[data.variant]
-    base_params: dict[str, RenderableType] = {
+    base_params: dict[str, "RenderableType"] = {
         "Proxy Factory": data.proxy_factory
         + (
             f" [ok]{CHECK} CANONICAL[/ok]"
@@ -259,7 +265,7 @@ def print_safetxdata(
     from safe_eth.safe import SafeOperationEnum
     from web3.types import Wei
 
-    table_data: list[dict[str, RenderableType]] = []
+    table_data: list[dict[str, "RenderableType"]] = []
     table_data.append(
         {
             "Safe Address": safe.safe_address,
@@ -293,10 +299,13 @@ def print_signatures(
     threshold: Optional[int],
     offline: bool,
 ) -> None:
-    sigout: list[dict[str, RenderableType]] = []
+    import rich
+
+    console = rich.get_console()
+    sigout: list[dict[str, "RenderableType"]] = []
     num_good, num_invalid, num_unknown = 0, 0, 0
     for sig in sigdata:
-        row: dict[str, RenderableType] = {}
+        row: dict[str, "RenderableType"] = {}
         row["File"] = sig.path
         if sig.sigtype:
             row["Type"] = sig.sigtype.lstrip("SafeSignature") + " Signature"
@@ -371,7 +380,7 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
 
 
 def print_web3_call_data(function: "ContractFunction", calldata: str) -> None:
-    argdata: dict[str, RenderableType] = {}
+    argdata: dict[str, "RenderableType"] = {}
     for i, argval in enumerate(function.arguments):
         if function.argument_types[i] == "bytes":
             argval_str = argval.to_0x_hex()
@@ -422,7 +431,7 @@ def print_web3_tx_fees(
             "Estimated Fees": est_fee,
         }
     else:
-        table_data: dict[str, RenderableType] = {}
+        table_data: dict[str, "RenderableType"] = {}
     table_data["Maximum Fees"] = format_native_value(
         Wei(params["gas"] * int(params["maxFeePerGas"])), chaindata
     )
@@ -479,6 +488,9 @@ def print_web3_tx_receipt(
     chaindata: Optional[ChainData],
 ) -> None:
     from web3.types import Wei
+    import rich
+
+    console = rich.get_console()
 
     timestamp_str = (
         datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
@@ -486,7 +498,7 @@ def print_web3_tx_receipt(
         else ""
     )
     success = txreceipt["status"] == 1
-    table_data: list[dict[str, RenderableType]] = [
+    table_data: list[dict[str, "RenderableType"]] = [
         {
             "Web3Tx Hash": txreceipt["transactionHash"].to_0x_hex(),
             "Block": str(txreceipt["blockNumber"]),

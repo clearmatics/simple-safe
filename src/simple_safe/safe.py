@@ -15,8 +15,6 @@ import click
 from hexbytes import (
     HexBytes,
 )
-from rich.prompt import Confirm
-from rich.traceback import Traceback
 
 from . import params
 from .abi import find_function, parse_args
@@ -26,7 +24,6 @@ from .click import Group
 from .console import (
     SAFE_DEBUG,
     activate_logging,
-    console,
     get_json_data_renderable,
     get_output_console,
     make_status_logger,
@@ -81,8 +78,11 @@ def handle_crash(
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> None:
+    from rich.traceback import Traceback
     from web3.exceptions import ContractLogicError
+    import rich
 
+    console = rich.get_console()
     if not SAFE_DEBUG:
         if exc_type is ContractLogicError:
             exc = cast(ContractLogicError, exc_value)
@@ -127,6 +127,21 @@ sys.excepthook = handle_crash
 )
 def main():
     """A simple Web3-native CLI for Safe accounts."""
+    import rich
+    from rich.theme import Theme
+
+    custom_theme = Theme(
+        {
+            "ok": "green",
+            "danger": "red",
+            "caution": "yellow",
+            "panel_ok": "green bold italic",
+            "panel_caution": "yellow bold italic",
+            "panel_danger": "red bold italic",
+            "secondary": "grey50",
+        }
+    )
+    rich.reconfigure(stderr=True, theme=custom_theme)
     if SAFE_DEBUG:
         activate_logging()
 
@@ -398,6 +413,10 @@ def deploy(
     """
     offline = rpc is None
     with status("Checking Safe deployment parameters..."):
+        from rich.prompt import Confirm
+        import rich
+
+        console = rich.get_console()
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
         txopts = validate_web3tx_options(
             w3=w3,
@@ -545,8 +564,11 @@ def exec(
     A SIGFILE must be a valid owner signature.
     """
     with status("Loading Safe transaction..."):
+        from rich.prompt import Confirm
         from safe_eth.safe.safe_signature import SafeSignature
+        import rich
 
+        console = rich.get_console()
         offline = rpc is None
 
         if not sigfiles:
@@ -661,7 +683,9 @@ def inspect(address: str, rpc: str):
         checksum_addr = to_checksum_address(address)
         from safe_eth.eth import EthereumClient
         from safe_eth.safe import Safe
+        import rich
 
+        console = rich.get_console()
         client = EthereumClient(cast("URI", rpc))
         try:
             safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
@@ -718,6 +742,9 @@ def precompute(
     without_events: bool,
 ):
     """Compute a Safe address offline."""
+    import rich
+
+    console = rich.get_console()
     data = validate_deploy_options(
         chain_id=chain_id,
         chain_specific=chain_specific,
@@ -765,6 +792,9 @@ def preview(
     A SIGFILE must be a valid owner signature.
     """
     with status("Loading Safe transaction..."):
+        import rich
+
+        console = rich.get_console()
         offline = rpc is None
 
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
@@ -824,6 +854,10 @@ def sign(
 ):
     """Sign a Safe transaction."""
     with status("Loading Safe transaction..."):
+        from rich.prompt import Confirm
+        import rich
+
+        console = rich.get_console()
         offline = rpc is None
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
         safe, safetx, _ = validate_safetxfile(

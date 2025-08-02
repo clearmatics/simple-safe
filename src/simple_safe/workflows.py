@@ -12,13 +12,11 @@ import click
 from hexbytes import (
     HexBytes,
 )
-from rich.prompt import Confirm
 
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
 from .chain import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
-    console,
     get_json_data_renderable,
     get_output_console,
     make_status_logger,
@@ -49,6 +47,9 @@ status = make_status_logger(logger)
 def handle_function_match_failure(
     identifier: str, partial_matches: Sequence[Function]
 ) -> None:
+    import rich
+
+    console = rich.get_console()
     if len(partial_matches) == 0:
         raise click.ClickException(f"No matches for function '{identifier}'.")
     console.line()
@@ -156,8 +157,11 @@ def process_call_web3tx(
 ):
     with status("Building Web3 transaction..."):
         from eth_utils.abi import abi_to_signature
+        from rich.prompt import Confirm
         from web3._utils.contracts import prepare_transaction
+        import rich
 
+        console = rich.get_console()
         tx_value: Wei = cast("Wei", 0)  # be explicit about zero value
         abi_element_identifier = abi_to_signature(contractfn.abi)
         tx_data = prepare_transaction(
