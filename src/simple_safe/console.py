@@ -501,18 +501,14 @@ def print_web3_tx_receipt(
     table_data: list[dict[str, "RenderableType"]] = [
         {
             "Web3Tx Hash": txreceipt["transactionHash"].to_0x_hex(),
+            "Status": str(txreceipt["status"])
+            + (" (SUCCESS)" if success else " (FAILURE)"),
             "Block": str(txreceipt["blockNumber"]),
             "Timestamp": timestamp_str,
             "Gas Used": str(txreceipt["gasUsed"]),
             "Effective Gas Price": format_gwei_value(txreceipt["effectiveGasPrice"]),
             "Transaction Fees": format_native_value(
                 Wei(txreceipt["gasUsed"] * txreceipt["effectiveGasPrice"]), chaindata
-            ),
-            "Status": str(txreceipt["status"])
-            + (
-                f" [ok]{CHECK} SUCCESS[/ok]"
-                if success
-                else f" [danger]{CROSS} FAILURE[/danger]"
             ),
         }
     ]
