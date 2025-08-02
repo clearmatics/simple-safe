@@ -32,6 +32,7 @@
     set -ux
     uv sync -q --dev
     uv run ruff check --fix
+    uv run ruff check --fix --select I $SOURCE_DIRS
   '';
 
   scripts.check.exec = ''
