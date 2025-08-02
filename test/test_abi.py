@@ -5,7 +5,7 @@ import pytest
 from eth_account.account import Account
 from eth_utils.abi import abi_to_signature, function_signature_to_4byte_selector
 from hexbytes import HexBytes
-from safe_eth.eth.constants import NULL_ADDRESS
+from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
 from simple_safe.abi import find_function, parse_abi_type, parse_args
 
@@ -138,7 +138,7 @@ def test_parse_abi_type_abi_int():
 
 
 def test_parse_abi_type_address():
-    assert parse_abi_type("address", NULL_ADDRESS) == NULL_ADDRESS
+    assert parse_abi_type("address", CHECKSUM_ADDRESSS_ZERO) == CHECKSUM_ADDRESSS_ZERO
     with pytest.raises(ValueError):
         parse_abi_type("address", "")
     for _ in range(3):
