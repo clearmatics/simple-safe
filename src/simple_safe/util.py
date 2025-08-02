@@ -22,6 +22,8 @@ if TYPE_CHECKING:
     from web3 import Web3
     from web3.types import Wei
 
+logger = logging.getLogger(__name__)
+
 
 class SignatureData(NamedTuple):
     sigbytes: HexBytes
@@ -216,6 +218,12 @@ def parse_signatures(
             )
         )
     return sigdata
+
+
+def scale_decimal_value(value: str, decimals: int) -> int:
+    scaled_value = int(Decimal(value).scaleb(decimals))
+    logger.debug(f"Scaled value '{value}' to '{scaled_value}' ({decimals} decimals)")
+    return scaled_value
 
 
 @contextmanager

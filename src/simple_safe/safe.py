@@ -3,7 +3,6 @@ import logging
 import shutil
 import sys
 import typing
-from decimal import Decimal
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
@@ -44,6 +43,7 @@ from .util import (
     hash_eip712_data,
     make_offline_web3,
     parse_signatures,
+    scale_decimal_value,
     silence_logging,
     to_checksum_address,
 )
@@ -259,7 +259,7 @@ def build_custom(
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
         safetx = SafeTx(
             to=to_checksum_address(to_str),
-            value=int(Decimal(value).scaleb(decimals)),
+            value=scale_decimal_value(value, decimals),
             data=HexBytes(data),
             operation=SafeOperationEnum.CALL.value,
             safe_tx_gas=0,

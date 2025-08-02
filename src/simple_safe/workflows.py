@@ -1,5 +1,4 @@
 import logging
-from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -12,6 +11,8 @@ import click
 from hexbytes import (
     HexBytes,
 )
+
+from simple_safe.util import scale_decimal_value
 
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
@@ -71,7 +72,7 @@ def build_contract_call_safetx(
 
     safetx = SafeTx(
         to=contract.address,
-        value=int(Decimal(value).scaleb(decimals)),
+        value=scale_decimal_value(value, decimals),
         data=calldata,
         operation=SafeOperationEnum.CALL.value,
         safe_tx_gas=0,
