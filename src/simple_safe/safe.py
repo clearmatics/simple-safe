@@ -758,6 +758,7 @@ def sign(
     auth = validate_authenticator(keyfile, trezor)
     sigbytes = auth.sign_typed_data(safetxdata.data)
     sigobj = SafeSignature.parse_signature(sigbytes, safetxdata.hash)[0]
+    # This is only needed for non-EOA signature, which are not yet supported:
     signature = sigobj.export_signature()
 
     output_console = get_output_console(output)
