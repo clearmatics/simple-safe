@@ -189,7 +189,7 @@ def process_call_web3tx(
     print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
 
     assert "chainId" in tx
-    with status("Getting chain data..."):
+    with status("Retrieving chainlist data..."):
         chaindata = fetch_chaindata(tx["chainId"])
         gasprice = None if offline else w3.eth.gas_price
 

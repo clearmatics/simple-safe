@@ -602,7 +602,7 @@ def exec(
             safetx_hash, safetx_preimage, sigfiles, safe_info.owners
         )
 
-    with status("Retrieving chain data..."):
+    with status("Retrieving chainlist data..."):
         chaindata = fetch_chaindata(safe.chain_id)
 
     console.line()
@@ -698,7 +698,7 @@ def inspect(address: str, rpc: str):
             raise click.ClickException(str(exc)) from exc
         balance = client.w3.eth.get_balance(checksum_addr, block_identifier=block)
 
-    with status("Retrieving chain data..."):
+    with status("Retrieving chainlist data..."):
         chaindata = fetch_chaindata(client.w3.eth.chain_id)
 
     console.line()
@@ -818,7 +818,7 @@ def preview(
             sigdata = []
             safe_info = SafeInfo()
 
-    with status("Retrieving chain data..."):
+    with status("Retrieving chainlist data..."):
         chaindata = fetch_chaindata(safe.chain_id)
 
     console.line()
@@ -869,7 +869,7 @@ def sign(
         )
         safetx_hash, _ = safetx.hash(safe), safetx.preimage(safe)
 
-    with status("Retrieving chain data..."):
+    with status("Retrieving chainlist data..."):
         chaindata = fetch_chaindata(safe.chain_id)
 
     console.line()
