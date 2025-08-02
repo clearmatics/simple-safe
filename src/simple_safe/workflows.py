@@ -141,7 +141,7 @@ def make_web3tx(
         data=data,
         value=value,
     )
-    logging.debug(f"Created Web3Tx: {tx}")
+    logger.debug(f"Created Web3Tx: {tx}")
     return tx
 
 
