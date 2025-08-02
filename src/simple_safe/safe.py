@@ -680,12 +680,13 @@ def hash(txfile: typing.TextIO) -> None:
 def inspect(address: str, rpc: str):
     """Inspect a Safe account."""
     with status("Retrieving Safe account data..."):
-        checksum_addr = to_checksum_address(address)
+        from web3.types import Wei
         from safe_eth.eth import EthereumClient
         from safe_eth.safe import Safe
         import rich
 
         console = rich.get_console()
+        checksum_addr = to_checksum_address(address)
         client = EthereumClient(cast("URI", rpc))
         try:
             safeobj = Safe(checksum_addr, client)  # type: ignore[abstract]
@@ -702,8 +703,6 @@ def inspect(address: str, rpc: str):
         chaindata = fetch_chaindata(client.w3.eth.chain_id)
 
     console.line()
-
-    from web3.types import Wei
 
     print_kvtable(
         "Safe Account",
