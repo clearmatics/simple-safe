@@ -164,11 +164,11 @@ def make_status_logger(logger: logging.Logger):
 
 
 def print_function_matches(matches: Sequence[Function]):
+    import rich
     from eth_utils.abi import get_abi_input_names
     from rich.box import HORIZONTALS
     from rich.table import Table
     from rich.text import Text
-    import rich
 
     console = rich.get_console()
 
@@ -487,8 +487,8 @@ def print_web3_tx_receipt(
     txreceipt: "TxReceipt",
     chaindata: Optional[ChainData],
 ) -> None:
-    from web3.types import Wei
     import rich
+    from web3.types import Wei
 
     console = rich.get_console()
 

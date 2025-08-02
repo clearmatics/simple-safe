@@ -78,9 +78,9 @@ def handle_crash(
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> None:
+    import rich
     from rich.traceback import Traceback
     from web3.exceptions import ContractLogicError
-    import rich
 
     console = rich.get_console()
     if not SAFE_DEBUG:
@@ -413,8 +413,8 @@ def deploy(
     """
     offline = rpc is None
     with status("Checking Safe deployment parameters..."):
-        from rich.prompt import Confirm
         import rich
+        from rich.prompt import Confirm
 
         console = rich.get_console()
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
@@ -564,9 +564,9 @@ def exec(
     A SIGFILE must be a valid owner signature.
     """
     with status("Loading Safe transaction..."):
+        import rich
         from rich.prompt import Confirm
         from safe_eth.safe.safe_signature import SafeSignature
-        import rich
 
         console = rich.get_console()
         offline = rpc is None
@@ -680,10 +680,10 @@ def hash(txfile: typing.TextIO) -> None:
 def inspect(address: str, rpc: str):
     """Inspect a Safe account."""
     with status("Retrieving Safe account data..."):
-        from web3.types import Wei
+        import rich
         from safe_eth.eth import EthereumClient
         from safe_eth.safe import Safe
-        import rich
+        from web3.types import Wei
 
         console = rich.get_console()
         checksum_addr = to_checksum_address(address)
@@ -853,8 +853,8 @@ def sign(
 ):
     """Sign a Safe transaction."""
     with status("Loading Safe transaction..."):
-        from rich.prompt import Confirm
         import rich
+        from rich.prompt import Confirm
 
         console = rich.get_console()
         offline = rpc is None

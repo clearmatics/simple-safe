@@ -53,6 +53,7 @@ def compute_safe_address(
     from eth_abi.abi import encode as abi_encode
     from eth_abi.packed import encode_packed
     from eth_utils.crypto import keccak
+    from safe_eth.eth.contracts import load_contract_interface
     from web3.constants import ADDRESS_ZERO
     from web3.utils.address import get_create2_address
 
@@ -97,7 +98,6 @@ def compute_safe_address(
             ),
         )
     salt = keccak(salt_preimage)
-    from safe_eth.eth.contracts import load_contract_interface
 
     bytecode = HexBytes(load_contract_interface("Proxy_V1_4_1.json")["bytecode"])
     deployment_data = encode_packed(

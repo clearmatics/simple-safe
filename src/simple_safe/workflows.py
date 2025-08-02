@@ -156,10 +156,10 @@ def process_call_web3tx(
     offline: bool,
 ):
     with status("Building Web3 transaction..."):
+        import rich
         from eth_utils.abi import abi_to_signature
         from rich.prompt import Confirm
         from web3._utils.contracts import prepare_transaction
-        import rich
 
         console = rich.get_console()
         tx_value: Wei = cast("Wei", 0)  # be explicit about zero value
