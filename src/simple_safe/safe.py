@@ -19,7 +19,7 @@ from hexbytes import (
 from . import params
 from .abi import find_function, parse_args
 from .auth import validate_authenticator
-from .chain import FALLBACK_DECIMALS, fetch_chaindata
+from .chaindata import FALLBACK_DECIMALS, fetch_chaindata
 from .click import Group
 from .console import (
     SAFE_DEBUG,

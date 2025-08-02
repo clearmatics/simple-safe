@@ -15,7 +15,7 @@ from hexbytes import (
 
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
-from .chain import FALLBACK_DECIMALS, fetch_chaindata
+from .chaindata import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
     get_json_data_renderable,
     get_output_console,

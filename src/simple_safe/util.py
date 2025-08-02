@@ -13,7 +13,7 @@ from hexbytes import (
     HexBytes,
 )
 
-from .chain import ChainData
+from .chaindata import ChainData
 from .constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
 if TYPE_CHECKING:

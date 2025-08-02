@@ -10,7 +10,7 @@ from click import Context, Parameter
 from hexbytes import HexBytes
 
 from .abi import Function
-from .chain import ChainData
+from .chaindata import ChainData
 from .constants import (
     DEFAULT_FALLBACK_ADDRESS,
     DEFAULT_PROXYFACTORY_ADDRESS,
