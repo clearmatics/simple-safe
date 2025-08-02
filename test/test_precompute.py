@@ -8,7 +8,8 @@ from simple_safe.constants import (
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
 )
-from simple_safe.util import DeployParams, SafeVariant, compute_safe_address
+from simple_safe.util import compute_safe_address
+from simple_safe.validation import DeployParams, SafeVariant
 
 
 def test_happy_path():

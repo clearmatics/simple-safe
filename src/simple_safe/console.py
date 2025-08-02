@@ -26,11 +26,13 @@ from .constants import (
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
 )
-from .util import (
+from .models import (
     DeployParams,
     Safe,
     SafeTx,
     SafeVariant,
+)
+from .util import (
     SignatureData,
     format_gwei_value,
     format_native_value,
@@ -61,15 +63,15 @@ custom_theme = Theme(
 rich.reconfigure(stderr=True, theme=custom_theme)
 console = rich.get_console()
 
-
 logger = logging.getLogger(__name__)
 
+# Symbols
 CHECK = "✔"
 CROSS = "✖"
 CAUTION = "!"
 WARNING = "⚠️"
 
-
+# Constants
 CUSTOM_BOX: Box = Box(
     "    \n"  # top
     "    \n"  # head
@@ -80,8 +82,6 @@ CUSTOM_BOX: Box = Box(
     "    \n"  # foot
     "    \n"  # bottom
 )
-
-
 JSON_INDENT_LEVEL = 2
 SAFE_DEBUG = True if "SAFE_DEBUG" in os.environ else False
 

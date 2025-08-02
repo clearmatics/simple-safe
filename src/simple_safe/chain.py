@@ -30,38 +30,6 @@ class ChainDataPaths(NamedTuple):
     chaindata: Path
 
 
-def get_paths() -> ChainDataPaths:
-    cache_dir = platformdirs.user_cache_path(appname=APP_NAME, appauthor=APP_AUTHOR)
-    return ChainDataPaths(
-        cache_dir=cache_dir,
-        metadata=cache_dir / "metadata.toml",
-        chaindata=cache_dir / "chaindata.json",
-    )
-
-
-def parse_etag(etag: str) -> str:
-    split = etag.split('"')
-    if len(split) != 3:
-        raise ValueError(f"Invalid ETag: <{etag}>.")
-    return split[-2]
-
-
-def lookup_chaindata(datafile: Path, chain_id: int) -> Optional[ChainData]:
-    if not datafile.exists():
-        return None
-    with datafile.open("rb") as fp:
-        chaindata = json.load(fp)
-    for chain in chaindata:
-        if chain["chainId"] == chain_id and chain["nativeCurrency"]["decimals"] >= 0:
-            return ChainData(
-                chain_id=chain_id,
-                name=chain["nativeCurrency"]["name"],
-                symbol=chain["nativeCurrency"]["symbol"],
-                decimals=chain["nativeCurrency"]["decimals"],
-            )
-    return None
-
-
 def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
     import requests
 
@@ -107,3 +75,35 @@ def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
             tomli_w.dump(metadata, fp)
 
     return lookup_chaindata(paths.chaindata, chain_id)
+
+
+def get_paths() -> ChainDataPaths:
+    cache_dir = platformdirs.user_cache_path(appname=APP_NAME, appauthor=APP_AUTHOR)
+    return ChainDataPaths(
+        cache_dir=cache_dir,
+        metadata=cache_dir / "metadata.toml",
+        chaindata=cache_dir / "chaindata.json",
+    )
+
+
+def lookup_chaindata(datafile: Path, chain_id: int) -> Optional[ChainData]:
+    if not datafile.exists():
+        return None
+    with datafile.open("rb") as fp:
+        chaindata = json.load(fp)
+    for chain in chaindata:
+        if chain["chainId"] == chain_id and chain["nativeCurrency"]["decimals"] >= 0:
+            return ChainData(
+                chain_id=chain_id,
+                name=chain["nativeCurrency"]["name"],
+                symbol=chain["nativeCurrency"]["symbol"],
+                decimals=chain["nativeCurrency"]["decimals"],
+            )
+    return None
+
+
+def parse_etag(etag: str) -> str:
+    split = etag.split('"')
+    if len(split) != 3:
+        raise ValueError(f"Invalid ETag: <{etag}>.")
+    return split[-2]

@@ -1,4 +1,12 @@
 DEPLOY_SAFE_VERSION = "1.4.1"
+SAFE_CONTRACT_VERSIONS = (
+    "0.0.1",
+    "1.0.0",
+    "1.1.1",
+    "1.2.0",
+    "1.3.0",
+    "1.4.1",
+)
 SALT_NONCE_SENTINEL = "random"
 
 # Safe v1.4.1 canonical addresses

@@ -8,14 +8,39 @@ from click_option_group._decorators import (
     _OptGroup,  # pyright: ignore[reportPrivateUsage]
 )
 
+from .console import (
+    SAFE_DEBUG,
+    activate_logging,
+)
 from .constants import DEPLOY_SAFE_VERSION, SALT_NONCE_SENTINEL
-from .validation import help_callback, verbose_callback
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
 Decorator = Callable[[FC], FC]
 
 optgroup = _OptGroup()
+
+# ┌───────────┐
+# │ Callbacks │
+# └───────────┘
+
+
+def help_callback(
+    ctx: click.Context, _: click.Option, value: Optional[bool]
+) -> Optional[Any]:
+    if value:
+        click.echo(ctx.get_help())
+        ctx.exit()
+    return None
+
+
+def verbose_callback(
+    ctx: click.Context, opt: click.Option, value: Optional[bool]
+) -> Optional[Any]:
+    if value and not SAFE_DEBUG:
+        activate_logging()
+    return None
+
 
 # ┌─────────────┐
 # │ Option Info │

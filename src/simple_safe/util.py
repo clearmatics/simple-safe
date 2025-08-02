@@ -1,8 +1,6 @@
-import dataclasses
 import logging
 from contextlib import contextmanager
 from decimal import Decimal, localcontext
-from enum import Enum
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -19,100 +17,10 @@ from .chain import ChainData
 from .constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
 if TYPE_CHECKING:
-    from eth_typing import URI, ChecksumAddress, HexStr
-    from safe_eth.safe import SafeTx as SafeLibTx
+    from eth_typing import ChecksumAddress, HexStr
     from safe_eth.safe.safe_signature import SafeSignature
     from web3 import Web3
-    from web3.contract import Contract
     from web3.types import Wei
-
-
-@dataclasses.dataclass(kw_only=True)
-class DeployParams:
-    # deployment
-    proxy_factory: "ChecksumAddress"
-    singleton: "ChecksumAddress"
-    chain_id: Optional[int]
-    salt_nonce: int
-    variant: "SafeVariant"
-    # initialization
-    owners: list["ChecksumAddress"]
-    threshold: int
-    fallback: "ChecksumAddress"
-
-
-class SafeVariant(Enum):
-    SAFE = 1
-    SAFE_L2 = 2
-    UNKNOWN = 3
-
-
-class Safe(NamedTuple):
-    safe_address: "ChecksumAddress"
-    safe_version: str
-    safe_nonce: int
-    chain_id: int
-
-
-class SafeInfo(NamedTuple):
-    owners: Optional[list["ChecksumAddress"]] = None
-    threshold: Optional[int] = None
-
-
-class SafeTx(NamedTuple):
-    to: "ChecksumAddress"
-    value: int
-    data: HexBytes
-    operation: int
-    safe_tx_gas: int
-    base_gas: int
-    gas_price: int
-    gas_token: "ChecksumAddress"
-    refund_receiver: "ChecksumAddress"
-
-    def _to_safelibtx(
-        self,
-        safe: Safe,
-    ) -> "SafeLibTx":
-        from safe_eth.eth import EthereumClient
-        from safe_eth.safe import SafeTx as SafeLibTx
-
-        return SafeLibTx(
-            ethereum_client=EthereumClient(ethereum_node_url=cast("URI", "dummy")),
-            safe_address=safe.safe_address,
-            to=self.to,
-            value=self.value,
-            data=self.data,
-            operation=self.operation,
-            safe_tx_gas=self.safe_tx_gas,
-            base_gas=self.base_gas,
-            gas_price=self.gas_price,
-            gas_token=self.gas_token,
-            refund_receiver=self.refund_receiver,
-            signatures=None,  # signatures are not part of EIP-712 data
-            safe_nonce=safe.safe_nonce,
-            safe_version=safe.safe_version,
-            chain_id=safe.chain_id,
-        )
-
-    def hash(
-        self,
-        safe: Safe,
-    ) -> HexBytes:
-        return self._to_safelibtx(safe).safe_tx_hash
-
-    def preimage(
-        self,
-        safe: Safe,
-    ) -> HexBytes:
-        return self._to_safelibtx(safe).safe_tx_hash_preimage
-
-    def to_eip712_message(
-        self,
-        safe: Safe,
-    ) -> dict[str, Any]:
-        safetx = self._to_safelibtx(safe)
-        return safetx.eip712_structured_data
 
 
 class SignatureData(NamedTuple):
@@ -308,15 +216,6 @@ def parse_signatures(
             )
         )
     return sigdata
-
-
-def query_safe_info(safe_contract: "Contract"):
-    return SafeInfo(
-        owners=safe_contract.functions.getOwners().call(block_identifier="latest"),
-        threshold=safe_contract.functions.getThreshold().call(
-            block_identifier="latest"
-        ),
-    )
 
 
 @contextmanager
