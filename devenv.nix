@@ -60,7 +60,7 @@
   scripts.profile.exec = ''
     set -ux
     IMPORT_LOG=$(mktemp)
-    uv run python -X importtime -m simple_safe.safe 2>$IMPORT_LOG
+    uv run -q python -X importtime -m simple_safe.safe 2>$IMPORT_LOG
     uv run tuna $IMPORT_LOG
   '';
 
