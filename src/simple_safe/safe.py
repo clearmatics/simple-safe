@@ -55,9 +55,9 @@ from .validation import (
     validate_web3tx_options,
 )
 from .workflows import (
+    build_contract_call_safetx,
     handle_function_match_failure,
-    process_call_safetx,
-    process_call_web3tx,
+    process_contract_call_web3tx,
     query_safe_info,
 )
 
@@ -209,7 +209,7 @@ def build_abi_call(
         with open(abi_file, "r") as f:
             abi = json.load(f)
         contract = w3.eth.contract(address=to_checksum_address(contract_str), abi=abi)
-        process_call_safetx(
+        build_contract_call_safetx(
             w3=w3,
             contract=contract,
             fn_identifier=identifier,
@@ -318,7 +318,7 @@ def build_erc20_call(
         )
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(w3, address=token_address)
-        process_call_safetx(
+        build_contract_call_safetx(
             w3=w3,
             contract=ERC20,
             fn_identifier=identifier,
@@ -362,7 +362,7 @@ def build_safe_call(
             safe_version=safe_version,
             w3=w3,
         )
-        process_call_safetx(
+        build_contract_call_safetx(
             w3=w3,
             contract=contract,
             fn_identifier=identifier,
@@ -476,7 +476,7 @@ def deploy(
         raise click.Abort()
 
     auth = validate_authenticator(keyfile, trezor)
-    process_call_web3tx(
+    process_contract_call_web3tx(
         w3,
         contractfn=deployment_call,
         auth=auth,
@@ -649,7 +649,7 @@ def exec(
     )
 
     auth = validate_authenticator(keyfile, trezor)
-    process_call_web3tx(
+    process_contract_call_web3tx(
         w3,
         contractfn=exec_call,
         auth=auth,

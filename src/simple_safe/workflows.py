@@ -44,6 +44,48 @@ logger = logging.getLogger(__name__)
 status = make_status_logger(logger)
 
 
+def build_contract_call_safetx(
+    *,
+    w3: "Web3",
+    contract: "Contract",
+    fn_identifier: str,
+    str_args: list[str],
+    safe: Safe,
+    value: str,
+    output: Optional[TextIO],
+):
+    """Print a SafeTx that represents a contract call."""
+    from safe_eth.safe import SafeOperationEnum
+    from web3.constants import CHECKSUM_ADDRESSS_ZERO
+
+    match, partials = find_function(contract.abi, fn_identifier)
+    if match is None:
+        handle_function_match_failure(fn_identifier, partials)
+    assert match is not None
+
+    fn_obj = contract.get_function_by_selector(match.selector)
+    args = parse_args(fn_obj.abi, str_args)
+    calldata = HexBytes(contract.encode_abi(match.sig, args))
+    chaindata = fetch_chaindata(safe.chain_id)
+    decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+
+    safetx = SafeTx(
+        to=contract.address,
+        value=int(Decimal(value).scaleb(decimals)),
+        data=calldata,
+        operation=SafeOperationEnum.CALL.value,
+        safe_tx_gas=0,
+        base_gas=0,
+        gas_price=0,
+        gas_token=CHECKSUM_ADDRESSS_ZERO,
+        refund_receiver=CHECKSUM_ADDRESSS_ZERO,
+    )
+    output_console = get_output_console(output)
+    output_console.print(
+        get_json_data_renderable(safetx.to_eip712_message(safe)),
+    )
+
+
 def handle_function_match_failure(
     identifier: str, partial_matches: Sequence[Function]
 ) -> None:
@@ -102,49 +144,7 @@ def make_web3tx(
     return tx
 
 
-def process_call_safetx(
-    *,
-    w3: "Web3",
-    contract: "Contract",
-    fn_identifier: str,
-    str_args: list[str],
-    safe: Safe,
-    value: str,
-    output: Optional[TextIO],
-):
-    """Print a SafeTx that represents a contract call."""
-    from safe_eth.safe import SafeOperationEnum
-    from web3.constants import CHECKSUM_ADDRESSS_ZERO
-
-    match, partials = find_function(contract.abi, fn_identifier)
-    if match is None:
-        handle_function_match_failure(fn_identifier, partials)
-    assert match is not None
-
-    fn_obj = contract.get_function_by_selector(match.selector)
-    args = parse_args(fn_obj.abi, str_args)
-    calldata = HexBytes(contract.encode_abi(match.sig, args))
-    chaindata = fetch_chaindata(safe.chain_id)
-    decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
-
-    safetx = SafeTx(
-        to=contract.address,
-        value=int(Decimal(value).scaleb(decimals)),
-        data=calldata,
-        operation=SafeOperationEnum.CALL.value,
-        safe_tx_gas=0,
-        base_gas=0,
-        gas_price=0,
-        gas_token=CHECKSUM_ADDRESSS_ZERO,
-        refund_receiver=CHECKSUM_ADDRESSS_ZERO,
-    )
-    output_console = get_output_console(output)
-    output_console.print(
-        get_json_data_renderable(safetx.to_eip712_message(safe)),
-    )
-
-
-def process_call_web3tx(
+def process_contract_call_web3tx(
     w3: "Web3",
     *,
     contractfn: "ContractFunction",
