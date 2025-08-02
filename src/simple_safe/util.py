@@ -17,6 +17,7 @@ from .chaindata import ChainData
 from .constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
 
 if TYPE_CHECKING:
+    from eth_account.datastructures import SignedTransaction
     from eth_typing import ChecksumAddress, HexStr
     from safe_eth.safe.safe_signature import SafeSignature
     from web3 import Web3
@@ -224,6 +225,16 @@ def scale_decimal_value(value: str, decimals: int) -> int:
     scaled_value = int(Decimal(value).scaleb(decimals))
     logger.debug(f"Scaled value '{value}' to '{scaled_value}' ({decimals} decimals)")
     return scaled_value
+
+
+def signed_tx_to_dict(signed_tx: "SignedTransaction") -> dict[str, str]:
+    res: dict[str, str] = {}
+    for key, val in signed_tx._asdict().items():
+        if isinstance(val, HexBytes):
+            res[key] = val.to_0x_hex()
+        else:
+            res[key] = val
+    return res
 
 
 @contextmanager

@@ -45,6 +45,7 @@ def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
     chaindata = lookup_chaindata(paths.chaindata, chain_id)
     if chaindata:
         logger.debug(f"Cache hit for chain ID {chain_id}")
+        logger.debug(f"Chainlist data: {chaindata._asdict()}")
         return chaindata
 
     metadata = {}
@@ -59,12 +60,12 @@ def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
             if new_etag_value:
                 new_etag = parse_etag(new_etag_value)
                 if new_etag == old_etag:
-                    logger.debug("ChainList data unchanged")
+                    logger.debug(f"Still no Chainlist data for {chain_id}")
                     return None
 
-    logger.debug("Requesting ChainList data")
+    logger.debug("Requesting Chainlist data")
     res = requests.get(CHAINLIST_URL)
-    assert len(res.content) > 0, "Bad ChainList data."
+    assert len(res.content) > 0, "Received bad Chainlist data."
     with open(paths.chaindata, "wb") as fp:
         fp.write(res.content)
     metadata["chains"] = {}
@@ -74,7 +75,10 @@ def fetch_chaindata(chain_id: int) -> Optional[ChainData]:
         with open(paths.metadata, "wb") as fp:
             tomli_w.dump(metadata, fp)
 
-    return lookup_chaindata(paths.chaindata, chain_id)
+    chaindata = lookup_chaindata(paths.chaindata, chain_id)
+    if chaindata:
+        logger.debug(f"Chainlist data: {chaindata._asdict()}")
+    return chaindata
 
 
 def get_paths() -> ChainDataPaths:

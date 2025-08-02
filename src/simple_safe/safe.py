@@ -630,8 +630,8 @@ def exec(
             )
     exported_signatures = SafeSignature.export_signatures(sigs)
 
+    console.line()
     if not force:
-        console.line()
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 

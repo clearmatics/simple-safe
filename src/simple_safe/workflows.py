@@ -12,7 +12,7 @@ from hexbytes import (
     HexBytes,
 )
 
-from simple_safe.util import scale_decimal_value
+from simple_safe.util import scale_decimal_value, signed_tx_to_dict
 
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
@@ -141,7 +141,7 @@ def make_web3tx(
         data=data,
         value=value,
     )
-    logger.debug(f"Created Web3Tx: {tx}")
+    logger.info(f"Created Web3Tx: {tx}")
     return tx
 
 
@@ -205,11 +205,13 @@ def process_contract_call_web3tx(
         raise click.Abort()
 
     signed_tx = auth.sign_transaction(tx)
+    signed_tx_dict = signed_tx_to_dict(signed_tx)
+    logger.info(f"Signed Web3Tx: {signed_tx_dict}")
     output_console = get_output_console(output)
 
     if sign_only:
         console.line()
-        output_console.print(get_json_data_renderable(signed_tx._asdict()))
+        output_console.print(get_json_data_renderable(signed_tx_dict))
     else:
         with status("Executing Web3 transaction..."):
             tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
