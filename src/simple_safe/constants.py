@@ -28,3 +28,9 @@ SAFE_SETUP_FUNC_TYPES = (
     "uint256",
     "address",
 )
+
+# Symbols
+SYMBOL_CHECK = "✔"
+SYMBOL_CROSS = "✖"
+SYMBOL_CAUTION = "!!"
+SYMBOL_WARNING = "⚠️"

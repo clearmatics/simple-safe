@@ -15,7 +15,7 @@ from hexbytes import (
 )
 
 from .console import (
-    WARNING,
+    SYMBOL_WARNING,
     make_status_logger,
 )
 from .constants import (
@@ -85,7 +85,7 @@ def validate_deploy_options(
         )
     elif not chain_specific and chain_id is not None:
         logger.warning(
-            f"{WARNING} Ignoring --chain-id {chain_id} because chain-specific address not requested"
+            f"{SYMBOL_WARNING} Ignoring --chain-id {chain_id} because chain-specific address not requested"
         )
         chain_id = None
     return DeployParams(

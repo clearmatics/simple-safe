@@ -16,6 +16,10 @@ from .constants import (
     DEFAULT_PROXYFACTORY_ADDRESS,
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
+    SYMBOL_CAUTION,
+    SYMBOL_CHECK,
+    SYMBOL_CROSS,
+    SYMBOL_WARNING,
 )
 from .models import (
     DeployParams,
@@ -43,12 +47,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-
-# Symbols
-CHECK = "✔"
-CROSS = "✖"
-CAUTION = "!"
-WARNING = "⚠️"
 
 # Constants
 JSON_INDENT_LEVEL = 2
@@ -220,13 +218,13 @@ def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
     base_params: dict[str, "RenderableType"] = {
         "Proxy Factory": data.proxy_factory
         + (
-            f" [ok]{CHECK} CANONICAL[/ok]"
+            f" [ok]{SYMBOL_CHECK} CANONICAL[/ok]"
             if data.proxy_factory == DEFAULT_PROXYFACTORY_ADDRESS
             else ""
         ),
         "Singleton": data.singleton
         + (
-            f" [ok]{CHECK} CANONICAL[/ok]"
+            f" [ok]{SYMBOL_CHECK} CANONICAL[/ok]"
             if data.singleton
             in (DEFAULT_SAFE_SINGLETON_ADDRESS, DEFAULT_SAFEL2_SINGLETON_ADDRESS)
             else ""
@@ -245,7 +243,7 @@ def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
             "Threshold": str(data.threshold),
             "Fallback Handler": data.fallback
             + (
-                f" [ok]{CHECK} DEFAULT[/ok]"
+                f" [ok]{SYMBOL_CHECK} DEFAULT[/ok]"
                 if data.fallback == DEFAULT_FALLBACK_ADDRESS
                 else ""
             ),
@@ -310,17 +308,17 @@ def print_signatures(
         if sig.sigtype:
             row["Type"] = sig.sigtype.lstrip("SafeSignature") + " Signature"
         row["Signature"] = sig.sigbytes.to_0x_hex() + (
-            f" [ok]{CHECK} VALID[/ok]"
+            f" [ok]{SYMBOL_CHECK} VALID[/ok]"
             if sig.valid
-            else f" [danger]{CROSS} INVALID[/danger]"
+            else f" [danger]{SYMBOL_CROSS} INVALID[/danger]"
         )
         if sig.address:
             if sig.is_owner is True:
-                owner = f" [ok]{CHECK} OWNER[/ok]"
+                owner = f" [ok]{SYMBOL_CHECK} OWNER[/ok]"
             elif sig.is_owner is False:
-                owner = f" [danger]{CROSS} OWNER[/danger]"
+                owner = f" [danger]{SYMBOL_CROSS} OWNER[/danger]"
             else:
-                owner = f" [caution]{CAUTION} UNVERIFIED[/caution]"
+                owner = f" [caution]{SYMBOL_CAUTION} UNVERIFIED[/caution]"
             row["ECRecover"] = f"{sig.address}" + owner
         if sig.valid and sig.is_owner:
             num_good += 1
@@ -342,20 +340,20 @@ def print_signatures(
         summary = ""
         border_style = "panel_caution"
     elif executable:
-        summary = f"[{CHECK} EXECUTABLE]"
+        summary = f"[{SYMBOL_CHECK} EXECUTABLE]"
         border_style = "panel_ok"
     else:
         border_style = "panel_danger"
         if num_invalid == 1:
-            summary = f"[{CROSS} INVALID SIGNATURE]"
+            summary = f"[{SYMBOL_CROSS} INVALID SIGNATURE]"
         elif num_invalid > 1:
-            summary = f"[{CROSS} INVALID SIGNATURES]"
+            summary = f"[{SYMBOL_CROSS} INVALID SIGNATURES]"
         elif num_unknown == 1:
-            summary = f"[{CROSS} UNKNOWN SIGNATURE]"
+            summary = f"[{SYMBOL_CROSS} UNKNOWN SIGNATURE]"
         elif num_unknown > 1:
-            summary = f"[{CROSS} UNKNOWN SIGNATURES]"
+            summary = f"[{SYMBOL_CROSS} UNKNOWN SIGNATURES]"
         else:
-            summary = f"[{CROSS} INSUFFICIENT SIGNATURES]"
+            summary = f"[{SYMBOL_CROSS} INSUFFICIENT SIGNATURES]"
     console.print(
         get_panel(
             "Signatures",
@@ -366,7 +364,7 @@ def print_signatures(
     )
     if offline:
         console.line()
-        logger.warning(f"{WARNING} Cannot verify signers when offline.")
+        logger.warning(f"{SYMBOL_WARNING} Cannot verify signers when offline.")
 
 
 def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None:
