@@ -583,7 +583,9 @@ def exec(
         offline = rpc is None
 
         if not sigfiles:
-            raise click.ClickException("Cannot execute SafeTx without signatures.")
+            raise click.ClickException(
+                "Missing one or more signature files. Cannot execute SafeTx without signatures."
+            )
 
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
         txopts = validate_web3tx_options(
