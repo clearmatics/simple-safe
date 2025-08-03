@@ -43,6 +43,7 @@ from .util import (
     hash_eip712_data,
     make_offline_web3,
     parse_signatures,
+    query_safe_info,
     scale_decimal_value,
     silence_logging,
     to_checksum_address,
@@ -58,7 +59,6 @@ from .workflows import (
     build_contract_call_safetx,
     handle_function_match_failure,
     process_contract_call_web3tx,
-    query_safe_info,
 )
 
 if TYPE_CHECKING:

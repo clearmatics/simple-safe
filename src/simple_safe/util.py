@@ -15,13 +15,18 @@ from hexbytes import (
 
 from .chaindata import ChainData
 from .constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
+from .models import (
+    SafeInfo,
+    Web3TxOptions,
+)
 
 if TYPE_CHECKING:
     from eth_account.datastructures import SignedTransaction
     from eth_typing import ChecksumAddress, HexStr
     from safe_eth.safe.safe_signature import SafeSignature
     from web3 import Web3
-    from web3.types import Wei
+    from web3.contract import Contract
+    from web3.types import Nonce, TxParams, Wei
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +173,43 @@ def make_offline_web3() -> "Web3":
     return Web3(provider=BaseProvider())
 
 
+def make_web3tx(
+    w3: "Web3",
+    *,
+    from_: "ChecksumAddress",
+    to: "ChecksumAddress",
+    txopts: "Web3TxOptions",
+    data: "bytes | HexStr",
+    value: "Wei",
+) -> "TxParams":
+    from web3.types import TxParams
+
+    assert txopts.chain_id is not None
+    if (gas_limit := txopts.gas_limit) is None:
+        gas_limit = w3.eth.estimate_gas({"to": to, "data": data})
+    if (nonce := txopts.nonce) is None:
+        nonce = w3.eth.get_transaction_count(from_, block_identifier="pending")
+    if (max_pri_fee := txopts.max_pri_fee) is None:
+        max_pri_fee = w3.eth.max_priority_fee
+    if (max_fee := txopts.max_fee) is None:
+        block = w3.eth.get_block("latest")
+        assert "baseFeePerGas" in block
+        max_fee = (2 * block["baseFeePerGas"]) + max_pri_fee
+    tx = TxParams(
+        type=2,
+        to=to,
+        chainId=txopts.chain_id,
+        gas=gas_limit,
+        nonce=cast("Nonce", nonce),
+        maxFeePerGas=cast("Wei", max_fee),
+        maxPriorityFeePerGas=cast("Wei", max_pri_fee),
+        data=data,
+        value=value,
+    )
+    logger.info(f"Created Web3Tx: {tx}")
+    return tx
+
+
 def parse_signatures(
     safetx_hash: HexBytes,
     safetx_preimage: HexBytes,
@@ -219,6 +261,15 @@ def parse_signatures(
             )
         )
     return sigdata
+
+
+def query_safe_info(safe_contract: "Contract"):
+    return SafeInfo(
+        owners=safe_contract.functions.getOwners().call(block_identifier="latest"),
+        threshold=safe_contract.functions.getThreshold().call(
+            block_identifier="latest"
+        ),
+    )
 
 
 def scale_decimal_value(value: str, decimals: int) -> int:
