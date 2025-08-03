@@ -268,12 +268,17 @@ safe_address = click.option(
 
 safe_version = make_option(safe_version_option_info, cls=optgroup.option)
 
-sigfile = click.argument(
-    "sigfiles",
-    metavar="[SIGFILE]...",
-    type=click.Path(exists=True),
-    nargs=-1,
-)
+
+def sigfile(metavar: str) -> Callable[[FC], FC]:
+    def decorator(f: FC) -> FC:
+        return click.argument(
+            "sigfiles",
+            metavar=metavar,
+            type=click.Path(exists=True),
+            nargs=-1,
+        )(f)
+
+    return decorator
 
 
 def web3tx() -> Callable[[FC], FC]:

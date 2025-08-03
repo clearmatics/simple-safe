@@ -551,7 +551,7 @@ def encode(
 @params.authentication
 @params.force
 @click.argument("txfile", type=click.File("r"), required=True)
-@params.sigfile
+@params.sigfile(metavar="SIGFILE [SIGFILE]...")
 @params.output_file
 @params.common
 def exec(
@@ -789,7 +789,7 @@ def precompute(
 @optgroup.group("Preview offline")
 @params.safe_version
 @click.argument("txfile", type=click.File("r"), required=True)
-@params.sigfile
+@params.sigfile(metavar="[SIGFILE]...")
 @params.common
 def preview(
     rpc: Optional[str],
