@@ -27,6 +27,7 @@ from .console import (
     print_web3_tx_params,
     print_web3_tx_receipt,
 )
+from .constants import SYMBOL_WARNING
 from .models import (
     Safe,
     SafeTx,
@@ -142,8 +143,9 @@ def process_contract_call_web3tx(
             fn_kwargs=contractfn.kwargs,
         ).get("data")
         assert tx_data is not None
-        tx = make_web3tx(
+        tx, gas_estimate = make_web3tx(
             w3,
+            offline=offline,
             from_=auth.address,
             to=contractfn.address,
             txopts=txopts,
@@ -161,9 +163,21 @@ def process_contract_call_web3tx(
         gasprice = None if offline else w3.eth.gas_price
 
     console.line()
-    print_web3_tx_params(tx, auth, chaindata)
+    print_web3_tx_params(tx, auth, gas_estimate, chaindata)
     console.line()
     print_web3_tx_fees(tx, offline, gasprice, chaindata)
+
+    if (
+        not offline
+        and (txopts.gas_limit is not None)
+        and (gas_estimate is not None)
+        and txopts.gas_limit < gas_estimate
+    ):
+        console.line()
+        logger.warning(
+            f"{SYMBOL_WARNING} Transaction expected to fail because estimated gas "
+            f"{gas_estimate} exceeds custom gas limit {txopts.gas_limit}."
+        )
 
     console.line()
     prompt = ("Sign" if sign_only else "Execute") + " Web3 transaction?"

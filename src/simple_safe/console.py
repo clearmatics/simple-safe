@@ -443,6 +443,7 @@ def print_web3_tx_fees(
 def print_web3_tx_params(
     params: "TxParams",
     auth: "Authenticator",
+    gas_estimate: Optional[int],
     chaindata: Optional[ChainData] = None,
 ) -> None:
     from web3.types import Wei
@@ -466,7 +467,12 @@ def print_web3_tx_params(
             "Nonce": str(params["nonce"]),
             "To Address": str(params["to"]),
             "Value": format_native_value(params["value"], chaindata),
-            "Gas Limit": str(params["gas"]),
+            "Gas Limit": str(params["gas"])
+            + (
+                f" [caution]{SYMBOL_CAUTION} EXCEEDS GAS ESTIMATE[/caution]"
+                if gas_estimate is not None and params["gas"] < gas_estimate
+                else ""
+            ),
             "Total Fees": "Max "
             + format_gwei_value(
                 Wei(int(params["maxFeePerGas"])), units=("Wei/Gas", "Gwei/Gas")

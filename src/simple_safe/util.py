@@ -176,25 +176,34 @@ def make_offline_web3() -> "Web3":
 def make_web3tx(
     w3: "Web3",
     *,
+    offline: bool,
     from_: "ChecksumAddress",
     to: "ChecksumAddress",
     txopts: "Web3TxOptions",
     data: "bytes | HexStr",
     value: "Wei",
-) -> "TxParams":
+) -> tuple["TxParams", Optional[int]]:
     from web3.types import TxParams
 
-    assert txopts.chain_id is not None
-    if (gas_limit := txopts.gas_limit) is None:
-        gas_limit = w3.eth.estimate_gas({"to": to, "data": data})
+    gas_limit = txopts.gas_limit
+    gas_estimate = None
+    if not offline:
+        gas_estimate = w3.eth.estimate_gas({"to": to, "data": data})
+        if gas_limit is None:
+            gas_limit = gas_estimate
+
     if (nonce := txopts.nonce) is None:
         nonce = w3.eth.get_transaction_count(from_, block_identifier="pending")
+
     if (max_pri_fee := txopts.max_pri_fee) is None:
         max_pri_fee = w3.eth.max_priority_fee
     if (max_fee := txopts.max_fee) is None:
         block = w3.eth.get_block("latest")
         assert "baseFeePerGas" in block
         max_fee = (2 * block["baseFeePerGas"]) + max_pri_fee
+
+    assert txopts.chain_id is not None
+    assert gas_limit is not None
     tx = TxParams(
         type=2,
         to=to,
@@ -207,7 +216,7 @@ def make_web3tx(
         value=value,
     )
     logger.info(f"Created Web3Tx: {tx}")
-    return tx
+    return (tx, gas_estimate)
 
 
 def parse_signatures(
