@@ -1,3 +1,4 @@
+from importlib.metadata import PackageMetadata
 import json
 import logging
 import shutil
@@ -684,6 +685,22 @@ def hash(txfile: typing.TextIO) -> None:
     safetx_hash = hash_eip712_data(safetx_data)
     output_console = get_output_console()
     output_console.print(safetx_hash.to_0x_hex())
+
+
+@safe.command()
+def help():
+    """Browse the documentation."""
+    from rich.markdown import Markdown
+    from rich.console import Console
+    from importlib.resources import files
+
+    console = Console()
+    readme = files("simple_safe.docs").joinpath("README.md")
+    print(readme)
+    with readme.open("r") as f:
+        md = f.read()
+    with console.pager(styles=True, links=True):
+        console.print(Markdown(md))
 
 
 @safe.command()
