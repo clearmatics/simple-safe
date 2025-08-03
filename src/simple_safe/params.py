@@ -12,7 +12,7 @@ from .console import (
     SAFE_DEBUG,
     activate_logging,
 )
-from .constants import DEPLOY_SAFE_VERSION, SALT_NONCE_SENTINEL
+from .constants import DEPLOY_SAFE_VERSION, SAFE_CONTRACT_VERSIONS, SALT_NONCE_SENTINEL
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
@@ -74,7 +74,7 @@ chain_id_option_info = OptionInfo(
 
 safe_version_option_info = OptionInfo(
     args=["--safe-version"],
-    help="Safe version",
+    help=f"Safe version: {', '.join(reversed(SAFE_CONTRACT_VERSIONS[-3:]))}, ...",
 )
 
 
