@@ -62,7 +62,7 @@
   '';
 
   env.PYTHON_VERSIONS = "3.11 3.12 3.13";
-  env.PYTEST_COMMAND = "pytest -l -s -v --no-header --disable-warnings ./test";
+  env.PYTEST_COMMAND = "pytest -l -s -v --no-header --disable-warnings ./tests";
   scripts.runtests.exec = "uv run -q $PYTEST_COMMAND";
   scripts.runtests-multi.exec = ''
     UV_PYTHON_DOWNLOADS=automatic  # disabled by devenv/Nix
