@@ -33,7 +33,7 @@ from .models import (
     SafeVariant,
     Web3TxOptions,
 )
-from .util import to_checksum_address
+from .util import hash_eip712_data, to_checksum_address
 
 if TYPE_CHECKING:
     from eth_typing import URI, ChecksumAddress
@@ -162,7 +162,19 @@ def validate_safetxfile(
 ) -> tuple[Safe, SafeTx, "Contract"]:
     from safe_eth.eth.contracts import get_safe_contract
 
+    def abort_invalid():
+        # raise RuntimeError(
+        raise click.ClickException(
+            f"TXFILE '{txfile.name}' is not a valid representation of an EIP-712 Safe transaction."
+        )
+
     message = json.loads(txfile.read())
+    if ("types" not in message) or ("SafeTx" not in message["types"]):
+        abort_invalid()
+    safetx_hash = hash_eip712_data(
+        message
+    )  # Use `eth_account` to validate EIP-712 message
+    logger.debug(f"SafeTx Hash: {safetx_hash.to_0x_hex()}")
     safe_address = message["domain"]["verifyingContract"]
     if (
         not offline
@@ -201,6 +213,7 @@ def validate_safetxfile(
         safe_nonce=message["message"]["nonce"],
         chain_id=message["domain"].get("chainId"),
     )
+    logger.debug(f"Safe: {safe}")
     safetx = SafeTx(
         to=message["message"]["to"],
         value=message["message"]["value"],
@@ -212,6 +225,11 @@ def validate_safetxfile(
         gas_token=message["message"]["gasToken"],
         refund_receiver=message["message"]["refundReceiver"],
     )
+    logger.debug(f"SafeTx: {safetx}")
+
+    if safetx_hash != safetx.hash(safe):
+        abort_invalid()
+
     return (safe, safetx, contract)
 
 
