@@ -90,7 +90,12 @@ def handle_crash(
                 f'[bold]{exc_type.__name__}[/bold]: "{exc.message}" ({exc.data})'
             )
         else:
-            console.print(f"[bold]{exc_type.__name__}[/bold]: {exc_value}")
+            exc_name = (
+                "Error"
+                if isinstance(exc_value, click.ClickException)
+                else exc_type.__name__
+            )
+            console.print(f"[bold]{exc_name}[/bold]: {exc_value}")
     else:
         rich_traceback = Traceback.from_exception(
             exc_type,
@@ -125,7 +130,7 @@ sys.excepthook = handle_crash
     is_eager=True,
     help="print version info and exit",
 )
-def main():
+def safe():
     """A simple Web3-native CLI for Safe accounts."""
     import rich
     from rich.theme import Theme
@@ -146,12 +151,18 @@ def main():
         activate_logging()
 
 
+def main():
+    # Invoke main() manually in order to apply custom exception formatting
+    # <https://click.palletsprojects.com/en/stable/exceptions/>
+    safe.main(standalone_mode=False)
+
+
 # ┌──────────┐
 # │ Commands │
 # └──────────┘
 
 
-@main.group()
+@safe.group()
 def build():
     """Build a Safe transaction."""
     pass
@@ -373,7 +384,7 @@ def build_safe_call(
         )
 
 
-@main.command()
+@safe.command()
 @params.deployment(precompute=False)
 @params.web3tx()
 @params.authentication
@@ -488,7 +499,7 @@ def deploy(
     )
 
 
-@main.command()
+@safe.command()
 @click.option(
     "--abi",
     "abi_file",
@@ -529,7 +540,7 @@ def encode(
     output_console.print(calldata)
 
 
-@main.command()
+@safe.command()
 @optgroup.group("Safe parameters")
 @params.make_option(
     params.safe_version_option_info,
@@ -661,7 +672,7 @@ def exec(
     )
 
 
-@main.command()
+@safe.command()
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.common
 def hash(txfile: typing.TextIO) -> None:
@@ -673,7 +684,7 @@ def hash(txfile: typing.TextIO) -> None:
     output_console.print(safetx_hash.to_0x_hex())
 
 
-@main.command()
+@safe.command()
 @params.rpc(click.option, required=True)
 @click.argument("address")
 @params.common
@@ -724,7 +735,7 @@ def inspect(address: str, rpc: str):
     )
 
 
-@main.command()
+@safe.command()
 @params.deployment(precompute=True)
 @params.output_file
 @params.common
@@ -772,7 +783,7 @@ def precompute(
     output_console.print(address)
 
 
-@main.command()
+@safe.command()
 @optgroup.group("Preview online")
 @params.rpc(optgroup.option)
 @optgroup.group("Preview offline")
@@ -832,7 +843,7 @@ def preview(
         )
 
 
-@main.command()
+@safe.command()
 @optgroup.group("Sign online")
 @params.rpc(optgroup.option)
 @optgroup.group("Sign offline")
