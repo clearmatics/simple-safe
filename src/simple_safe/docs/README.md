@@ -4,40 +4,40 @@ A simple Web3-native CLI for Safe accounts.
 
 Functionality:
 
-<div>
-<code>🚀</code> Deploy a Safe account<br/>
-<code>📝</code> Build a Safe transaction<br/>
-<code>🔏</code> Sign a Safe transaction<br/>
-<code>⚙️</code> Execute a Safe transaction<br/>
-<code>🔌</code> Build and sign offline<br/>
-<code>🪪</code> Authenticate with a Trezor<br/>
-<code>🪪</code> Authenticate with a keyfile<br/>
-</div><br/>
+- `🚀` deploy a Safe account
+- `📝` build a Safe transaction
+- `🔏` sign a Safe transaction
+- `🌐` execute a Safe transaction
+- `🔌` build and sign offline
+- `🪪` authenticate with a Trezor
+- `🪪` authenticate with a keyfile
 
 Benefits:
 
-<div>
-<code>✅</code> Runs in the terminal<br/>
-<code>✅</code> No Terms of Use to accept<br/>
-<code>✅</code> No Privacy Policy to accept<br/>
-<code>✅</code> All commands can be scripted<br/>
-<code>✅</code> Not reliant on centralized services<br/>
-<code>✅</code> No need for chain to be officially supported<br/>
-</div>
+- ✅ runs in the terminal
+- ✅ no Terms of Use to accept
+- ✅ no Privacy Policy to accept
+- ✅ all commands can be scripted
+- ✅ not reliant on centralized services
+- ✅ no need for chain to be officially supported
 
 ## Getting started
 
-You will need:
+To get the most out of Simple Safe:
 
-- [ ] an EVM-compatible chain that supports EIP-1559
-- [ ] a JSON-RPC endpoint over HTTP (not Websocket)
-- [ ] the [Safe contracts](https://github.com/safe-global/safe-smart-account)
-      deployed (preferably at
-      [canonical addresses](https://github.com/safe-global/safe-singleton-factory?tab=readme-ov-file#how-to-get-the-singleton-deployed-to-your-network))
-- [ ] an understanding of the
-      [Safe Protocol](https://github.com/safe-global/safe-smart-account/blob/v1.4.1/docs/overview.md)
-      and
-      [Safe Smart Accounts](https://docs.safe.global/advanced/smart-account-overview)
+- familiarize yourself with the
+  [Safe Protocol](https://github.com/safe-global/safe-smart-account/blob/v1.4.1/docs/overview.md)
+  and
+  [Safe Smart Accounts](https://docs.safe.global/advanced/smart-account-overview)
+  documentation
+
+To get started, you will need:
+
+1. an EVM-compatible chain that supports EIP-1559
+2. a JSON-RPC endpoint over HTTP (not Websocket)
+3. the [Safe Smart Account](https://github.com/safe-global/safe-smart-account)
+   contracts deployed (preferably at
+   [canonical addresses](https://github.com/safe-global/safe-singleton-factory?tab=readme-ov-file#how-to-get-the-singleton-deployed-to-your-network))
 
 Install Simple Safe using `pipx`:
 
@@ -79,11 +79,9 @@ Commands:
 
 ## Authentication
 
-Simple Safe supports the following authentication methods for signing messages
-and transactions:
-
-- Trezor device
-- local keyfile
+For signing messages and transactions, Simple Safe currently supports
+authenticating with a Trezor device (more secure) or a local encrypted keyfile
+(less secure).
 
 ### Trezor authentication
 
@@ -91,8 +89,8 @@ Before using a Trezor device with Simple Safe, ensure it is running the latest
 firmware version, or a firmware version that is supported by
 [trezorlib](https://github.com/trezor/trezor-firmware/blob/main/python/README.md#firmware-version-requirements).
 
-To authenticate with a connected Trezor device, pass the `--trezor ACCOUNT`
-option to the relevant command, where `ACCOUNT` is either:
+To authenticate with a connected and unlocked Trezor device, pass the
+`--trezor ACCOUNT` option to the relevant command, where `ACCOUNT` is either:
 
 - the _full derivation path_ of the account, for example: `m/44h/60h/0h/0/123`
 - the _index of the account_ at the default Trezor derivation prefix for
@@ -105,5 +103,6 @@ The following two options are equivalent:
 
 ### Local keyfile authentication
 
-To authenticate with a local keyfile, pass the `--keyfile PATH` option, where
-`PATH` is the relative or absolute path of the encrypted keyfile to use.
+To authenticate with a local encrypted keyfile, pass the `--keyfile PATH`
+option, where `PATH` is the relative or absolute path of the encrypted keyfile
+to use.
