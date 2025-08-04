@@ -187,14 +187,14 @@ def build():
 @params.build_safetx
 @params.safe_address
 @params.output_file
-@click.argument("identifier", metavar="FUNCTION")
+@click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @params.common
 def build_abi_call(
     abi_file: str,
     chain_id: Optional[int],
     contract_str: str,
-    identifier: str,
+    function: str,
     output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
@@ -224,7 +224,7 @@ def build_abi_call(
         build_contract_call_safetx(
             w3=w3,
             contract=contract,
-            fn_identifier=identifier,
+            fn_identifier=function,
             str_args=str_args,
             safe=safe,
             value=value,
@@ -296,12 +296,12 @@ def build_custom(
 @params.build_safetx
 @params.safe_address
 @params.output_file
-@click.argument("identifier", metavar="FUNCTION")
+@click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @params.common
 def build_erc20_call(
     chain_id: Optional[int],
-    identifier: str,
+    function: str,
     output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
@@ -333,7 +333,7 @@ def build_erc20_call(
         build_contract_call_safetx(
             w3=w3,
             contract=ERC20,
-            fn_identifier=identifier,
+            fn_identifier=function,
             str_args=str_args,
             safe=safe,
             value=value,
@@ -345,12 +345,12 @@ def build_erc20_call(
 @params.safe_address
 @params.build_safetx
 @params.output_file
-@click.argument("identifier", metavar="FUNCTION")
+@click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @params.common
 def build_safe_call(
     chain_id: Optional[int],
-    identifier: str,
+    function: str,
     output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
@@ -377,7 +377,7 @@ def build_safe_call(
         build_contract_call_safetx(
             w3=w3,
             contract=contract,
-            fn_identifier=identifier,
+            fn_identifier=function,
             str_args=str_args,
             safe=safe,
             value=value,
@@ -509,12 +509,12 @@ def deploy(
     help="contract ABI in JSON format",
 )
 @params.output_file
-@click.argument("identifier", metavar="FUNCTION")
+@click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @params.common
 def encode(
     abi_file: str,
-    identifier: str,
+    function: str,
     output: Optional[typing.TextIO],
     str_args: list[str],
 ) -> None:
@@ -525,9 +525,9 @@ def encode(
     with status("Building call data..."):
         with open(abi_file, "r") as f:
             abi = json.load(f)
-        match, partials = find_function(abi, identifier)
+        match, partials = find_function(abi, function)
         if match is None:
-            handle_function_match_failure(identifier, partials)
+            handle_function_match_failure(function, partials)
         assert match is not None
 
         from web3 import Web3
