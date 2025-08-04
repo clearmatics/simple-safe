@@ -26,7 +26,7 @@
     uv.sync.enable = true;
   };
 
-  env.SOURCE_DIRS = "src/simple_safe test";
+  env.SOURCE_DIRS = "src/simple_safe tests";
 
   scripts.autofix.exec = ''
     uv sync -q --dev
