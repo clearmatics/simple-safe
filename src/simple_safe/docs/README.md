@@ -45,6 +45,12 @@ Install Simple Safe using `pipx`:
 pipx install git+ssh://git@github.com/clearmatics/simple-safe.git
 ```
 
+Upgrade Simple Safe to the latest version using `pipx`:
+
+```sh
+pipx upgrade simple-safe
+```
+
 For convenience, set the environment variable `SAFE_RPC` to the JSON-RPC node
 URL:
 
