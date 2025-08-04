@@ -163,7 +163,6 @@ def validate_safetxfile(
     from safe_eth.eth.contracts import get_safe_contract
 
     def abort_invalid():
-        # raise RuntimeError(
         raise click.ClickException(
             f"TXFILE '{txfile.name}' is not a valid representation of an EIP-712 Safe transaction."
         )
