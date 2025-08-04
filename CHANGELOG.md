@@ -20,6 +20,12 @@ Template:
 ### Fixed
 -->
 
+## [v0.2.1] - 2025-08-05
+
+### Fixed
+
+- Fix wording of warning when gas limit is too low ([`f9f6236`](https://github.com/clearmatics/simple-safe/commit/f9f6236))
+
 ## [v0.2.0] - 2025-08-05
 
 ### Added
@@ -33,11 +39,12 @@ Template:
 ### Fixed
 
 - Rename Click FUNCTION argument name to match metavar ([`f9e395b`](https://github.com/clearmatics/simple-safe/commit/f9e395b))
-- Fix incorrect derivation path in README example ([`b9df872`](https://github.com/clearmatics/simple-safe/commit/b9df872))
+- Fix incorrect derivation path in README example ([#1](https://github.com/clearmatics/simple-safe/pull/1))
 
 ## [v0.1.6] - 2025-07-22
 
 _First internal release._
 
+[v0.2.1]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.1
 [v0.2.0]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.0
 [v0.1.6]: https://github.com/clearmatics/simple-safe/releases/tag/v0.1.6
