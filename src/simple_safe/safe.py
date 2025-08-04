@@ -1,4 +1,3 @@
-from importlib.metadata import PackageMetadata
 import json
 import logging
 import shutil
@@ -690,9 +689,10 @@ def hash(txfile: typing.TextIO) -> None:
 @safe.command()
 def help():
     """Browse the documentation."""
-    from rich.markdown import Markdown
-    from rich.console import Console
     from importlib.resources import files
+
+    from rich.console import Console
+    from rich.markdown import Markdown
 
     console = Console()
     readme = files("simple_safe.docs").joinpath("README.md")
