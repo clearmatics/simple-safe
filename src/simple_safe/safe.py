@@ -700,7 +700,7 @@ def help():
     with readme.open("r") as f:
         md = f.read()
     with console.pager(styles=True, links=True):
-        console.print(Markdown(md))
+        console.print(Markdown(md, code_theme="default"))
 
 
 @safe.command()
