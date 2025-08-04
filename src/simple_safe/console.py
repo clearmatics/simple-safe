@@ -469,7 +469,7 @@ def print_web3_tx_params(
             "Value": format_native_value(params["value"], chaindata),
             "Gas Limit": str(params["gas"])
             + (
-                f" [caution]{SYMBOL_CAUTION} EXCEEDS GAS ESTIMATE[/caution]"
+                f" [caution]{SYMBOL_CAUTION} LESS THAN ESTIMATED GAS[/caution]"
                 if gas_estimate is not None and params["gas"] < gas_estimate
                 else ""
             ),

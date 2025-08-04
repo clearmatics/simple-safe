@@ -175,8 +175,9 @@ def process_contract_call_web3tx(
     ):
         console.line()
         logger.warning(
-            f"{SYMBOL_WARNING} Transaction expected to fail because estimated gas "
-            f"{gas_estimate} exceeds custom gas limit {txopts.gas_limit}."
+            f"{SYMBOL_WARNING} Transaction likely to fail because "
+            f"custom gas limit {txopts.gas_limit} is less than "
+            f"estimated gas {gas_estimate}."
         )
 
     console.line()
