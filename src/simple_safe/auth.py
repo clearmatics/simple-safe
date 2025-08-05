@@ -100,6 +100,15 @@ class TrezorAuthenticator:
         return f"model='{model}', device_id='{features.device_id}', label='{label}'"
 
     def sign_transaction(self, params: "TxParams") -> "SignedTransaction":
+        from eth_account._utils.legacy_transactions import (
+            encode_transaction,
+        )
+        from eth_account.datastructures import SignedTransaction
+        from eth_account.typed_transactions.typed_transaction import TypedTransaction
+        from eth_account.types import TransactionDictType
+        from eth_utils.conversions import to_int
+        from eth_utils.crypto import keccak
+
         assert "chainId" in params
         assert "data" in params
         assert "gas" in params
@@ -122,14 +131,6 @@ class TrezorAuthenticator:
             max_gas_fee=int(params["maxFeePerGas"]),
             max_priority_fee=int(params["maxPriorityFeePerGas"]),
         )
-        from eth_account._utils.legacy_transactions import (
-            encode_transaction,
-        )
-        from eth_account.datastructures import SignedTransaction
-        from eth_account.typed_transactions.typed_transaction import TypedTransaction
-        from eth_account.types import TransactionDictType
-        from eth_utils.conversions import to_int
-        from eth_utils.crypto import keccak
 
         r_int = to_int(r_bytes)
         s_int = to_int(s_bytes)

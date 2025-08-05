@@ -426,6 +426,7 @@ def deploy(
     with status("Checking Safe deployment parameters..."):
         import rich
         from rich.prompt import Confirm
+        from safe_eth.eth.contracts import get_proxy_factory_V1_4_1_contract
 
         console = rich.get_console()
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
@@ -459,8 +460,6 @@ def deploy(
             fallback=data.fallback,
             chain_id=data.chain_id,
         )
-
-        from safe_eth.eth.contracts import get_proxy_factory_V1_4_1_contract
 
         proxy_factory_contract = get_proxy_factory_V1_4_1_contract(
             w3, data.proxy_factory
@@ -522,14 +521,14 @@ def encode(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building call data..."):
+        from web3 import Web3
+
         with open(abi_file, "r") as f:
             abi = json.load(f)
         match, partials = find_function(abi, function)
         if match is None:
             handle_function_match_failure(function, partials)
         assert match is not None
-
-        from web3 import Web3
 
         w3 = Web3()
         contract = w3.eth.contract(abi=abi)
@@ -885,6 +884,7 @@ def sign(
     with status("Loading Safe transaction..."):
         import rich
         from rich.prompt import Confirm
+        from safe_eth.safe.safe_signature import SafeSignature
 
         console = rich.get_console()
         offline = rpc is None
@@ -907,8 +907,6 @@ def sign(
     console.line()
     if not force and not Confirm.ask("Sign Safe transaction?", default=False):
         raise click.Abort()
-
-    from safe_eth.safe.safe_signature import SafeSignature
 
     auth = validate_authenticator(keyfile, trezor)
     data = safetx.to_eip712_message(safe)
