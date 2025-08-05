@@ -41,6 +41,7 @@ from .util import (
     compute_safe_address,
     format_native_value,
     hash_eip712_data,
+    hexbytes_json_encoder,
     make_offline_web3,
     parse_signatures,
     query_safe_info,
@@ -910,7 +911,7 @@ def sign(
 
     auth = validate_authenticator(keyfile, trezor)
     data = safetx.to_eip712_message(safe)
-    logger.info(f"EIP-712 Data: {data}")
+    logger.info(f"EIP-712 Data: {json.dumps(data, default=hexbytes_json_encoder)}")
     sigbytes = auth.sign_typed_data(data)
     sigobj = SafeSignature.parse_signature(sigbytes, safetx_hash)[0]
     # This is only needed for non-EOA signature, which are not yet supported:
