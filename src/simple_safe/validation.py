@@ -1,7 +1,7 @@
 import json
 import logging
 import secrets
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -150,6 +150,17 @@ def validate_safe(
         chain_id=chain_id if chain_id is not None else w3.eth.chain_id,
     )
     return (safe, contract)
+
+
+def validate_safetx_value(value: str):
+    try:
+        decval = Decimal(value)
+    except InvalidOperation as exc:
+        raise click.ClickException(
+            f"Cannot parse SafeTx value '{value}' as Decimal."
+        ) from exc
+    if decval < 0:
+        raise click.ClickException(f"SafeTx value '{value}' must be positive.")
 
 
 def validate_safetxfile(

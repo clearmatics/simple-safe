@@ -55,6 +55,7 @@ from .validation import (
     validate_deploy_options,
     validate_rpc_option,
     validate_safe,
+    validate_safetx_value,
     validate_safetxfile,
     validate_web3tx_options,
 )
@@ -227,6 +228,7 @@ def build_abi_call(
         with open(abi_file, "r") as f:
             abi = json.load(f)
         contract = w3.eth.contract(address=to_checksum_address(contract_str), abi=abi)
+        validate_safetx_value(value)
         build_contract_call_safetx(
             w3=w3,
             contract=contract,
@@ -277,6 +279,7 @@ def build_custom(
         )
         chaindata = fetch_chaindata(safe.chain_id)
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+        validate_safetx_value(value)
         safetx = SafeTx(
             to=to_checksum_address(to_str),
             value=scale_decimal_value(value, decimals),
@@ -338,6 +341,7 @@ def build_erc20_call(
         )
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(w3, address=token_address)
+        validate_safetx_value(value)
         build_contract_call_safetx(
             w3=w3,
             contract=ERC20,
@@ -383,6 +387,7 @@ def build_safe_call(
             safe_version=safe_version,
             w3=w3,
         )
+        validate_safetx_value(value)
         build_contract_call_safetx(
             w3=w3,
             contract=contract,
