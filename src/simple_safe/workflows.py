@@ -32,6 +32,7 @@ from .console import (
 from .constants import SYMBOL_WARNING
 from .models import (
     Safe,
+    SafeOperation,
     SafeTx,
     Web3TxOptions,
 )
@@ -60,10 +61,10 @@ def build_contract_call_safetx(
     str_args: list[str],
     safe: Safe,
     value: str,
+    operation: int,
     output: Optional[TextIO],
 ):
     """Print a SafeTx that represents a contract call."""
-    from safe_eth.safe import SafeOperationEnum
     from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
     match, partials = find_function(contract.abi, fn_identifier)
@@ -81,7 +82,7 @@ def build_contract_call_safetx(
         to=contract.address,
         value=scale_decimal_value(value, decimals),
         data=calldata,
-        operation=SafeOperationEnum.CALL.value,
+        operation=SafeOperation(operation).value,
         safe_tx_gas=0,
         base_gas=0,
         gas_price=0,

@@ -24,6 +24,7 @@ from .constants import (
 from .models import (
     DeployParams,
     Safe,
+    SafeOperation,
     SafeTx,
     SafeVariant,
 )
@@ -260,7 +261,6 @@ def print_safetxdata(
     safetx_hash: HexBytes,
     chaindata: Optional[ChainData] = None,
 ) -> None:
-    from safe_eth.safe import SafeOperationEnum
     from web3.types import Wei
 
     table_data: list[dict[str, "RenderableType"]] = []
@@ -270,7 +270,7 @@ def print_safetxdata(
             "Chain ID": str(safe.chain_id),
             "Safe Nonce": str(safe.safe_nonce),
             "To Address": str(safetx.to),
-            "Operation": f"{safetx.operation} ({SafeOperationEnum(safetx.operation).name})",
+            "Operation": f"{safetx.operation} ({SafeOperation(safetx.operation).name})",
             "Value": format_native_value(Wei(safetx.value), chaindata),
             "Gas Limit": format_gwei_value(Wei(safetx.safe_tx_gas)),
             "Data": safetx.data.to_0x_hex(),

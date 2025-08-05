@@ -266,6 +266,15 @@ safe_address = click.option(
     help="Safe account address",
 )
 
+
+safe_operation = click.option(
+    "--operation",
+    type=int,
+    default="0",
+    help="0=CALL, 1=DELEGATECALL",
+)
+
+
 safe_version = make_option(safe_version_option_info, cls=optgroup.option)
 
 

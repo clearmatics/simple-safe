@@ -35,6 +35,7 @@ from .console import (
 )
 from .models import (
     SafeInfo,
+    SafeOperation,
     SafeTx,
 )
 from .params import optgroup
@@ -188,6 +189,7 @@ def build():
     help="contract call address",
 )
 @params.build_safetx
+@params.safe_operation
 @params.safe_address
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
@@ -198,6 +200,7 @@ def build_abi_call(
     chain_id: Optional[int],
     contract_str: str,
     function: str,
+    operation: int,
     output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
@@ -231,6 +234,7 @@ def build_abi_call(
             str_args=str_args,
             safe=safe,
             value=value,
+            operation=operation,
             output=output,
         )
 
@@ -241,12 +245,14 @@ def build_abi_call(
 )
 @click.option("--data", default="0x", help="call data payload")
 @params.build_safetx
+@params.safe_operation
 @params.safe_address
 @params.output_file
 @params.common
 def build_custom(
     chain_id: Optional[int],
     data: str,
+    operation: int,
     output: Optional[typing.TextIO],
     rpc: Optional[str],
     safe_address: str,
@@ -257,7 +263,6 @@ def build_custom(
 ) -> None:
     """Build a custom Safe transaction."""
     with status("Building Safe transaction..."):
-        from safe_eth.safe import SafeOperationEnum
         from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
         offline = rpc is None
@@ -276,7 +281,7 @@ def build_custom(
             to=to_checksum_address(to_str),
             value=scale_decimal_value(value, decimals),
             data=HexBytes(data),
-            operation=SafeOperationEnum.CALL.value,
+            operation=SafeOperation(operation).value,
             safe_tx_gas=0,
             base_gas=0,
             gas_price=0,
@@ -340,6 +345,7 @@ def build_erc20_call(
             str_args=str_args,
             safe=safe,
             value=value,
+            operation=SafeOperation.CALL.value,
             output=output,
         )
 
@@ -384,6 +390,7 @@ def build_safe_call(
             str_args=str_args,
             safe=safe,
             value=value,
+            operation=SafeOperation.CALL.value,
             output=output,
         )
 

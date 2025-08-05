@@ -31,6 +31,11 @@ class DeployParams:
     fallback: "ChecksumAddress"
 
 
+class SafeOperation(Enum):
+    CALL = 0
+    DELEGATECALL = 1
+
+
 class SafeVariant(Enum):
     SAFE = 1
     SAFE_L2 = 2
