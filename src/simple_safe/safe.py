@@ -1,5 +1,6 @@
 import json
 import logging
+import pdb
 import shutil
 import sys
 import typing
@@ -106,6 +107,7 @@ def handle_crash(
             show_locals=True,
         )
         console.print(rich_traceback)
+        pdb.post_mortem(exc_traceback)
 
 
 sys.excepthook = handle_crash
