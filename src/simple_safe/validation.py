@@ -33,7 +33,7 @@ from .models import (
     SafeVariant,
     Web3TxOptions,
 )
-from .util import hash_eip712_data, to_checksum_address
+from .util import hash_eip712_data, hexbytes_json_encoder, to_checksum_address
 
 if TYPE_CHECKING:
     from eth_typing import URI, ChecksumAddress
@@ -212,7 +212,7 @@ def validate_safetxfile(
         safe_nonce=message["message"]["nonce"],
         chain_id=message["domain"].get("chainId"),
     )
-    logger.debug(f"Safe: {safe}")
+    logger.info(f"Safe: {safe._asdict()}")
     safetx = SafeTx(
         to=message["message"]["to"],
         value=message["message"]["value"],
@@ -224,7 +224,9 @@ def validate_safetxfile(
         gas_token=message["message"]["gasToken"],
         refund_receiver=message["message"]["refundReceiver"],
     )
-    logger.debug(f"SafeTx: {safetx}")
+    logger.info(
+        f"SafeTx: {json.dumps(safetx._asdict(), default=hexbytes_json_encoder)}"
+    )
 
     if safetx_hash != safetx.hash(safe):
         abort_invalid()
