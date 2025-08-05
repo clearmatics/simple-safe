@@ -102,7 +102,9 @@ class SafeTx(NamedTuple):
         safe: Safe,
     ) -> dict[str, Any]:
         safetx = self._to_safelibtx(safe)
-        return safetx.eip712_structured_data
+        typed_data = safetx.eip712_structured_data
+        typed_data["message"]["data"] = typed_data["message"]["data"].to_0x_hex()
+        return typed_data
 
 
 class Web3TxOptions(NamedTuple):

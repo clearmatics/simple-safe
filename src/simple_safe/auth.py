@@ -1,6 +1,5 @@
 import logging
 import sys
-from copy import deepcopy
 from getpass import getpass
 from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
 
@@ -148,14 +147,7 @@ class TrezorAuthenticator:
     def sign_typed_data(self, data: dict[str, Any]) -> bytes:
         import trezorlib.ethereum as trezor_eth
 
-        _data = deepcopy(data)
-
-        # Trezorlib expects all EIP-712 `bytes` values to be encoded as strings,
-        # and SafeTx `data` is the only "bytes" value.
-        if isinstance(data["message"]["data"], bytes):
-            _data["message"]["data"] = "0x" + _data["message"]["data"].hex()
-
-        sigdata = trezor_eth.sign_typed_data(self.client, self.path, _data)
+        sigdata = trezor_eth.sign_typed_data(self.client, self.path, data)
         return sigdata.signature
 
     def __repr__(self):
