@@ -20,6 +20,12 @@ Template:
 ### Fixed
 -->
 
+## [v0.2.2] - 2025-08-05
+
+### Fixed
+
+- Fix a regression when signing with a Trezor ([`a422e49`](https://github.com/clearmatics/simple-safe/commit/a422e49))
+
 ## [v0.2.1] - 2025-08-05
 
 ### Fixed
@@ -45,6 +51,7 @@ Template:
 
 _First internal release._
 
+[v0.2.2]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.2
 [v0.2.1]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.1
 [v0.2.0]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.0
 [v0.1.6]: https://github.com/clearmatics/simple-safe/releases/tag/v0.1.6
