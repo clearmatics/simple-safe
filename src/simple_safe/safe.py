@@ -911,7 +911,9 @@ def sign(
     from safe_eth.safe.safe_signature import SafeSignature
 
     auth = validate_authenticator(keyfile, trezor)
-    sigbytes = auth.sign_typed_data(safetx.to_eip712_message(safe))
+    data = safetx.to_eip712_message(safe)
+    logger.info(f"EIP-712 Data: {data}")
+    sigbytes = auth.sign_typed_data(data)
     sigobj = SafeSignature.parse_signature(sigbytes, safetx_hash)[0]
     # This is only needed for non-EOA signature, which are not yet supported:
     signature = sigobj.export_signature()
