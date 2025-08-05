@@ -4,6 +4,7 @@ from decimal import Decimal, localcontext
 from typing import (
     TYPE_CHECKING,
     Any,
+    Mapping,
     NamedTuple,
     Optional,
     cast,
@@ -311,3 +312,21 @@ def to_checksum_address(address: str) -> "ChecksumAddress":
     from eth_utils.address import to_checksum_address
 
     return to_checksum_address(address)
+
+
+def web3tx_receipt_json_encoder(
+    obj: Mapping[str, Any] | list[Any] | str | int | bytes,
+) -> Any:
+    """Transform a TxReceipt into JSON-friendly encoding.
+
+    web3.py's TxReceipt makes use of nested web3.datatypes.AttributeDict, which
+    are not straightforward to serialize.
+    """
+    if isinstance(obj, Mapping):
+        return dict((key, web3tx_receipt_json_encoder(val)) for key, val in obj.items())
+    elif isinstance(obj, (list, set, tuple)):
+        return tuple([web3tx_receipt_json_encoder(item) for item in obj])
+    elif isinstance(obj, bytes):
+        return HexBytes(obj).to_0x_hex()
+    else:
+        return obj

@@ -1,5 +1,6 @@
 """Common logic for command implementations."""
 
+import json
 import logging
 from typing import (
     TYPE_CHECKING,
@@ -37,6 +38,7 @@ from .util import (
     make_web3tx,
     scale_decimal_value,
     signed_tx_to_dict,
+    web3tx_receipt_json_encoder,
 )
 
 if TYPE_CHECKING:
@@ -199,6 +201,9 @@ def process_contract_call_web3tx(
 
         with status("Waiting for Web3 transaction receipt..."):
             tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+        logger.info(
+            f"Web3Tx Receipt: {json.dumps(tx_receipt, default=web3tx_receipt_json_encoder)}"
+        )
         timestamp = w3.eth.get_block(
             tx_receipt["blockNumber"], full_transactions=False
         ).get("timestamp")
