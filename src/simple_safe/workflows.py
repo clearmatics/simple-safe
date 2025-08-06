@@ -2,6 +2,7 @@
 
 import json
 import logging
+import time
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -204,9 +205,24 @@ def process_contract_call_web3tx(
         logger.info(
             f"Web3Tx Receipt: {json.dumps(tx_receipt, default=web3tx_receipt_json_encoder)}"
         )
-        timestamp = w3.eth.get_block(
-            tx_receipt["blockNumber"], full_transactions=False
-        ).get("timestamp")
+        block_number = tx_receipt["blockNumber"]
+        with status(f"Retrieving block {block_number} info..."):
+            MAX_ATTEMPTS = 5
+            for attempt in range(1, 1 + MAX_ATTEMPTS):
+                try:
+                    timestamp = w3.eth.get_block(
+                        block_number, full_transactions=False
+                    ).get("timestamp")
+                    break
+                except Exception as exc:
+                    logger.info(
+                        f"{type(exc).__name__} (attempt {attempt}/{MAX_ATTEMPTS}): {exc}"
+                    )
+                    time.sleep(attempt)
+            else:
+                raise click.ClickException(
+                    f"Failed to obtain block {block_number} info from RPC node after {MAX_ATTEMPTS} attempts."
+                )
 
         console.line()
         print_web3_tx_receipt(timestamp, tx_receipt, chaindata)
