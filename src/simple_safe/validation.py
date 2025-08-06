@@ -26,7 +26,7 @@ from .constants import (
     SAFE_CONTRACT_VERSIONS,
     SALT_NONCE_SENTINEL,
 )
-from .models import (
+from .types import (
     DeployParams,
     Safe,
     SafeTx,

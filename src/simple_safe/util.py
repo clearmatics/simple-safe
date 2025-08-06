@@ -19,7 +19,7 @@ from .constants import (
     SAFE_SETUP_FUNC_TYPES,
     TRUNCATE_DATA_BYTES,
 )
-from .models import (
+from .types import (
     SafeInfo,
     SignatureData,
     Web3TxOptions,

@@ -33,12 +33,12 @@ from .console import (
     print_signatures,
     print_version,
 )
-from .models import (
+from .params import optgroup
+from .types import (
     SafeInfo,
     SafeOperation,
     SafeTx,
 )
-from .params import optgroup
 from .util import (
     compute_safe_address,
     format_native_value,

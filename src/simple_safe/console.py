@@ -21,7 +21,7 @@ from .constants import (
     SYMBOL_CROSS,
     SYMBOL_WARNING,
 )
-from .models import (
+from .types import (
     DeployParams,
     Safe,
     SafeOperation,

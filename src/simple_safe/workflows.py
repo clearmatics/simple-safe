@@ -30,7 +30,7 @@ from .console import (
     print_web3_tx_receipt,
 )
 from .constants import SYMBOL_WARNING
-from .models import (
+from .types import (
     Safe,
     SafeOperation,
     SafeTx,
