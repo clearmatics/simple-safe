@@ -207,7 +207,7 @@ def process_contract_call_web3tx(
             f"Web3Tx Receipt: {json.dumps(tx_receipt, default=web3tx_receipt_json_encoder)}"
         )
         block_number = tx_receipt["blockNumber"]
-        with status(f"Retrieving block {block_number} info..."):
+        with status(f"Retrieving block {block_number} headers..."):
             MAX_ATTEMPTS = 5
             for attempt in range(1, 1 + MAX_ATTEMPTS):
                 try:
