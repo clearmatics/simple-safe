@@ -27,9 +27,9 @@ from .models import (
     SafeOperation,
     SafeTx,
     SafeVariant,
+    SignatureData,
 )
 from .util import (
-    SignatureData,
     format_gwei_value,
     format_hexbytes,
     format_native_value,

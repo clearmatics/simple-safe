@@ -5,7 +5,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Mapping,
-    NamedTuple,
     Optional,
     cast,
 )
@@ -22,29 +21,18 @@ from .constants import (
 )
 from .models import (
     SafeInfo,
+    SignatureData,
     Web3TxOptions,
 )
 
 if TYPE_CHECKING:
     from eth_account.datastructures import SignedTransaction
     from eth_typing import ChecksumAddress, HexStr
-    from safe_eth.safe.safe_signature import SafeSignature
     from web3 import Web3
     from web3.contract import Contract
     from web3.types import Nonce, TxParams, Wei
 
 logger = logging.getLogger(__name__)
-
-
-class SignatureData(NamedTuple):
-    sigbytes: HexBytes
-    path: str
-    valid: bool
-    is_owner: Optional[bool]
-    # Invalid signature may not have these fields.
-    sig: Optional["SafeSignature"]
-    sigtype: Optional[str]
-    address: Optional["ChecksumAddress"]
 
 
 def as_checksum(checksum_str: str) -> "ChecksumAddress":

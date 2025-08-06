@@ -15,6 +15,7 @@ from hexbytes import (
 if TYPE_CHECKING:
     from eth_typing import URI, ChecksumAddress
     from safe_eth.safe import SafeTx as SafeLibTx
+    from safe_eth.safe.safe_signature import SafeSignature
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -110,6 +111,17 @@ class SafeTx(NamedTuple):
         typed_data = safetx.eip712_structured_data
         typed_data["message"]["data"] = typed_data["message"]["data"].to_0x_hex()
         return typed_data
+
+
+class SignatureData(NamedTuple):
+    sigbytes: HexBytes
+    path: str
+    valid: bool
+    is_owner: Optional[bool]
+    # Invalid signature may not have these fields.
+    sig: Optional["SafeSignature"]
+    sigtype: Optional[str]
+    address: Optional["ChecksumAddress"]
 
 
 class Web3TxOptions(NamedTuple):
