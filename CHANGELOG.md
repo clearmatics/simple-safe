@@ -20,6 +20,12 @@ Template:
 ### Fixed
 -->
 
+## [v0.2.3] - 2025-08-06
+
+### Fixed
+
+- Prevent potential crash due to RPC node sync issues ([#5](https://github.com/clearmatics/simple-safe/issues/5))
+
 ## [v0.2.2] - 2025-08-05
 
 ### Fixed
@@ -51,6 +57,7 @@ Template:
 
 _First internal release._
 
+[v0.2.3]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.3
 [v0.2.2]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.2
 [v0.2.1]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.1
 [v0.2.0]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.0
