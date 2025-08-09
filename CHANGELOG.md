@@ -39,7 +39,7 @@ Template:
 
 ### Fixed
 
-- Restore more helpful Click error messages ([`cdddc91`](https://github.com/clearmatics/simple-safe/commit/cdddc91))
+- Restore more helpful Click error messages ([`6e697ed`](https://github.com/clearmatics/simple-safe/commit/6e697ed))
 
 ## [v0.2.3] - 2025-08-06
 
@@ -67,7 +67,7 @@ Template:
 - Support passing custom Web3 transaction parameters ([#2](https://github.com/clearmatics/simple-safe/issues/2))
 - Perform more extensive validation for TXFILEs ([`b3a35dc`](https://github.com/clearmatics/simple-safe/commit/b3a35dc))
 - Add an integrated help documentation facility ([#4](https://github.com/clearmatics/simple-safe/issues/4))
-- Show recent Safe versions in --safe-version help ([`5ada7f8`](https://github.com/clearmatics/simple-safe/commit/5ada7f8))
+- Show recent Safe versions in `--safe-version` help ([`5ada7f8`](https://github.com/clearmatics/simple-safe/commit/5ada7f8))
 
 ### Fixed
 
