@@ -94,13 +94,13 @@ def handle_crash(
                 f'[bold]{exc_type.__name__}[/bold]: "{exc.message}" ({exc.data})'
             )
         else:
-            if isinstance(exc_value, click.ClickException):
-                exc_name = "Error"
-                message = exc_value.format_message()
+            if isinstance(exc_value, click.Abort):
+                message = "[bold]Aborted[/bold]"
+            elif isinstance(exc_value, click.ClickException):
+                message = f"[bold]Error[/bold]: {exc_value.format_message()}"
             else:
-                exc_name = exc_type.__name__
-                message = exc_value
-            console.print(f"[bold]{exc_name}[/bold]: {message}")
+                message = f"[bold]{exc_type.__name__}[/bold]: {exc_value}"
+            console.print(message)
     else:
         rich_traceback = Traceback.from_exception(
             exc_type,
