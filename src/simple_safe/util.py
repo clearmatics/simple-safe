@@ -15,7 +15,11 @@ from hexbytes import (
 )
 
 from .chaindata import ChainData
-from .constants import SAFE_SETUP_FUNC_SELECTOR, SAFE_SETUP_FUNC_TYPES
+from .constants import (
+    SAFE_SETUP_FUNC_SELECTOR,
+    SAFE_SETUP_FUNC_TYPES,
+    TRUNCATE_DATA_BYTES,
+)
 from .models import (
     SafeInfo,
     Web3TxOptions,
@@ -144,6 +148,16 @@ def format_gwei_value(value: "Wei", units: tuple[str, str] = ("Wei", "Gwei")) ->
         converted = (Decimal(value) / denoms.gwei).normalize()
     wei, gwei = units
     return f"{value} {wei} ({converted:f} {gwei})"
+
+
+def format_hexbytes(data: HexBytes) -> str:
+    len_data = len(data)
+    return (
+        f"{data[:TRUNCATE_DATA_BYTES].to_0x_hex()}"
+        + ("[danger]...[/danger] " if len_data > TRUNCATE_DATA_BYTES else " ")
+        + r"[secondary]\["
+        + f"{len_data:,} bytes][/secondary]"
+    )
 
 
 def hexbytes_json_encoder(obj: Any):

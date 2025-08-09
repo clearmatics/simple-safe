@@ -31,6 +31,7 @@ from .models import (
 from .util import (
     SignatureData,
     format_gwei_value,
+    format_hexbytes,
     format_native_value,
     hexbytes_json_encoder,
 )
@@ -273,7 +274,7 @@ def print_safetxdata(
             "Operation": f"{safetx.operation} ({SafeOperation(safetx.operation).name})",
             "Value": format_native_value(Wei(safetx.value), chaindata),
             "Gas Limit": format_gwei_value(Wei(safetx.safe_tx_gas)),
-            "Data": safetx.data.to_0x_hex(),
+            "Data": format_hexbytes(safetx.data),
         }
     )
     if safetx.gas_price > 0:
@@ -377,7 +378,7 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
     ctx.exit()
 
 
-def print_web3_call_data(function: "ContractFunction", calldata: str) -> None:
+def print_web3_call_data(function: "ContractFunction", calldata: HexBytes) -> None:
     argdata: dict[str, "RenderableType"] = {}
     for i, argval in enumerate(function.arguments):
         if function.argument_types[i] == "bytes":
@@ -404,7 +405,7 @@ def print_web3_call_data(function: "ContractFunction", calldata: str) -> None:
             for i, (arg, val) in enumerate(argdata.items())
         },
         {
-            "ABI Encoding": calldata,
+            "ABI Encoding": format_hexbytes(calldata),
         },
     )
 
@@ -481,7 +482,7 @@ def print_web3_tx_params(
             + format_gwei_value(
                 Wei(int(params["maxPriorityFeePerGas"])), units=("Wei/Gas", "Gwei/Gas")
             ),
-            "Data": str(params["data"]),
+            "Data": format_hexbytes(HexBytes(params["data"])),
         },
     )
 

@@ -159,7 +159,7 @@ def process_contract_call_web3tx(
 
     assert "data" in tx
     console.line()
-    print_web3_call_data(contractfn, HexBytes(tx["data"]).to_0x_hex())
+    print_web3_call_data(contractfn, HexBytes(tx["data"]))
 
     assert "chainId" in tx
     with status("Retrieving chainlist data..."):
