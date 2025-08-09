@@ -185,7 +185,7 @@ def build():
 
 
 @build.command(name="call")
-@params.abi
+@params.make_option(params.abi_option_info)
 @click.option(
     "--contract",
     "contract_str",
@@ -196,8 +196,8 @@ def build():
 @params.make_option(
     params.value_option_info,
 )
-@params.safe_operation
-@params.safe_address
+@params.make_option(params.operation_option_info)
+@params.make_option(params.safe_address_option_info)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
@@ -251,7 +251,7 @@ def build_call(
 
 
 @build.command(name="deploy")
-@params.abi
+@params.make_option(params.abi_option_info)
 @click.option(
     "--code",
     "code_file",
@@ -268,14 +268,14 @@ def build_call(
     default="CREATE2",
     help="contract deployment method",
 )
-@params.safe_operation
+@params.make_option(params.operation_option_info)
 @click.option(
     "--createcall",
     "createcall_str",
     metavar="ADDRESS",
     help="use a non-canonical CreateCall address",
 )
-@params.safe_address
+@params.make_option(params.safe_address_option_info)
 @optgroup.group("CREATE deployment")
 @optgroup.option(
     "--deployer-nonce",
@@ -499,9 +499,9 @@ def build_deploy(
     params.value_option_info,
 )
 @click.option("--data", default="0x", help="call data payload")
-@params.safe_address
+@params.make_option(params.safe_address_option_info)
 @params.build_safetx
-@params.safe_operation
+@params.make_option(params.operation_option_info)
 @params.output_file
 @params.common
 def build_custom(
@@ -558,7 +558,7 @@ def build_custom(
     required=True,
     help="ERC-20 token address",
 )
-@params.safe_address
+@params.make_option(params.safe_address_option_info)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
@@ -612,7 +612,7 @@ def build_erc20_call(
 @params.make_option(
     params.value_option_info,
 )
-@params.safe_address
+@params.make_option(params.safe_address_option_info)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
@@ -777,7 +777,7 @@ def deploy(
 
 
 @safe.command()
-@params.abi
+@params.make_option(params.abi_option_info)
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)

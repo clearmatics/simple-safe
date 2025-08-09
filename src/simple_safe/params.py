@@ -74,6 +74,7 @@ class OptionInfo:
     args: Iterable[str]
     help: str
     # defaults should match click.Option class
+    required: bool = False
     default: Optional[Any] = None
     metavar: Optional[str] = None
     type: Optional[Union[click.types.ParamType, Any]] = None
@@ -88,12 +89,37 @@ def make_option(
     return cls(*args, **info)
 
 
+abi_option_info = OptionInfo(
+    args=["--abi", "abi_file"],
+    type=click.Path(exists=True),
+    required=True,
+    help="contract ABI in JSON format",
+)
+
+
 chain_id_option_info = OptionInfo(
     args=["--chain-id"],
     help="the chain ID to use",
     type=int,
     metavar="ID",
 )
+
+
+operation_option_info = OptionInfo(
+    args=["--operation"],
+    type=int,
+    default="0",
+    help="0=CALL, 1=DELEGATECALL",
+)
+
+
+safe_address_option_info = OptionInfo(
+    args=["--safe", "safe_address"],
+    metavar="ADDRESS",
+    required=True,
+    help="Safe account address",
+)
+
 
 safe_version_option_info = OptionInfo(
     args=["--safe-version"],
@@ -111,15 +137,6 @@ value_option_info = OptionInfo(
 # ┌─────────┐
 # │ Options │
 # └─────────┘
-
-
-abi = click.option(
-    "--abi",
-    "abi_file",
-    type=click.Path(exists=True),
-    required=True,
-    help="contract ABI in JSON format",
-)
 
 
 def authentication(f: FC) -> FC:
@@ -316,23 +333,6 @@ def rpc(
         show_envvar=True,
         help="HTTP JSON-RPC endpoint",
     )
-
-
-safe_address = click.option(
-    "--safe",
-    "safe_address",
-    metavar="ADDRESS",
-    required=True,
-    help="Safe account address",
-)
-
-
-safe_operation = click.option(
-    "--operation",
-    type=int,
-    default="0",
-    help="0=CALL, 1=DELEGATECALL",
-)
 
 
 safe_version = make_option(safe_version_option_info, cls=optgroup.option)
