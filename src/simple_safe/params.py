@@ -52,6 +52,7 @@ class OptionInfo:
     args: Iterable[str]
     help: str
     # defaults should match click.Option
+    default: Optional[Any] = None
     metavar: Optional[str] = None
     type: Optional[Union[click.types.ParamType, Any]] = None
 
@@ -75,6 +76,13 @@ chain_id_option_info = OptionInfo(
 safe_version_option_info = OptionInfo(
     args=["--safe-version"],
     help=f"Safe version: {', '.join(reversed(SAFE_CONTRACT_VERSIONS[-3:]))}, ...",
+)
+
+
+value_option_info = OptionInfo(
+    args=["--value"],
+    default="0.0",
+    help="tx value in decimals",
 )
 
 
@@ -110,7 +118,6 @@ def authentication(f: FC) -> FC:
 def build_safetx(f: FC) -> FC:
     for option in reversed(
         [
-            click.option("--value", default="0.0", help="tx value in decimals"),
             optgroup.group("Build online"),
             rpc(optgroup.option),
             optgroup.group("Build offline"),

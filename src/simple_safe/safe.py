@@ -189,6 +189,9 @@ def build():
     required=True,
     help="contract call address",
 )
+@params.make_option(
+    params.value_option_info,
+)
 @params.build_safetx
 @params.safe_operation
 @params.safe_address
@@ -246,6 +249,9 @@ def build_abi_call(
 @build.command(name="custom")
 @click.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
+)
+@params.make_option(
+    params.value_option_info,
 )
 @click.option("--data", default="0x", help="call data payload")
 @params.build_safetx
@@ -324,7 +330,6 @@ def build_erc20_call(
     safe_version: Optional[str],
     str_args: list[str],
     token_str: str,
-    value: str,
 ) -> None:
     """Build an ERC-20 token Safe transaction.
 
@@ -345,14 +350,13 @@ def build_erc20_call(
         )
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(w3, address=token_address)
-        validate_safetx_value(value)
         build_contract_call_safetx(
             w3=w3,
             contract=ERC20,
             fn_identifier=function,
             str_args=str_args,
             safe=safe,
-            value=value,
+            value="0",
             operation=SafeOperation.CALL.value,
             output=output,
             pretty=pretty,
@@ -360,6 +364,9 @@ def build_erc20_call(
 
 
 @build.command(name="safe-call")
+@params.make_option(
+    params.value_option_info,
+)
 @params.safe_address
 @params.build_safetx
 @params.output_file
