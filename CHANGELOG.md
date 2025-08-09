@@ -20,6 +20,21 @@ Template:
 ### Fixed
 -->
 
+## [v0.2.4] - 2025-08-10
+
+### Changed
+
+- Ellipsize printed call data above 1 kilobyte ([`555de3e`](https://github.com/clearmatics/simple-safe/commit/555de3e))
+
+### Added
+
+- Support `DELEGATECALL` Safe transactions ([`34c0666`](https://github.com/clearmatics/simple-safe/commit/34c0666))
+- Perform additional validation on TX `--value` ([`77499af`](https://github.com/clearmatics/simple-safe/commit/77499af))
+
+### Fixed
+
+- Restore more helpful Click error messages ([`cdddc91`](https://github.com/clearmatics/simple-safe/commit/cdddc91))
+
 ## [v0.2.3] - 2025-08-06
 
 ### Fixed
@@ -57,6 +72,7 @@ Template:
 
 _First internal release._
 
+[v0.2.4]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.4
 [v0.2.3]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.3
 [v0.2.2]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.2
 [v0.2.1]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.1
