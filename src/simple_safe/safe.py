@@ -236,7 +236,7 @@ def build_abi_call(
             str_args=str_args,
             safe=safe,
             value=value,
-            operation=operation,
+            operation=SafeOperation(operation).value,
             output=output,
         )
 
