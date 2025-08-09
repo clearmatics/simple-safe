@@ -20,6 +20,12 @@ Template:
 ### Fixed
 -->
 
+## [v0.2.5] - 2025-08-10
+
+### Fixed
+
+- Add missing operation validation in `build abi-call` ([`863c7cf`](https://github.com/clearmatics/simple-safe/commit/863c7cf))
+
 ## [v0.2.4] - 2025-08-10
 
 ### Changed
@@ -72,6 +78,7 @@ Template:
 
 _First internal release._
 
+[v0.2.5]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.5
 [v0.2.4]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.4
 [v0.2.3]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.3
 [v0.2.2]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.2
