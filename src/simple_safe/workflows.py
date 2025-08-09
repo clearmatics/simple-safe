@@ -63,6 +63,7 @@ def build_contract_call_safetx(
     value: str,
     operation: int,
     output: Optional[TextIO],
+    pretty: bool,
 ):
     """Print a SafeTx that represents a contract call."""
     from web3.constants import CHECKSUM_ADDRESSS_ZERO
@@ -91,7 +92,7 @@ def build_contract_call_safetx(
     )
     output_console = get_output_console(output)
     output_console.print(
-        get_json_data_renderable(safetx.to_eip712_message(safe)),
+        get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
     )
 
 

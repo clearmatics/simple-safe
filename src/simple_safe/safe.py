@@ -203,6 +203,7 @@ def build_abi_call(
     function: str,
     operation: int,
     output: Optional[typing.TextIO],
+    pretty: bool,
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -238,6 +239,7 @@ def build_abi_call(
             value=value,
             operation=SafeOperation(operation).value,
             output=output,
+            pretty=pretty,
         )
 
 
@@ -256,6 +258,7 @@ def build_custom(
     data: str,
     operation: int,
     output: Optional[typing.TextIO],
+    pretty: bool,
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -293,7 +296,7 @@ def build_custom(
         )
         eip712_data = safetx.to_eip712_message(safe)
     output_console = get_output_console(output)
-    output_console.print(get_json_data_renderable(eip712_data))
+    output_console.print(get_json_data_renderable(eip712_data, pretty))
 
 
 @build.command(name="erc20-call")
@@ -314,6 +317,7 @@ def build_erc20_call(
     chain_id: Optional[int],
     function: str,
     output: Optional[typing.TextIO],
+    pretty: bool,
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -351,6 +355,7 @@ def build_erc20_call(
             value=value,
             operation=SafeOperation.CALL.value,
             output=output,
+            pretty=pretty,
         )
 
 
@@ -365,6 +370,7 @@ def build_safe_call(
     chain_id: Optional[int],
     function: str,
     output: Optional[typing.TextIO],
+    pretty: bool,
     rpc: Optional[str],
     safe_address: str,
     safe_nonce: Optional[int],
@@ -397,6 +403,7 @@ def build_safe_call(
             value=value,
             operation=SafeOperation.CALL.value,
             output=output,
+            pretty=pretty,
         )
 
 

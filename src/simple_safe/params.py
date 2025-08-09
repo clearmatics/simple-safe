@@ -117,6 +117,11 @@ def build_safetx(f: FC) -> FC:
             make_option(chain_id_option_info, cls=optgroup.option),
             safe_version,
             optgroup.option("--safe-nonce", type=int, help="Safe nonce"),
+            click.option(
+                "--pretty",
+                is_flag=True,
+                help="Pretty print EIP-712 message JSON",
+            ),
         ]
     ):
         f = option(f)

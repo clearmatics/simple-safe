@@ -72,14 +72,14 @@ def activate_logging():
 
 
 def get_json_data_renderable(
-    data: dict[str, Any], indent: Optional[int] = 2
+    data: dict[str, Any], pretty: bool = False
 ) -> "RenderableType":
     from rich.json import JSON
 
     return JSON.from_data(
         data,
         default=hexbytes_json_encoder,
-        indent=JSON_INDENT_LEVEL,
+        indent=2 if pretty else None,
     )
 
 
