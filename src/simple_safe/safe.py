@@ -18,7 +18,7 @@ from hexbytes import (
 
 from . import params
 from .abi import find_function, parse_args
-from .auth import validate_authenticator
+from .auth import authenticator
 from .chaindata import FALLBACK_DECIMALS, fetch_chaindata
 from .click import Group
 from .console import (
@@ -501,17 +501,17 @@ def deploy(
     if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
-    auth = validate_authenticator(keyfile, trezor)
-    process_contract_call_web3tx(
-        w3,
-        contractfn=deployment_call,
-        auth=auth,
-        force=force,
-        sign_only=sign_only,
-        output=output,
-        txopts=txopts,
-        offline=offline,
-    )
+    with authenticator(keyfile, trezor) as auth:
+        process_contract_call_web3tx(
+            w3,
+            contractfn=deployment_call,
+            auth=auth,
+            force=force,
+            sign_only=sign_only,
+            output=output,
+            txopts=txopts,
+            offline=offline,
+        )
 
 
 @safe.command()
@@ -676,17 +676,17 @@ def exec(
         exported_signatures,
     )
 
-    auth = validate_authenticator(keyfile, trezor)
-    process_contract_call_web3tx(
-        w3,
-        contractfn=exec_call,
-        auth=auth,
-        force=force,
-        sign_only=sign_only,
-        output=output,
-        txopts=txopts,
-        offline=offline,
-    )
+    with authenticator(keyfile, trezor) as auth:
+        process_contract_call_web3tx(
+            w3,
+            contractfn=exec_call,
+            auth=auth,
+            force=force,
+            sign_only=sign_only,
+            output=output,
+            txopts=txopts,
+            offline=offline,
+        )
 
 
 @safe.command()
@@ -924,10 +924,10 @@ def sign(
     if not force and not Confirm.ask("Sign Safe transaction?", default=False):
         raise click.Abort()
 
-    auth = validate_authenticator(keyfile, trezor)
     data = safetx.to_eip712_message(safe)
     logger.info(f"EIP-712 Data: {json.dumps(data, default=hexbytes_json_encoder)}")
-    sigbytes = auth.sign_typed_data(data)
+    with authenticator(keyfile, trezor) as auth:
+        sigbytes = auth.sign_typed_data(data)
     sigobj = SafeSignature.parse_signature(sigbytes, safetx_hash)[0]
     # This is only needed for non-EOA signature, which are not yet supported:
     signature = sigobj.export_signature()

@@ -1,7 +1,8 @@
 import logging
 import sys
+from contextlib import contextmanager
 from getpass import getpass
-from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
+from typing import TYPE_CHECKING, Any, Generator, Optional, Protocol, cast
 
 import click
 from hexbytes import HexBytes
@@ -30,6 +31,8 @@ class Authenticator(Protocol):
 
     def sign_typed_data(self, data: dict[str, Any]) -> bytes: ...
 
+    def shutdown(self): ...
+
 
 class KeyfileAuthenticator:
     account: "LocalAccount"
@@ -56,6 +59,9 @@ class KeyfileAuthenticator:
     def sign_typed_data(self, data: dict[str, Any]) -> bytes:
         with status("Signing typed data..."):
             return self.account.sign_typed_data(full_message=data).signature
+
+    def shutdown(self):
+        pass
 
 
 class TrezorAuthenticator:
@@ -150,14 +156,19 @@ class TrezorAuthenticator:
         sigdata = trezor_eth.sign_typed_data(self.client, self.path, data)
         return sigdata.signature
 
+    def shutdown(self):
+        logger.debug("Terminating Trezor session")
+        self.client.end_session()
+
     def __repr__(self):
         return f"trezor: {self.path_str}"
 
 
-def validate_authenticator(
+@contextmanager
+def authenticator(
     keyfile: Optional[str],
     trezor: Optional[str],
-) -> Authenticator:
+) -> Generator[Authenticator]:
     if trezor and keyfile:
         raise click.ClickException("Expected at most one authentication method.")
     elif keyfile:
@@ -172,4 +183,8 @@ def validate_authenticator(
     else:
         raise click.ClickException("No authentication method provided.")
     logger.info(f"Using authenticator: {auth}")
-    return auth
+    try:
+        yield auth
+    finally:
+        logger.debug(f"Shutdown authenticator: {auth}")
+        auth.shutdown()
