@@ -365,7 +365,7 @@ def print_signatures(
     )
     if offline:
         console.line()
-        logger.warning(f"{SYMBOL_WARNING} Cannot verify signers when offline.")
+        logger.warning(f"{SYMBOL_WARNING} Cannot verify whether signers are owners when offline.")
 
 
 def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None:
