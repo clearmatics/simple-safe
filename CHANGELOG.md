@@ -20,6 +20,16 @@ Template:
 ### Fixed
 -->
 
+## [v0.2.6] - 2025-08-11
+
+### Changed
+
+- Reword warning when previewing or executing offline ([`bc55c73`](https://github.com/clearmatics/simple-safe/commit/bc55c73))
+
+### Fixed
+
+- Shut down Trezor session on completion ([`d3f7129`](https://github.com/clearmatics/simple-safe/commit/d3f7129))
+
 ## [v0.2.5] - 2025-08-10
 
 ### Fixed
@@ -78,6 +88,7 @@ Template:
 
 _First internal release._
 
+[v0.2.6]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.6
 [v0.2.5]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.5
 [v0.2.4]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.4
 [v0.2.3]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.3
