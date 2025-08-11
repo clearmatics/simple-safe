@@ -20,15 +20,11 @@ Template:
 ### Fixed
 -->
 
-## [v0.2.6] - 2025-08-11
+## [v0.2.6] - 2025-08-12
 
 ### Changed
 
 - Reword warning when previewing or executing offline ([`bc55c73`](https://github.com/clearmatics/simple-safe/commit/bc55c73))
-
-### Fixed
-
-- Shut down Trezor session on completion ([`d3f7129`](https://github.com/clearmatics/simple-safe/commit/d3f7129))
 
 ## [v0.2.5] - 2025-08-10
 
