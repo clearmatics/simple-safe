@@ -112,7 +112,7 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
     elif abi_type == "bool":
         if val_str not in ("true", "false"):
             raise ValueError(
-                f"Boolean value  must be 'true' or 'false' (not '{val_str}'"
+                f"Boolean value must be 'true' or 'false' (not '{val_str}')"
             )
         return True if val_str == "true" else False
     elif abi_type.startswith("bytes") or abi_type == "function":
