@@ -20,6 +20,12 @@ Template:
 ### Fixed
 -->
 
+## [v0.2.7] - 2025-08-12
+
+### Fixed
+
+- Restore compatibility with Python 3.11 & 3.12 ([`240ebf3`](https://github.com/clearmatics/simple-safe/commit/240ebf3))
+
 ## [v0.2.6] - 2025-08-12
 
 ### Changed
@@ -84,6 +90,7 @@ Template:
 
 _First internal release._
 
+[v0.2.7]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.7
 [v0.2.6]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.6
 [v0.2.5]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.5
 [v0.2.4]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.4
