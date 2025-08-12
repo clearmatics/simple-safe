@@ -91,6 +91,15 @@ value_option_info = OptionInfo(
 # └─────────┘
 
 
+abi = click.option(
+    "--abi",
+    "abi_file",
+    type=click.Path(exists=True),
+    required=True,
+    help="contract ABI in JSON format",
+)
+
+
 def authentication(f: FC) -> FC:
     for option in reversed(
         [

@@ -175,13 +175,7 @@ def build():
 
 
 @build.command(name="abi-call")
-@click.option(
-    "--abi",
-    "abi_file",
-    type=click.Path(exists=True),
-    required=True,
-    help="contract ABI in JSON format",
-)
+@params.abi
 @click.option(
     "--contract",
     "contract_str",
@@ -529,13 +523,7 @@ def deploy(
 
 
 @safe.command()
-@click.option(
-    "--abi",
-    "abi_file",
-    type=click.Path(exists=True),
-    required=True,
-    help="contract ABI in JSON format",
-)
+@params.abi
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
