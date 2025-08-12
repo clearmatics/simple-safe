@@ -1,5 +1,6 @@
 import json
 from itertools import product
+from typing import Any
 
 import pytest
 from eth_account.account import Account
@@ -146,6 +147,27 @@ def test_parse_abi_type_address():
         res = parse_abi_type("address", address.lower())
         assert isinstance(res, str)
         assert res == address
+
+
+def test_parse_abi_type_bytes():
+    def check(input: Any, expected: HexBytes):
+        return parse_abi_type("bytes", input) == expected
+
+    for invalid in [
+        "",
+        "0",
+        "deadbeef",
+        "0xnothex",
+        "not hex!",
+    ]:
+        with pytest.raises(ValueError):
+            check(invalid, HexBytes(""))
+    for input, expected in [
+        ("0x", HexBytes(b"")),
+        ("0x0", HexBytes(0x00)),
+        ("0xdeadbeef", HexBytes(0xDEADBEEF)),
+    ]:
+        assert check(input, expected)
 
 
 def test_parse_abi_type_bool():
