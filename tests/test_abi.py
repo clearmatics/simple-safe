@@ -151,12 +151,12 @@ def test_parse_abi_type_address():
 def test_parse_abi_type_bool():
     with pytest.raises(ValueError):
         parse_abi_type("bool", "")
-    for val_str in ["0", "False", "no"]:
+    for invalid in ["0", "False", "no"]:
         with pytest.raises(ValueError):
-            parse_abi_type("bool", val_str)
-    for val_str in ["1", "True", "yes"]:
+            parse_abi_type("bool", invalid)
+    for invalid in ["1", "True", "yes"]:
         with pytest.raises(ValueError):
-            parse_abi_type("bool", val_str)
+            parse_abi_type("bool", invalid)
     assert parse_abi_type("bool", "true")
     assert not parse_abi_type("bool", "false")
 
