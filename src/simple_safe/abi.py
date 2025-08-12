@@ -116,6 +116,8 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
             )
         return True if val_str == "true" else False
     elif abi_type.startswith("bytes") or abi_type == "function":
+        if not val_str.lower().startswith("0x"):
+            raise ValueError("Bytes value must be prefixed with 0x")
         return HexBytes(val_str)
     elif abi_type == "string":
         return val_str
