@@ -186,9 +186,9 @@ def build():
 @params.make_option(
     params.value_option_info,
 )
-@params.build_safetx
 @params.safe_operation
 @params.safe_address
+@params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
@@ -248,9 +248,9 @@ def build_abi_call(
     params.value_option_info,
 )
 @click.option("--data", default="0x", help="call data payload")
+@params.safe_address
 @params.build_safetx
 @params.safe_operation
-@params.safe_address
 @params.output_file
 @params.common
 def build_custom(
@@ -307,8 +307,8 @@ def build_custom(
     required=True,
     help="ERC-20 token address",
 )
-@params.build_safetx
 @params.safe_address
+@params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
