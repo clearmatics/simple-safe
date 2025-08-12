@@ -2,7 +2,7 @@ import logging
 import sys
 from contextlib import contextmanager
 from getpass import getpass
-from typing import TYPE_CHECKING, Any, Generator, Optional, Protocol, cast
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Protocol, cast
 
 import click
 from hexbytes import HexBytes
@@ -168,7 +168,7 @@ class TrezorAuthenticator:
 def authenticator(
     keyfile: Optional[str],
     trezor: Optional[str],
-) -> Generator[Authenticator]:
+) -> Iterator[Authenticator]:
     if trezor and keyfile:
         raise click.ClickException("Expected at most one authentication method.")
     elif keyfile:
