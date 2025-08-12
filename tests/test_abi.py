@@ -189,8 +189,8 @@ def test_parse_abi_type_string():
 
 
 def test_parse_abi_type_invalid_value():
-    for basic_typ in ("int", "address", "bool", "bytes", "tuple"):
+    for basic_typ in ("int", "address", "bool", "bytes", "string", "tuple"):
         for typ in (basic_typ, basic_typ + "[]"):
             for val in (None, object, object()):
                 with pytest.raises((ValueError, TypeError)):
-                    parse_abi_type(typ, val)  # pyright: ignore[reportArgumentType]
+                    _ = parse_abi_type(typ, val)  # pyright: ignore[reportArgumentType]
