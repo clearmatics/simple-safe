@@ -24,25 +24,23 @@
     version = "3.13";
     uv.enable = true;
     uv.sync.enable = true;
+    uv.sync.groups = [ "dev" ];
   };
 
   env.SOURCE_DIRS = "src/simple_safe tests";
 
   scripts.autofix.exec = ''
-    uv sync -q --dev
     uv run -q ruff check --fix
     uv run -q ruff check --fix --select I $SOURCE_DIRS
   '';
 
   scripts.check.exec = ''
-    uv sync -q --dev
     uv run -q ruff check $SOURCE_DIRS
     uv run -q pyright $SOURCE_DIRS
   '';
 
   scripts.format.exec = ''
     set -ux
-    uv sync -q --dev
     uv run -q ruff check --fix --select I $SOURCE_DIRS
     uv run -q ruff format $SOURCE_DIRS
     RUST_LOG=warn taplo fmt pyproject.toml
