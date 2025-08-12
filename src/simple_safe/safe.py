@@ -1,6 +1,7 @@
 import json
 import logging
 import pdb
+import secrets
 import shutil
 import sys
 import typing
@@ -28,13 +29,16 @@ from .console import (
     get_json_data_renderable,
     get_output_console,
     make_status_logger,
+    print_createcall_info,
     print_kvtable,
     print_line_if_tty,
     print_safe_deploy_info,
     print_safetxdata,
     print_signatures,
     print_version,
+    print_web3_call_data,
 )
+from .constants import DEFAULT_CREATECALL_ADDRESS, SALT_SENTINEL
 from .params import optgroup
 from .types import (
     ContractCall,
@@ -69,7 +73,7 @@ from .workflows import (
 )
 
 if TYPE_CHECKING:
-    from eth_typing import URI
+    from eth_typing import URI, ABIConstructor
     from web3 import Web3
 
 # ┌───────┐
@@ -242,6 +246,242 @@ def build_abi_call(
         operation=SafeOperation(operation).value,
         output=output,
         pretty=pretty,
+    )
+
+
+@build.command(name="deploy")
+@params.abi
+@click.option(
+    "--code",
+    "code_file",
+    type=click.Path(exists=True),
+    required=True,
+    help="contract bytecode in hex format",
+)
+@params.make_option(
+    params.value_option_info,
+)
+@click.option(
+    "--method",
+    type=click.Choice(["CREATE", "CREATE2"]),
+    default="CREATE2",
+    help="contract deployment method",
+)
+@params.safe_operation
+@click.option(
+    "--createcall",
+    "createcall_str",
+    metavar="ADDRESS",
+    help="use a non-canonical CreateCall address",
+)
+@params.safe_address
+@optgroup.group("CREATE deployment")
+@optgroup.option(
+    "--deployer-nonce",
+    "deployer_nonce",
+    type=int,
+    help="deployer nonce as override or when offline",
+)
+@optgroup.group("CREATE2 deployment")
+@optgroup.option(
+    "--salt",
+    "salt_str",
+    type=str,
+    metavar="BYTES32",
+    default=SALT_SENTINEL,
+    help="CREATE2 salt value",
+)
+@params.build_safetx
+@params.output_file
+@click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
+@params.common
+def build_deploy(
+    abi_file: str,
+    chain_id: Optional[int],
+    code_file: str,
+    createcall_str: Optional[str],
+    deployer_nonce: Optional[int],
+    method: str,
+    operation: int,
+    output: Optional[typing.TextIO],
+    pretty: bool,
+    rpc: Optional[str],
+    safe_address: str,
+    safe_nonce: Optional[int],
+    safe_version: Optional[str],
+    salt_str: str,
+    str_args: list[str],
+    value: str,
+):
+    """Build a contract deployment Safe transaction.
+
+    The contract is deployed using Safe's CreateCall library contract, which
+    provides CREATE and CREATE2 deployment methods. When the Safe transaction
+    operation is a CALL the deployer is the CreateCall contract, whereas when it
+    is a DELEGATECALL the deployer is the Safe address. When offline and using
+    the CREATE method, the nonce of the deployer must be provided.
+
+    The tx value is passed to the constructor and will appear as a field in
+    the Safe transaction message and as one of the arguments to the relevant
+    CreateCall "perform" function.
+
+    The positional ARGUMENTs are the constructor arguments for the deployed
+    contract.
+    """
+    with status("Building Safe transaction..."):
+        import rich
+        from eth_abi.abi import encode as abi_encode
+        from eth_typing import ABIFunction, HexStr
+        from web3._utils.contracts import encode_abi
+        from web3.constants import CHECKSUM_ADDRESSS_ZERO
+        from web3.types import Nonce
+        from web3.utils import get_create_address
+        from web3.utils.abi import get_abi_element
+        from web3.utils.address import get_create2_address
+
+        offline = rpc is None
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, _ = validate_safe(
+            safe_address=to_checksum_address(safe_address),
+            offline=offline,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
+            safe_version=safe_version,
+            w3=w3,
+        )
+
+        if method == "CREATE":
+            if salt_str != SALT_SENTINEL:
+                raise click.ClickException(
+                    "CREATE deployment method incompatible with --salt option."
+                )
+            if offline and (deployer_nonce is None):
+                raise click.ClickException(
+                    "Missing --deployer-nonce for CREATE deployment when offline."
+                )
+        else:
+            if deployer_nonce:
+                raise click.ClickException("Deployer nonce is not used in CREATE2.")
+
+        validate_safetx_value(value)
+        SafeOperation(operation)  # validate operation value
+        createcall_address = to_checksum_address(
+            createcall_str if createcall_str else DEFAULT_CREATECALL_ADDRESS
+        )
+
+        chaindata = fetch_chaindata(safe.chain_id)
+        decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+        value_scaled = scale_decimal_value(value, decimals)
+
+        # Constructor call
+        with open(abi_file, "r") as f:
+            target_abi = json.load(f)
+        with open(code_file, "r") as f:
+            target_bytecode = HexBytes(f.read())
+        constructor_abi = cast(
+            "ABIConstructor",
+            get_abi_element(target_abi, abi_element_identifier="constructor"),
+        )
+        constructor_args = parse_args(constructor_abi, str_args)
+        constructor_call = ContractCall(constructor_abi, constructor_args)
+        constructor_data = HexBytes(
+            abi_encode(constructor_call.argtypes, constructor_args)
+        )
+        init_code = HexBytes(HexBytes(target_bytecode) + constructor_data)
+
+        # CreateCall args
+        salt = None
+        if method == "CREATE":
+            createcall_func = "performCreate(uint256,bytes)"  # selector 0x4c8c9ea1
+            createcall_args = (value_scaled, init_code)
+        else:
+            createcall_func = (
+                "performCreate2(uint256,bytes,bytes32)"  # selector 0x4847be6f
+            )
+            if salt_str == SALT_SENTINEL:
+                salt = HexBytes(secrets.token_bytes(32))
+            else:
+                salt = HexBytes(salt_str)
+            createcall_args = (value_scaled, init_code, salt)
+
+        # CreateCall call
+        createcall_abifile = files("simple_safe.abis").joinpath("CreateCall.abi")
+        with createcall_abifile.open("r") as f:
+            createcall_abi = json.load(f)
+        createcall_fn_abi = cast(
+            "ABIFunction", get_abi_element(createcall_abi, createcall_func)
+        )
+        createcall_call = ContractCall(createcall_fn_abi, createcall_args)
+        createcall_data = HexBytes(
+            encode_abi(
+                w3,
+                createcall_fn_abi,
+                createcall_args,
+                cast("HexStr", createcall_call.selector),
+            )
+        )
+
+        # Compute address
+        deployer_address = (
+            createcall_address
+            if operation == SafeOperation.CALL.value
+            else safe.safe_address
+        )
+        if method == "CREATE":
+            if deployer_nonce is None:
+                deployer_nonce = w3.eth.get_transaction_count(
+                    deployer_address
+                    if operation == SafeOperation.CALL.value
+                    else safe.safe_address
+                )
+            computed_address = get_create_address(
+                deployer_address, Nonce(deployer_nonce)
+            )
+        else:
+            assert salt is not None
+            computed_address = get_create2_address(
+                deployer_address,
+                cast("HexStr", salt.to_0x_hex()),
+                cast("HexStr", init_code.to_0x_hex()),
+            )
+
+        # SafeTx
+        safetx = SafeTx(
+            to=createcall_address,
+            value=value_scaled,
+            data=createcall_data,
+            operation=operation,
+            safe_tx_gas=0,
+            base_gas=0,
+            gas_price=0,
+            gas_token=CHECKSUM_ADDRESSS_ZERO,
+            refund_receiver=CHECKSUM_ADDRESSS_ZERO,
+        )
+
+    console = rich.get_console()
+
+    console.line()
+    print_web3_call_data(constructor_call, constructor_data, "Constructor Data Encoder")
+    console.line()
+    print_createcall_info(
+        address=createcall_address,
+        method=method,
+        operation=operation,
+        init_code=init_code,
+        value=value_scaled,
+        deployer_address=deployer_address,
+        computed_address=computed_address,
+        deployer_nonce=deployer_nonce,
+        salt=salt,
+        chaindata=chaindata,
+    )
+    console.line()
+    print_web3_call_data(createcall_call, createcall_data, "CreateCall Data Encoder")
+
+    print_line_if_tty(console, output)
+    output_console = get_output_console(output)
+    output_console.print(
+        get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
     )
 
 

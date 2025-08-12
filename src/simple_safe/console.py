@@ -12,6 +12,7 @@ from hexbytes import HexBytes
 from .abi import Function
 from .chaindata import ChainData
 from .constants import (
+    DEFAULT_CREATECALL_ADDRESS,
     DEFAULT_FALLBACK_ADDRESS,
     DEFAULT_PROXYFACTORY_ADDRESS,
     DEFAULT_SAFE_SINGLETON_ADDRESS,
@@ -69,6 +70,22 @@ def activate_logging():
         datefmt="[%X]",
         handlers=[RichHandler()],
     )
+
+
+def parse_argdata(
+    args: tuple[Any, ...], argtypes: list[str], argnames: list[str]
+) -> dict[str, "RenderableType"]:
+    argdata: list[tuple[str, str, "RenderableType"]] = []
+    for i, val in enumerate(args):
+        if isinstance(val, HexBytes):
+            val_str = format_hexbytes(val)
+        else:
+            val_str = str(val)
+        argdata.append((argtypes[i], argnames[i], val_str))
+    return {
+        r"[secondary]" + f"{argtype}[/secondary] {argname}": val
+        for (argtype, argname, val) in argdata
+    }
 
 
 def get_json_data_renderable(
@@ -214,6 +231,50 @@ def print_kvtable(
 def print_line_if_tty(console: "Console", output: Optional[typing.TextIO]):
     if not output and sys.stdout.isatty():
         console.line()
+
+
+def print_createcall_info(
+    *,
+    address: "ChecksumAddress",
+    method: str,
+    operation: int,
+    init_code: HexBytes,
+    value: int,
+    deployer_address: "ChecksumAddress",
+    computed_address: "ChecksumAddress",
+    deployer_nonce: Optional[int] = None,
+    salt: Optional[HexBytes] = None,
+    chaindata: Optional[ChainData] = None,
+):
+    from web3.types import Wei
+
+    data: dict[str, "RenderableType"] = {
+        "Deployer": deployer_address,
+    }
+    if method == "CREATE":
+        data["Deployer Nonce"] = str(deployer_nonce)
+    else:
+        assert salt is not None
+        data["Salt"] = HexBytes(salt).to_0x_hex()
+    data["Init Code"] = format_hexbytes(init_code)
+
+    print_kvtable(
+        "CreateCall Deployment Parameters",
+        "",
+        {
+            "CreateCall": address
+            + (
+                f" [ok]{SYMBOL_CHECK} CANONICAL[/ok]"
+                if address == DEFAULT_CREATECALL_ADDRESS
+                else ""
+            ),
+            "Deploy Method": method,
+            "Value": format_native_value(Wei(value), chaindata),
+            "Operation": f"{operation} ({SafeOperation(operation).name})",
+        },
+        data,
+        {"Computed Address": computed_address},
+    )
 
 
 def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
@@ -385,7 +446,9 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
     ctx.exit()
 
 
-def print_web3_call_data(function: ContractCall, calldata: HexBytes) -> None:
+def print_web3_call_data(
+    function: ContractCall, calldata: HexBytes, title: str = "Call Data Encoder"
+) -> None:
     argdata: list[tuple[str, str, "RenderableType"]] = []
     for i, argval in enumerate(function.args):
         if isinstance(argval, HexBytes):
@@ -400,17 +463,21 @@ def print_web3_call_data(function: ContractCall, calldata: HexBytes) -> None:
         and function.abi["stateMutability"] == "payable"
     ):
         function_signature += " [green]💲Payable[/green]"
+
+    metadata: dict[str, "RenderableType"] = {}
+    metadata["Function"] = function_signature
+    if function.selector:
+        metadata["Selector"] = function.selector
+
     print_kvtable(
-        "Call Data Encoder",
+        title,
         "",
-        {
-            "Function": function_signature,
-            "Selector": function.selector,
-        },
-        {
-            r"[secondary]" + f"{argtype}[/secondary] {argname}": val
-            for (argtype, argname, val) in argdata
-        },
+        metadata,
+        parse_argdata(
+            function.args,
+            list(function.argtypes),
+            list(function.argnames),
+        ),
         {
             "ABI Encoding": format_hexbytes(calldata),
         },

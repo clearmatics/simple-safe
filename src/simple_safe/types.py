@@ -13,13 +13,13 @@ from hexbytes import (
 )
 
 if TYPE_CHECKING:
-    from eth_typing import URI, ABIFunction, ChecksumAddress
+    from eth_typing import URI, ABIConstructor, ABIFunction, ChecksumAddress
     from safe_eth.safe import SafeTx as SafeLibTx
     from safe_eth.safe.safe_signature import SafeSignature
 
 
 class ContractCall:
-    def __init__(self, fn_abi: "ABIFunction", args: tuple[Any, ...]):
+    def __init__(self, fn_abi: "ABIConstructor | ABIFunction", args: tuple[Any, ...]):
         from eth_utils.abi import (
             abi_to_signature,
             function_abi_to_4byte_selector,
@@ -32,7 +32,12 @@ class ContractCall:
         self.argtypes = list(map(str, get_abi_input_types(fn_abi)))
         self.argnames = list(map(str, get_abi_input_names(fn_abi)))
         self.signature = abi_to_signature(fn_abi)
-        self.selector = HexBytes(function_abi_to_4byte_selector(fn_abi)).to_0x_hex()
+        self.constructor = fn_abi["type"] == "constructor"
+        self.selector = (
+            HexBytes(function_abi_to_4byte_selector(fn_abi)).to_0x_hex()
+            if not self.constructor
+            else None
+        )
 
 
 @dataclasses.dataclass(kw_only=True)
