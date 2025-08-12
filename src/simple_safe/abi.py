@@ -102,6 +102,9 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
     """
     from web3._utils.abi import is_array_type
 
+    if not isinstance(val_str, str):  # pyright: ignore[reportUnnecessaryIsInstance]
+        raise TypeError("Values passed in value_str must be strings")
+
     if abi_type.startswith("uint") or abi_type.startswith("int"):
         return int(val_str)
     elif abi_type == "address":
