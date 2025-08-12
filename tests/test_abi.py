@@ -161,6 +161,11 @@ def test_parse_abi_type_bool():
     assert not parse_abi_type("bool", "false")
 
 
+def test_parse_abi_type_string():
+    for valid_string in ["", "£", "⚠️", "👾 κόσμε 👾"]:
+        assert parse_abi_type("string", valid_string) == valid_string
+
+
 def test_parse_abi_type_invalid_value():
     for basic_typ in ("int", "address", "bool", "bytes", "tuple"):
         for typ in (basic_typ, basic_typ + "[]"):

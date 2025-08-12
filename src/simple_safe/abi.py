@@ -112,8 +112,10 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
                 f"Boolean value  must be 'true' or 'false' (not '{val_str}'"
             )
         return True if val_str == "true" else False
-    elif abi_type.startswith("bytes") or abi_type in ("string", "function"):
+    elif abi_type.startswith("bytes") or abi_type == "function":
         return HexBytes(val_str)
+    elif abi_type == "string":
+        return val_str
     elif abi_type == "tuple" or is_array_type(abi_type):
         val: list[Any] | dict[str, Any] = json.loads(val_str)
         if isinstance(val, list):
