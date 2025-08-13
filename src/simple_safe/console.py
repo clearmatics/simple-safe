@@ -383,8 +383,8 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
 def print_web3_call_data(function: "ContractFunction", calldata: HexBytes) -> None:
     argdata: list[tuple[str, str, "RenderableType"]] = []
     for i, argval in enumerate(function.arguments):
-        if function.argument_types[i] == "bytes":
-            argval_str = argval.to_0x_hex()
+        if isinstance(argval, HexBytes):
+            argval_str = format_hexbytes(argval)
         else:
             argval_str = str(argval)
         argdata.append(
