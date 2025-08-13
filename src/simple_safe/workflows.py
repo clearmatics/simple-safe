@@ -66,6 +66,7 @@ def build_contract_call_safetx(
     pretty: bool,
 ):
     """Print a SafeTx that represents a contract call."""
+    import rich
     from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
     match, partials = find_function(contract.abi, fn_identifier)
@@ -75,9 +76,15 @@ def build_contract_call_safetx(
 
     fn_obj = contract.get_function_by_selector(match.selector)
     args = parse_args(fn_obj.abi, str_args)
+    fn_call = fn_obj(*args)
     calldata = HexBytes(contract.encode_abi(match.sig, args))
     chaindata = fetch_chaindata(safe.chain_id)
     decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+
+    console = rich.get_console()
+    console.line()
+    print_web3_call_data(fn_call, calldata)
+    console.line()
 
     safetx = SafeTx(
         to=contract.address,
