@@ -725,7 +725,6 @@ def help():
 
     console = Console()
     readme = files("simple_safe.docs").joinpath("README.md")
-    print(readme)
     with readme.open("r") as f:
         md = f.read()
     with console.pager(styles=True, links=True):
