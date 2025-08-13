@@ -381,13 +381,15 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
 
 
 def print_web3_call_data(function: "ContractFunction", calldata: HexBytes) -> None:
-    argdata: dict[str, "RenderableType"] = {}
+    argdata: list[tuple[str, str, "RenderableType"]] = []
     for i, argval in enumerate(function.arguments):
         if function.argument_types[i] == "bytes":
             argval_str = argval.to_0x_hex()
         else:
             argval_str = str(argval)
-        argdata[function.argument_names[i]] = argval_str
+        argdata.append(
+            (function.argument_types[i], function.argument_names[i], argval_str)
+        )
 
     function_signature = function.signature
     if (
@@ -403,8 +405,8 @@ def print_web3_call_data(function: "ContractFunction", calldata: HexBytes) -> No
             "Function": function_signature,
         },
         {
-            arg + r" [secondary](" + f"{1 + i})[/secondary]": val
-            for i, (arg, val) in enumerate(argdata.items())
+            r"[secondary]" + f"{argtype}[/secondary] {argname}": val
+            for (argtype, argname, val) in argdata
         },
         {
             "ABI Encoding": format_hexbytes(calldata),
