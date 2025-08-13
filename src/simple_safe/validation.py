@@ -24,7 +24,7 @@ from .constants import (
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
     SAFE_CONTRACT_VERSIONS,
-    SALT_NONCE_SENTINEL,
+    SALT_SENTINEL,
 )
 from .types import (
     DeployParams,
@@ -75,7 +75,7 @@ def validate_deploy_options(
     else:
         singleton_address = DEFAULT_SAFEL2_SINGLETON_ADDRESS
         variant = SafeVariant.SAFE_L2
-    if salt_nonce == SALT_NONCE_SENTINEL:
+    if salt_nonce == SALT_SENTINEL:
         salt_nonce_int = secrets.randbits(256)  # uint256
     else:
         salt_nonce_int = int.from_bytes(HexBytes(salt_nonce))

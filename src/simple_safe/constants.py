@@ -7,7 +7,7 @@ SAFE_CONTRACT_VERSIONS = (
     "1.3.0",
     "1.4.1",
 )
-SALT_NONCE_SENTINEL = "random"
+SALT_SENTINEL = "random"
 TRUNCATE_DATA_BYTES = 1000
 
 # Safe v1.4.1 canonical addresses

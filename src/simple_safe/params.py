@@ -12,7 +12,7 @@ from .console import (
     SAFE_DEBUG,
     activate_logging,
 )
-from .constants import DEPLOY_SAFE_VERSION, SAFE_CONTRACT_VERSIONS, SALT_NONCE_SENTINEL
+from .constants import DEPLOY_SAFE_VERSION, SAFE_CONTRACT_VERSIONS, SALT_SENTINEL
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
@@ -190,7 +190,7 @@ def deployment(precompute: bool) -> Callable[[FC], FC]:
                     "--salt-nonce",
                     type=str,
                     metavar="BYTES32",
-                    default=SALT_NONCE_SENTINEL,
+                    default=SALT_SENTINEL,
                     help="nonce used to generate CREATE2 salt",
                 ),
                 optgroup.option(
