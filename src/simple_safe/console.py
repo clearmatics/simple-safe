@@ -401,8 +401,8 @@ def print_web3_call_data(function: "ContractFunction", calldata: HexBytes) -> No
         "Call Data Encoder",
         "",
         {
-            "Selector": function.selector,
             "Function": function_signature,
+            "Selector": function.selector,
         },
         {
             r"[secondary]" + f"{argtype}[/secondary] {argname}": val
