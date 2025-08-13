@@ -4,6 +4,7 @@ import pdb
 import shutil
 import sys
 import typing
+from importlib.resources import files
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
@@ -706,8 +707,6 @@ def hash(txfile: typing.TextIO) -> None:
 @safe.command()
 def help():
     """Browse the documentation."""
-    from importlib.resources import files
-
     from rich.console import Console
     from rich.markdown import Markdown
 
