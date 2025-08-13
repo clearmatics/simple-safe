@@ -233,17 +233,17 @@ def build_abi_call(
             abi = json.load(f)
         contract = w3.eth.contract(address=to_checksum_address(contract_str), abi=abi)
         validate_safetx_value(value)
-        build_contract_call_safetx(
-            w3=w3,
-            contract=contract,
-            fn_identifier=function,
-            str_args=str_args,
-            safe=safe,
-            value=value,
-            operation=SafeOperation(operation).value,
-            output=output,
-            pretty=pretty,
-        )
+    build_contract_call_safetx(
+        w3=w3,
+        contract=contract,
+        fn_identifier=function,
+        str_args=str_args,
+        safe=safe,
+        value=value,
+        operation=SafeOperation(operation).value,
+        output=output,
+        pretty=pretty,
+    )
 
 
 @build.command(name="custom")
@@ -350,17 +350,17 @@ def build_erc20_call(
         )
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(w3, address=token_address)
-        build_contract_call_safetx(
-            w3=w3,
-            contract=ERC20,
-            fn_identifier=function,
-            str_args=str_args,
-            safe=safe,
-            value="0",
-            operation=SafeOperation.CALL.value,
-            output=output,
-            pretty=pretty,
-        )
+    build_contract_call_safetx(
+        w3=w3,
+        contract=ERC20,
+        fn_identifier=function,
+        str_args=str_args,
+        safe=safe,
+        value="0",
+        operation=SafeOperation.CALL.value,
+        output=output,
+        pretty=pretty,
+    )
 
 
 @build.command(name="safe-call")
@@ -401,17 +401,17 @@ def build_safe_call(
             w3=w3,
         )
         validate_safetx_value(value)
-        build_contract_call_safetx(
-            w3=w3,
-            contract=contract,
-            fn_identifier=function,
-            str_args=str_args,
-            safe=safe,
-            value=value,
-            operation=SafeOperation.CALL.value,
-            output=output,
-            pretty=pretty,
-        )
+    build_contract_call_safetx(
+        w3=w3,
+        contract=contract,
+        fn_identifier=function,
+        str_args=str_args,
+        safe=safe,
+        value=value,
+        operation=SafeOperation.CALL.value,
+        output=output,
+        pretty=pretty,
+    )
 
 
 @safe.command()
