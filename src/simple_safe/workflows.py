@@ -24,6 +24,7 @@ from .console import (
     get_output_console,
     make_status_logger,
     print_function_matches,
+    print_line_if_tty,
     print_web3_call_data,
     print_web3_tx_fees,
     print_web3_tx_params,
@@ -97,6 +98,7 @@ def build_contract_call_safetx(
         gas_token=CHECKSUM_ADDRESSS_ZERO,
         refund_receiver=CHECKSUM_ADDRESSS_ZERO,
     )
+    print_line_if_tty(console, output)
     output_console = get_output_console(output)
     output_console.print(
         get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
@@ -203,7 +205,7 @@ def process_contract_call_web3tx(
     output_console = get_output_console(output)
 
     if sign_only:
-        console.line()
+        print_line_if_tty(console, output)
         output_console.print(get_json_data_renderable(signed_tx_dict))
     else:
         with status("Executing Web3 transaction..."):
@@ -236,5 +238,5 @@ def process_contract_call_web3tx(
         console.line()
         print_web3_tx_receipt(timestamp, tx_receipt, chaindata)
 
-        console.line()
+        print_line_if_tty(console, output)
         output_console.print(tx_hash.to_0x_hex())

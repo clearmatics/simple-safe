@@ -29,6 +29,7 @@ from .console import (
     get_output_console,
     make_status_logger,
     print_kvtable,
+    print_line_if_tty,
     print_safe_deploy_info,
     print_safetxdata,
     print_signatures,
@@ -542,7 +543,10 @@ def encode(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building call data..."):
+        import rich
         from web3 import Web3
+
+        console = rich.get_console()
 
         with open(abi_file, "r") as f:
             abi = json.load(f)
@@ -556,6 +560,7 @@ def encode(
         fn_obj = contract.get_function_by_selector(match.selector)
         args = parse_args(fn_obj.abi, str_args)
         calldata = contract.encode_abi(match.sig, args)
+    print_line_if_tty(console, output)
     output_console = get_output_console(output)
     output_console.print(calldata)
 
@@ -811,10 +816,11 @@ def precompute(
         fallback=data.fallback,
         chain_id=data.chain_id,
     )
+
     console.line()
     print_safe_deploy_info(data, address)
-    if not output:
-        console.line()
+
+    print_line_if_tty(console, output=None)
     output_console = get_output_console(output)
     output_console.print(address)
 
@@ -934,5 +940,6 @@ def sign(
     # This is only needed for non-EOA signature, which are not yet supported:
     signature = sigobj.export_signature()
 
+    print_line_if_tty(console, output=None)
     output_console = get_output_console(output)
     output_console.print(signature.to_0x_hex())

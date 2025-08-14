@@ -211,6 +211,11 @@ def print_kvtable(
     console.print(get_panel(title, subtitle, table))
 
 
+def print_line_if_tty(console: "Console", output: Optional[typing.TextIO]):
+    if not output and sys.stdout.isatty():
+        console.line()
+
+
 def print_safe_deploy_info(data: DeployParams, safe_address: "ChecksumAddress"):
     variant = {
         SafeVariant.SAFE: "Safe.sol (without events)",
