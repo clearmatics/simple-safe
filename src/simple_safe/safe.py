@@ -85,13 +85,14 @@ def handle_crash(
 ) -> None:
     import rich
     from rich.traceback import Traceback
-    from web3.exceptions import ContractLogicError
 
     def format_error(err: str, msg: str) -> str:
         return f"[bold][red]{err}[/red]:[/bold] {msg}"
 
     console = rich.get_console()
     if not SAFE_DEBUG:
+        from web3.exceptions import ContractLogicError
+
         if exc_type is ContractLogicError:
             exc = cast(ContractLogicError, exc_value)
             message = format_error(exc_type.__name__, f"{exc.message} ({exc.data})")
