@@ -87,21 +87,22 @@ def handle_crash(
     from rich.traceback import Traceback
     from web3.exceptions import ContractLogicError
 
+    def format_error(err: str, msg: str) -> str:
+        return f"[bold][red]{err}[/red]:[/bold] {msg}"
+
     console = rich.get_console()
     if not SAFE_DEBUG:
         if exc_type is ContractLogicError:
             exc = cast(ContractLogicError, exc_value)
-            console.print(
-                f'[bold]{exc_type.__name__}[/bold]: "{exc.message}" ({exc.data})'
-            )
+            message = format_error(exc_type.__name__, f"{exc.message} ({exc.data})")
         else:
             if isinstance(exc_value, click.Abort):
-                message = "[bold]Aborted[/bold]"
+                message = r"[bold][yellow]Aborted[/yellow][/bold]"
             elif isinstance(exc_value, click.ClickException):
-                message = f"[bold]Error[/bold]: {exc_value.format_message()}"
+                message = format_error("Error", exc_value.format_message())
             else:
-                message = f"[bold]{exc_type.__name__}[/bold]: {exc_value}"
-            console.print(message)
+                message = format_error(exc_type.__name__, str(exc_value))
+        console.print(message)
     else:
         rich_traceback = Traceback.from_exception(
             exc_type,
