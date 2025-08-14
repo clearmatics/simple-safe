@@ -22,6 +22,7 @@ from .constants import (
     SYMBOL_WARNING,
 )
 from .types import (
+    ContractCall,
     DeployParams,
     Safe,
     SafeOperation,
@@ -42,7 +43,6 @@ if TYPE_CHECKING:
     from rich.console import Console, RenderableType
     from rich.panel import Panel
     from rich.table import Table
-    from web3.contract.contract import ContractFunction
     from web3.types import Timestamp, TxParams, TxReceipt
 
     from .auth import Authenticator
@@ -385,16 +385,14 @@ def print_version(ctx: Context, param: Parameter, value: Optional[bool]) -> None
     ctx.exit()
 
 
-def print_web3_call_data(function: "ContractFunction", calldata: HexBytes) -> None:
+def print_web3_call_data(function: ContractCall, calldata: HexBytes) -> None:
     argdata: list[tuple[str, str, "RenderableType"]] = []
-    for i, argval in enumerate(function.arguments):
+    for i, argval in enumerate(function.args):
         if isinstance(argval, HexBytes):
             argval_str = format_hexbytes(argval)
         else:
             argval_str = str(argval)
-        argdata.append(
-            (function.argument_types[i], function.argument_names[i], argval_str)
-        )
+        argdata.append((function.argtypes[i], function.argnames[i], argval_str))
 
     function_signature = function.signature
     if (

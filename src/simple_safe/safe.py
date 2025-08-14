@@ -37,6 +37,7 @@ from .console import (
 )
 from .params import optgroup
 from .types import (
+    ContractCall,
     SafeInfo,
     SafeOperation,
     SafeTx,
@@ -497,8 +498,8 @@ def deploy(
             if not data.chain_id
             else proxy_factory_contract.functions.createChainSpecificProxyWithNonce
         )
-        deployment_call = proxy_factory_method(
-            data.singleton, initializer, data.salt_nonce
+        deployment_call = ContractCall(
+            proxy_factory_method.abi, (data.singleton, initializer, data.salt_nonce)
         )
 
         if not offline:
@@ -516,7 +517,9 @@ def deploy(
     with authenticator(keyfile, trezor) as auth:
         process_contract_call_web3tx(
             w3,
-            contractfn=deployment_call,
+            contract_abi=proxy_factory_contract.abi,
+            contract_call=deployment_call,
+            contract_address=data.proxy_factory,
             auth=auth,
             force=force,
             sign_only=sign_only,
@@ -673,23 +676,28 @@ def exec(
         if not Confirm.ask("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
-    exec_call = contract.functions.execTransaction(
-        safetx.to,
-        safetx.value,
-        safetx.data,
-        safetx.operation,
-        safetx.safe_tx_gas,
-        safetx.base_gas,
-        safetx.gas_price,
-        safetx.gas_token,
-        safetx.refund_receiver,
-        exported_signatures,
+    exec_call = ContractCall(
+        contract.functions.execTransaction.abi,
+        (
+            safetx.to,
+            safetx.value,
+            safetx.data,
+            safetx.operation,
+            safetx.safe_tx_gas,
+            safetx.base_gas,
+            safetx.gas_price,
+            safetx.gas_token,
+            safetx.refund_receiver,
+            exported_signatures,
+        ),
     )
 
     with authenticator(keyfile, trezor) as auth:
         process_contract_call_web3tx(
             w3,
-            contractfn=exec_call,
+            contract_abi=contract.abi,
+            contract_call=exec_call,
+            contract_address=contract.address,
             auth=auth,
             force=force,
             sign_only=sign_only,

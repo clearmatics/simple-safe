@@ -32,6 +32,7 @@ from .console import (
 )
 from .constants import SYMBOL_WARNING
 from .types import (
+    ContractCall,
     Safe,
     SafeOperation,
     SafeTx,
@@ -45,9 +46,9 @@ from .util import (
 )
 
 if TYPE_CHECKING:
+    from eth_typing import ABI, ChecksumAddress
     from web3 import Web3
     from web3.contract import Contract
-    from web3.contract.contract import ContractFunction
     from web3.types import TxParams, Wei
 
 logger = logging.getLogger(__name__)
@@ -77,14 +78,13 @@ def build_contract_call_safetx(
 
     fn_obj = contract.get_function_by_selector(match.selector)
     args = parse_args(fn_obj.abi, str_args)
-    fn_call = fn_obj(*args)
     calldata = HexBytes(contract.encode_abi(match.sig, args))
+
     chaindata = fetch_chaindata(safe.chain_id)
     decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
-
     console = rich.get_console()
     console.line()
-    print_web3_call_data(fn_call, calldata)
+    print_web3_call_data(ContractCall(fn_obj.abi, args), calldata)
     console.line()
 
     safetx = SafeTx(
@@ -129,7 +129,9 @@ def handle_function_match_failure(
 def process_contract_call_web3tx(
     w3: "Web3",
     *,
-    contractfn: "ContractFunction",
+    contract_abi: "ABI",
+    contract_call: ContractCall,
+    contract_address: "ChecksumAddress",
     auth: Authenticator,
     force: bool,
     sign_only: bool,
@@ -139,29 +141,27 @@ def process_contract_call_web3tx(
 ):
     with status("Building Web3 transaction..."):
         import rich
-        from eth_utils.abi import abi_to_signature
         from rich.prompt import Confirm
         from web3._utils.contracts import prepare_transaction
 
         console = rich.get_console()
         tx_value: Wei = cast("Wei", 0)  # be explicit about zero value
-        abi_element_identifier = abi_to_signature(contractfn.abi)
         tx_data = prepare_transaction(
-            contractfn.address,
+            contract_address,
             w3,
-            abi_element_identifier=abi_element_identifier,
-            contract_abi=contractfn.contract_abi,
-            abi_callable=contractfn.abi,
+            abi_element_identifier=contract_call.signature,
+            contract_abi=contract_abi,
+            abi_callable=contract_call.abi,
             transaction=cast("TxParams", {"value": tx_value}),
-            fn_args=contractfn.args,
-            fn_kwargs=contractfn.kwargs,
+            fn_args=contract_call.args,
+            fn_kwargs=None,
         ).get("data")
         assert tx_data is not None
         tx, gas_estimate = make_web3tx(
             w3,
             offline=offline,
             from_=auth.address,
-            to=contractfn.address,
+            to=contract_address,
             txopts=txopts,
             data=tx_data,
             value=tx_value,
@@ -169,7 +169,7 @@ def process_contract_call_web3tx(
 
     assert "data" in tx
     console.line()
-    print_web3_call_data(contractfn, HexBytes(tx["data"]))
+    print_web3_call_data(contract_call, HexBytes(tx["data"]))
 
     assert "chainId" in tx
     with status("Retrieving chainlist data..."):
