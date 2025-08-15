@@ -148,12 +148,12 @@ def common(f: FC) -> FC:
     for option in reversed(
         [
             click.option(
-                "--verbose",
                 "-v",
+                "--verbose",
                 is_flag=True,
                 expose_value=False,
                 is_eager=True,
-                help="print informational messages",
+                help="print informational log messages",
                 callback=verbose_callback,
             ),
         ]
