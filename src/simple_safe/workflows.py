@@ -138,6 +138,7 @@ def process_contract_call_web3tx(
     output: Optional[TextIO],
     txopts: "Web3TxOptions",
     offline: bool,
+    value: int = 0,
 ):
     with status("Building Web3 transaction..."):
         import rich
@@ -145,7 +146,7 @@ def process_contract_call_web3tx(
         from web3._utils.contracts import prepare_transaction
 
         console = rich.get_console()
-        tx_value: Wei = cast("Wei", 0)  # be explicit about zero value
+        tx_value: Wei = cast("Wei", value)
         tx_data = prepare_transaction(
             contract_address,
             w3,

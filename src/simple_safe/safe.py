@@ -576,6 +576,9 @@ def encode(
     help="Safe version (required if no RPC provided)",
 )
 @params.web3tx()
+@params.make_option(
+    params.value_option_info,
+)
 @params.authentication
 @params.force
 @click.argument("txfile", type=click.File("r"), required=True)
@@ -597,6 +600,7 @@ def exec(
     sign_only: bool,
     trezor: Optional[str],
     txfile: typing.TextIO,
+    value: str,
 ):
     """Execute a signed Safe transaction.
 
@@ -633,6 +637,11 @@ def exec(
             w3_chain_id=txopts.chain_id,
             safe_version=safe_version,
         )
+
+        chaindata = fetch_chaindata(safe.chain_id)
+        decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+        value_scaled = scale_decimal_value(value, decimals)
+
         if offline:
             safe_info = SafeInfo()
         else:
@@ -704,6 +713,7 @@ def exec(
             output=output,
             txopts=txopts,
             offline=offline,
+            value=value_scaled,
         )
 
 
