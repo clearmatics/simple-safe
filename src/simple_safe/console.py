@@ -56,6 +56,11 @@ JSON_INDENT_LEVEL = 2
 SAFE_DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 
+# ┌─────────┐
+# │ Helpers │
+# └─────────┘
+
+
 def activate_logging():
     from rich.logging import RichHandler
 
@@ -178,6 +183,11 @@ def make_status_logger(logger: logging.Logger):
         return console.status(message)
 
     return status_logger
+
+
+# ┌──────────┐
+# │ Printing │
+# └──────────┘
 
 
 def print_function_matches(matches: Sequence[Function]):
