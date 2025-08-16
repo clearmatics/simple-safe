@@ -3,6 +3,7 @@
 import json
 import logging
 import time
+from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -64,7 +65,7 @@ def build_contract_call_safetx(
     fn_identifier: str,
     str_args: list[str],
     safe: Safe,
-    value: str,
+    value: Decimal,
     operation: int,
     output: Optional[TextIO],
     pretty: bool,

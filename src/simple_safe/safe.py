@@ -5,6 +5,7 @@ import secrets
 import shutil
 import sys
 import typing
+from decimal import Decimal
 from importlib.resources import files
 from types import TracebackType
 from typing import (
@@ -60,10 +61,10 @@ from .util import (
     to_checksum_address,
 )
 from .validation import (
+    validate_decimal_value,
     validate_deploy_options,
     validate_rpc_option,
     validate_safe,
-    validate_safetx_value,
     validate_safetxfile,
     validate_web3tx_options,
 )
@@ -223,7 +224,7 @@ def build_call(
     safe_nonce: Optional[int],
     safe_version: Optional[str],
     str_args: list[str],
-    value: str,
+    value_str: str,
 ) -> None:
     """Build a contract call Safe transaction.
 
@@ -243,7 +244,7 @@ def build_call(
         with open(abi_file, "r") as f:
             abi = json.load(f)
         contract = w3.eth.contract(address=to_checksum_address(contract_str), abi=abi)
-        validate_safetx_value(value)
+        value = validate_decimal_value(value_str)
     build_contract_call_safetx(
         w3=w3,
         contract=contract,
@@ -280,7 +281,7 @@ def build_custom(
     safe_nonce: Optional[int],
     safe_version: Optional[str],
     to_str: str,
-    value: str,
+    value_str: str,
 ) -> None:
     """Build a custom Safe transaction."""
     with status("Building Safe transaction..."):
@@ -298,7 +299,7 @@ def build_custom(
         )
         chaindata = fetch_chaindata(safe.chain_id)
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
-        validate_safetx_value(value)
+        value = validate_decimal_value(value_str)
         safetx = SafeTx(
             to=to_checksum_address(to_str),
             value=scale_decimal_value(value, decimals),
@@ -376,7 +377,7 @@ def build_deploy(
     safe_version: Optional[str],
     salt_str: str,
     str_args: list[str],
-    value: str,
+    value_str: str,
 ):
     """Build a contract deployment Safe transaction.
 
@@ -428,7 +429,7 @@ def build_deploy(
             if deployer_nonce:
                 raise click.ClickException("Deployer nonce is not used in CREATE2.")
 
-        validate_safetx_value(value)
+        value = validate_decimal_value(value_str)
         SafeOperation(operation)  # validate operation value
         createcall_address = to_checksum_address(
             createcall_str if createcall_str else DEFAULT_CREATECALL_ADDRESS
@@ -607,7 +608,7 @@ def build_erc20_call(
         fn_identifier=function,
         str_args=str_args,
         safe=safe,
-        value="0",
+        value=Decimal(0),
         operation=SafeOperation.CALL.value,
         output=output,
         pretty=pretty,
@@ -633,7 +634,7 @@ def build_safe_call(
     safe_nonce: Optional[int],
     safe_version: Optional[str],
     str_args: list[str],
-    value: str,
+    value_str: str,
 ) -> None:
     """Build a Safe transaction to call the Safe.
 
@@ -650,7 +651,7 @@ def build_safe_call(
             safe_version=safe_version,
             w3=w3,
         )
-        validate_safetx_value(value)
+        value = validate_decimal_value(value_str)
     build_contract_call_safetx(
         w3=w3,
         contract=contract,
@@ -853,7 +854,7 @@ def exec(
     sign_only: bool,
     trezor: Optional[str],
     txfile: typing.TextIO,
-    value: str,
+    value_str: str,
 ):
     """Execute a signed Safe transaction.
 
@@ -892,6 +893,7 @@ def exec(
 
         chaindata = fetch_chaindata(safe.chain_id)
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+        value = validate_decimal_value(value_str)
         value_scaled = scale_decimal_value(value, decimals)
 
         if offline:

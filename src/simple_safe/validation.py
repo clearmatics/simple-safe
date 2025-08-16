@@ -152,15 +152,14 @@ def validate_safe(
     return (safe, contract)
 
 
-def validate_safetx_value(value: str):
+def validate_decimal_value(value: str) -> Decimal:
     try:
         decval = Decimal(value)
     except InvalidOperation as exc:
-        raise click.ClickException(
-            f"Cannot parse SafeTx value '{value}' as Decimal."
-        ) from exc
+        raise click.ClickException(f"Cannot parse value '{value}' as Decimal.") from exc
     if decval < 0:
-        raise click.ClickException(f"SafeTx value '{value}' must be positive.")
+        raise click.ClickException(f"Value '{value}' must be positive.")
+    return decval
 
 
 def validate_safetxfile(

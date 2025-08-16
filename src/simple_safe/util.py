@@ -289,8 +289,8 @@ def query_safe_info(safe_contract: "Contract"):
     )
 
 
-def scale_decimal_value(value: str, decimals: int) -> int:
-    scaled_value = int(Decimal(value).scaleb(decimals))
+def scale_decimal_value(value: Decimal, decimals: int) -> int:
+    scaled_value = int(value.scaleb(decimals))
     logger.debug(f"Scaled value '{value}' to '{scaled_value}' ({decimals} decimals)")
     return scaled_value
 

@@ -128,7 +128,7 @@ safe_version_option_info = OptionInfo(
 
 
 value_option_info = OptionInfo(
-    args=["--value"],
+    args=["--value", "value_str"],
     default="0.0",
     help="tx value in decimals",
 )
