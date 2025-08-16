@@ -183,7 +183,7 @@ def build():
     pass
 
 
-@build.command(name="abi-call")
+@build.command(name="call")
 @params.abi
 @click.option(
     "--contract",
@@ -202,7 +202,7 @@ def build():
 @click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @params.common
-def build_abi_call(
+def build_call(
     abi_file: str,
     chain_id: Optional[int],
     contract_str: str,
