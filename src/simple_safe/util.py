@@ -13,6 +13,7 @@ from hexbytes import (
     HexBytes,
 )
 
+from . import params
 from .chaindata import ChainData
 from .constants import (
     SAFE_SETUP_FUNC_SELECTOR,
@@ -142,7 +143,11 @@ def format_hexbytes(data: HexBytes) -> str:
     len_data = len(data)
     return (
         f"{data[:TRUNCATE_DATA_BYTES].to_0x_hex()}"
-        + ("[danger]...[/danger] " if len_data > TRUNCATE_DATA_BYTES else " ")
+        + (
+            "[danger]...[/danger] "
+            if (not params.expand_data and (len_data > TRUNCATE_DATA_BYTES))
+            else " "
+        )
         + r"[secondary]\["
         + f"{len_data:,} bytes][/secondary]"
     )

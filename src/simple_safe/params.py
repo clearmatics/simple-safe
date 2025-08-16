@@ -20,11 +20,22 @@ Decorator = Callable[[FC], FC]
 
 optgroup = _OptGroup()
 
+# Flags
 quiet_mode = False
+expand_data = False
 
 # ┌───────────┐
 # │ Callbacks │
 # └───────────┘
+
+
+def expand_callback(
+    ctx: click.Context, _: click.Option, value: Optional[bool]
+) -> Optional[Any]:
+    if value:
+        global expand_data
+        expand_data = True
+    return None
 
 
 def help_callback(
@@ -158,6 +169,14 @@ def build_safetx(f: FC) -> FC:
 def common(f: FC) -> FC:
     for option in reversed(
         [
+            click.option(
+                "--expand",
+                is_flag=True,
+                expose_value=False,
+                is_eager=True,
+                help="don't truncate data in panels",
+                callback=expand_callback,
+            ),
             click.option(
                 "-q",
                 "--quiet",
