@@ -16,6 +16,7 @@ from hexbytes import (
     HexBytes,
 )
 
+from . import params
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
 from .chaindata import FALLBACK_DECIMALS, fetch_chaindata
@@ -83,9 +84,11 @@ def build_contract_call_safetx(
     chaindata = fetch_chaindata(safe.chain_id)
     decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
     console = rich.get_console()
-    console.line()
-    print_web3_call_data(ContractCall(fn_obj.abi, args), calldata)
-    console.line()
+    if not params.quiet_mode:
+        console.line()
+        print_web3_call_data(ContractCall(fn_obj.abi, args), calldata)
+        console.line()
+        print_line_if_tty(console, output)
 
     safetx = SafeTx(
         to=contract.address,
@@ -98,7 +101,6 @@ def build_contract_call_safetx(
         gas_token=CHECKSUM_ADDRESSS_ZERO,
         refund_receiver=CHECKSUM_ADDRESSS_ZERO,
     )
-    print_line_if_tty(console, output)
     output_console = get_output_console(output)
     output_console.print(
         get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
@@ -169,18 +171,20 @@ def process_contract_call_web3tx(
         )
 
     assert "data" in tx
-    console.line()
-    print_web3_call_data(contract_call, HexBytes(tx["data"]))
+    if not params.quiet_mode:
+        console.line()
+        print_web3_call_data(contract_call, HexBytes(tx["data"]))
 
     assert "chainId" in tx
     with status("Retrieving chainlist data..."):
         chaindata = fetch_chaindata(tx["chainId"])
         gasprice = None if offline else w3.eth.gas_price
 
-    console.line()
-    print_web3_tx_params(tx, auth, gas_estimate, chaindata)
-    console.line()
-    print_web3_tx_fees(tx, offline, gasprice, chaindata)
+    if not params.quiet_mode:
+        console.line()
+        print_web3_tx_params(tx, auth, gas_estimate, chaindata)
+        console.line()
+        print_web3_tx_fees(tx, offline, gasprice, chaindata)
 
     if (
         not offline
@@ -195,7 +199,8 @@ def process_contract_call_web3tx(
             f"estimated gas {gas_estimate}."
         )
 
-    console.line()
+    if not params.quiet_mode:
+        console.line()
     prompt = ("Sign" if sign_only else "Execute") + " Web3 transaction?"
     if not force and not Confirm.ask(prompt, default=False):
         raise click.Abort()
@@ -206,7 +211,8 @@ def process_contract_call_web3tx(
     output_console = get_output_console(output)
 
     if sign_only:
-        print_line_if_tty(console, output)
+        if not params.quiet_mode:
+            print_line_if_tty(console, output)
         output_console.print(get_json_data_renderable(signed_tx_dict))
     else:
         with status("Executing Web3 transaction..."):
@@ -236,8 +242,9 @@ def process_contract_call_web3tx(
                     f"Failed to obtain block {block_number} info from RPC node after {MAX_ATTEMPTS} attempts."
                 )
 
-        console.line()
-        print_web3_tx_receipt(timestamp, tx_receipt, chaindata)
+        if not params.quiet_mode:
+            console.line()
+            print_web3_tx_receipt(timestamp, tx_receipt, chaindata)
+            print_line_if_tty(console, output)
 
-        print_line_if_tty(console, output)
         output_console.print(tx_hash.to_0x_hex())

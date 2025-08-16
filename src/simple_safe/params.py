@@ -20,6 +20,8 @@ Decorator = Callable[[FC], FC]
 
 optgroup = _OptGroup()
 
+quiet_mode = False
+
 # ┌───────────┐
 # │ Callbacks │
 # └───────────┘
@@ -31,6 +33,15 @@ def help_callback(
     if value:
         click.echo(ctx.get_help())
         ctx.exit()
+    return None
+
+
+def quiet_callback(
+    ctx: click.Context, opt: click.Option, value: Optional[bool]
+) -> Optional[Any]:
+    if value and not SAFE_DEBUG:
+        global quiet_mode
+        quiet_mode = True
     return None
 
 
@@ -147,6 +158,15 @@ def build_safetx(f: FC) -> FC:
 def common(f: FC) -> FC:
     for option in reversed(
         [
+            click.option(
+                "-q",
+                "--quiet",
+                is_flag=True,
+                expose_value=False,
+                is_eager=True,
+                help="don't show information panels",
+                callback=quiet_callback,
+            ),
             click.option(
                 "-v",
                 "--verbose",
