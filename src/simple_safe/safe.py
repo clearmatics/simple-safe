@@ -178,6 +178,14 @@ def main():
 # └──────────┘
 
 
+# Convention for `safe build` subcommand options:
+# 1. --safe
+# 2. (command-specific non-tx options)
+# Safe transaction:
+# 3. (command-specific tx options)
+# 4. --data (if applicable)
+# 5. --value (if applicable)
+# 6. --operation (if applicable)
 @safe.group()
 def build():
     """Build a Safe transaction."""
@@ -185,19 +193,18 @@ def build():
 
 
 @build.command(name="call")
+@params.make_option(params.safe_address_option_info)
 @params.make_option(params.abi_option_info)
-@click.option(
+@optgroup.group("Safe transaction")
+@optgroup.option(
     "--contract",
     "contract_str",
     metavar="ADDRESS",
     required=True,
     help="contract call address",
 )
-@params.make_option(
-    params.value_option_info,
-)
-@params.make_option(params.operation_option_info)
-@params.make_option(params.safe_address_option_info)
+@params.make_option(params.value_option_info, cls=optgroup.option)
+@params.make_option(params.operation_option_info, cls=optgroup.option)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
@@ -251,16 +258,15 @@ def build_call(
 
 
 @build.command(name="custom")
-@click.option(
+@params.make_option(params.safe_address_option_info)
+@optgroup.group("Safe transaction")
+@optgroup.option(
     "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
 )
-@params.make_option(
-    params.value_option_info,
-)
-@click.option("--data", default="0x", help="call data payload")
-@params.make_option(params.safe_address_option_info)
+@optgroup.option("--data", default="0x", help="call data payload")
+@params.make_option(params.value_option_info, cls=optgroup.option)
+@params.make_option(params.operation_option_info, cls=optgroup.option)
 @params.build_safetx
-@params.make_option(params.operation_option_info)
 @params.output_file
 @params.common
 def build_custom(
@@ -310,6 +316,7 @@ def build_custom(
 
 
 @build.command(name="deploy")
+@params.make_option(params.safe_address_option_info)
 @params.make_option(params.abi_option_info)
 @click.option(
     "--code",
@@ -318,23 +325,18 @@ def build_custom(
     required=True,
     help="contract bytecode in hex format",
 )
-@params.make_option(
-    params.value_option_info,
-)
 @click.option(
     "--method",
     type=click.Choice(["CREATE", "CREATE2"]),
     default="CREATE2",
     help="contract deployment method",
 )
-@params.make_option(params.operation_option_info)
 @click.option(
     "--createcall",
     "createcall_str",
     metavar="ADDRESS",
     help="use a non-canonical CreateCall address",
 )
-@params.make_option(params.safe_address_option_info)
 @optgroup.group("CREATE deployment")
 @optgroup.option(
     "--deployer-nonce",
@@ -351,6 +353,9 @@ def build_custom(
     default=SALT_SENTINEL,
     help="CREATE2 salt value",
 )
+@optgroup.group("Safe transaction")
+@params.make_option(params.value_option_info, cls=optgroup.option)
+@params.make_option(params.operation_option_info, cls=optgroup.option)
 @params.build_safetx
 @params.output_file
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
@@ -551,14 +556,15 @@ def build_deploy(
 
 
 @build.command(name="erc20-call")
-@click.option(
+@params.make_option(params.safe_address_option_info)
+@optgroup.group("Safe transaction")
+@optgroup.option(
     "--token",
     "token_str",
     metavar="ADDRESS",
     required=True,
     help="ERC-20 token address",
 )
-@params.make_option(params.safe_address_option_info)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
@@ -609,10 +615,9 @@ def build_erc20_call(
 
 
 @build.command(name="safe-call")
-@params.make_option(
-    params.value_option_info,
-)
 @params.make_option(params.safe_address_option_info)
+@optgroup.group("Safe transaction")
+@params.make_option(params.value_option_info, cls=optgroup.option)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
