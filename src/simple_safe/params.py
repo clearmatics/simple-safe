@@ -73,7 +73,7 @@ def verbose_callback(
 class OptionInfo:
     args: Iterable[str]
     help: str
-    # defaults should match click.Option
+    # defaults should match click.Option class
     default: Optional[Any] = None
     metavar: Optional[str] = None
     type: Optional[Union[click.types.ParamType, Any]] = None
