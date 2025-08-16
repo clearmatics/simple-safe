@@ -250,6 +250,65 @@ def build_call(
     )
 
 
+@build.command(name="custom")
+@click.option(
+    "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
+)
+@params.make_option(
+    params.value_option_info,
+)
+@click.option("--data", default="0x", help="call data payload")
+@params.make_option(params.safe_address_option_info)
+@params.build_safetx
+@params.make_option(params.operation_option_info)
+@params.output_file
+@params.common
+def build_custom(
+    chain_id: Optional[int],
+    data: str,
+    operation: int,
+    output: Optional[typing.TextIO],
+    pretty: bool,
+    rpc: Optional[str],
+    safe_address: str,
+    safe_nonce: Optional[int],
+    safe_version: Optional[str],
+    to_str: str,
+    value: str,
+) -> None:
+    """Build a custom Safe transaction."""
+    with status("Building Safe transaction..."):
+        from web3.constants import CHECKSUM_ADDRESSS_ZERO
+
+        offline = rpc is None
+        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
+        safe, _ = validate_safe(
+            safe_address=to_checksum_address(safe_address),
+            offline=offline,
+            chain_id=chain_id,
+            safe_nonce=safe_nonce,
+            safe_version=safe_version,
+            w3=w3,
+        )
+        chaindata = fetch_chaindata(safe.chain_id)
+        decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+        validate_safetx_value(value)
+        safetx = SafeTx(
+            to=to_checksum_address(to_str),
+            value=scale_decimal_value(value, decimals),
+            data=HexBytes(data),
+            operation=SafeOperation(operation).value,
+            safe_tx_gas=0,
+            base_gas=0,
+            gas_price=0,
+            gas_token=CHECKSUM_ADDRESSS_ZERO,
+            refund_receiver=CHECKSUM_ADDRESSS_ZERO,
+        )
+        eip712_data = safetx.to_eip712_message(safe)
+    output_console = get_output_console(output)
+    output_console.print(get_json_data_renderable(eip712_data, pretty))
+
+
 @build.command(name="deploy")
 @params.make_option(params.abi_option_info)
 @click.option(
@@ -489,65 +548,6 @@ def build_deploy(
     output_console.print(
         get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
     )
-
-
-@build.command(name="custom")
-@click.option(
-    "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
-)
-@params.make_option(
-    params.value_option_info,
-)
-@click.option("--data", default="0x", help="call data payload")
-@params.make_option(params.safe_address_option_info)
-@params.build_safetx
-@params.make_option(params.operation_option_info)
-@params.output_file
-@params.common
-def build_custom(
-    chain_id: Optional[int],
-    data: str,
-    operation: int,
-    output: Optional[typing.TextIO],
-    pretty: bool,
-    rpc: Optional[str],
-    safe_address: str,
-    safe_nonce: Optional[int],
-    safe_version: Optional[str],
-    to_str: str,
-    value: str,
-) -> None:
-    """Build a custom Safe transaction."""
-    with status("Building Safe transaction..."):
-        from web3.constants import CHECKSUM_ADDRESSS_ZERO
-
-        offline = rpc is None
-        w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
-        safe, _ = validate_safe(
-            safe_address=to_checksum_address(safe_address),
-            offline=offline,
-            chain_id=chain_id,
-            safe_nonce=safe_nonce,
-            safe_version=safe_version,
-            w3=w3,
-        )
-        chaindata = fetch_chaindata(safe.chain_id)
-        decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
-        validate_safetx_value(value)
-        safetx = SafeTx(
-            to=to_checksum_address(to_str),
-            value=scale_decimal_value(value, decimals),
-            data=HexBytes(data),
-            operation=SafeOperation(operation).value,
-            safe_tx_gas=0,
-            base_gas=0,
-            gas_price=0,
-            gas_token=CHECKSUM_ADDRESSS_ZERO,
-            refund_receiver=CHECKSUM_ADDRESSS_ZERO,
-        )
-        eip712_data = safetx.to_eip712_message(safe)
-    output_console = get_output_console(output)
-    output_console.print(get_json_data_renderable(eip712_data, pretty))
 
 
 @build.command(name="erc20-call")
