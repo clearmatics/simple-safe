@@ -4,12 +4,16 @@ import secrets
 from decimal import Decimal, InvalidOperation
 from typing import (
     TYPE_CHECKING,
+    Any,
+    Iterable,
+    NamedTuple,
     Optional,
     TextIO,
     cast,
 )
 
 import click
+from click.core import ParameterSource
 from hexbytes import (
     HexBytes,
 )
@@ -45,9 +49,50 @@ logger = logging.getLogger(__name__)
 status = make_status_logger(logger)
 
 
+# ┌──────────────────────────┐
+# │ Option Validator Helpers │
+# └──────────────────────────┘
+
+
+class CLIOption(NamedTuple):
+    name: str
+    value: Optional[Any]
+    source: Optional[ParameterSource]
+
+
 # ┌───────────────────┐
 # │ Option Validators │
 # └───────────────────┘
+
+
+def validate_batch_options(
+    options: Iterable[CLIOption],
+    colnames: Iterable[str],
+):
+    """Validate options and CSV columns for batch mode."""
+    csv_columns: set[str] = set(colnames)
+    cli_options: set[str] = set()
+    cli_default: set[str] = set()
+    all_options: set[str] = set()
+    for option in options:
+        all_options.add(option.name)
+        if option.source == ParameterSource.COMMANDLINE:
+            cli_options.add(option.name)
+        elif (option.value is not None) and option.source == ParameterSource.DEFAULT:
+            cli_default.add(option.name)
+
+    # CLI options must not overlap with CSV columns
+    if overlap := cli_options & csv_columns:
+        raise click.ClickException(
+            f"Duplicate CLI options and CSV columns: {overlap}. "
+            "Either omit the CLI option or drop the CSV column."
+        )
+
+    # must have a value for every option
+    if not all_options <= (have_value := (cli_options | cli_default | csv_columns)):
+        raise click.ClickException(
+            f"Missing values for CLI options or CSV columns: {all_options - have_value}."
+        )
 
 
 def validate_deploy_options(

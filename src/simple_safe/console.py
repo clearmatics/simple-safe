@@ -14,6 +14,8 @@ from .chaindata import ChainData
 from .constants import (
     DEFAULT_CREATECALL_ADDRESS,
     DEFAULT_FALLBACK_ADDRESS,
+    DEFAULT_MULTISEND_ADDRESS,
+    DEFAULT_MULTISEND_CALLONLY_ADDRESS,
     DEFAULT_PROXYFACTORY_ADDRESS,
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
@@ -23,6 +25,7 @@ from .constants import (
     SYMBOL_WARNING,
 )
 from .types import (
+    BatchTxInfo,
     ContractCall,
     DeployParams,
     Safe,
@@ -32,10 +35,10 @@ from .types import (
     SignatureData,
 )
 from .util import (
+    custom_json_encoder,
     format_gwei_value,
     format_hexbytes,
     format_native_value,
-    hexbytes_json_encoder,
 )
 
 if TYPE_CHECKING:
@@ -112,7 +115,7 @@ def get_json_data_renderable(
 
     return JSON.from_data(
         data,
-        default=hexbytes_json_encoder,
+        default=custom_json_encoder,
         indent=2 if pretty else None,
     )
 
@@ -200,6 +203,41 @@ def make_status_logger(logger: logging.Logger):
 # ┌──────────┐
 # │ Printing │
 # └──────────┘
+
+
+def print_batch_safetx(
+    stats: BatchTxInfo, multisend_data: bytes, chaindata: Optional[ChainData]
+):
+    from web3.types import Wei
+
+    if stats.contract_address == DEFAULT_MULTISEND_ADDRESS:
+        contract = f"(MultiSend) [ok]{SYMBOL_CHECK} CANONICAL[/ok]"
+    elif stats.contract_address == DEFAULT_MULTISEND_CALLONLY_ADDRESS:
+        contract = f"(MultiSendCallOnly) [ok]{SYMBOL_CHECK} CANONICAL[/ok]"
+    else:
+        contract = f" [caution]{SYMBOL_CAUTION} UNKNOWN[/caution]"
+
+    count_breakdown: list[str] = []
+    if stats.count != stats.delegatecalls:
+        count_breakdown.append(f"{stats.count - stats.delegatecalls}x CALLs")
+    if stats.delegatecalls > 0:
+        count_breakdown.append(
+            f"[caution]{stats.delegatecalls}x DELEGATECALLs[/caution]"
+        )
+    breakdown = ", ".join(count_breakdown)
+    print_kvtable(
+        "Safe Batch Transaction",
+        "",
+        {
+            "MultiSend": f"{stats.contract_address} " + contract,
+            "To Addresses": next(iter(stats.to_addresses))
+            if len(stats.to_addresses) == 1
+            else f"{len(stats.to_addresses)} unique addresses",
+            "Transactions": f"{stats.count} total ({breakdown})",
+            "Total Data": f"{len(multisend_data)} bytes",
+            "Total Value": format_native_value(Wei(stats.total_value), chaindata),
+        },
+    )
 
 
 def print_function_matches(matches: Sequence[Function]):

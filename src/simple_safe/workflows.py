@@ -3,9 +3,12 @@
 import json
 import logging
 import time
+from dataclasses import asdict
 from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
+    Any,
+    Callable,
     Optional,
     Sequence,
     TextIO,
@@ -20,12 +23,13 @@ from hexbytes import (
 from . import params
 from .abi import Function, find_function, parse_args
 from .auth import Authenticator
-from .chaindata import FALLBACK_DECIMALS, fetch_chaindata
+from .chaindata import FALLBACK_DECIMALS, ChainData, fetch_chaindata
 from .console import (
     confirm,
     get_json_data_renderable,
     get_output_console,
     make_status_logger,
+    print_batch_safetx,
     print_function_matches,
     print_line_if_tty,
     print_web3_call_data,
@@ -33,18 +37,27 @@ from .console import (
     print_web3_tx_params,
     print_web3_tx_receipt,
 )
-from .constants import SYMBOL_WARNING
+from .constants import (
+    DEFAULT_MULTISEND_ADDRESS,
+    DEFAULT_MULTISEND_CALLONLY_ADDRESS,
+    SYMBOL_WARNING,
+)
 from .types import (
+    BatchTxInfo,
     ContractCall,
+    MultiSendTxInput,
     Safe,
     SafeOperation,
     SafeTx,
     Web3TxOptions,
 )
 from .util import (
+    make_multisendtx,
     make_web3tx,
     scale_decimal_value,
     signed_tx_to_dict,
+    to_checksum_address,
+    to_json,
     web3tx_receipt_json_encoder,
 )
 
@@ -101,6 +114,96 @@ def build_contract_call_safetx(
         gas_token=CHECKSUM_ADDRESSS_ZERO,
         refund_receiver=CHECKSUM_ADDRESSS_ZERO,
     )
+
+
+def build_batch_safetx(
+    *,
+    w3: "Web3",
+    safe: Safe,
+    multisend: "Optional[str]",
+    delegatecall: bool,
+    chaindata: Optional[ChainData],
+    rows: list[dict[str, Any]],
+    row_parser: Callable[[int, dict[str, str]], MultiSendTxInput],
+) -> SafeTx:
+    """Create a batch SafeTx."""
+    import rich
+    from safe_eth.eth.contracts import get_multi_send_contract
+    from web3.constants import CHECKSUM_ADDRESSS_ZERO
+
+    batch_info = BatchTxInfo()
+    txs: list[bytes] = []
+    for i, row in enumerate(list(rows)):
+        try:
+            txinput = row_parser(i, row)
+            assert "to" in txinput
+            assert "data" in txinput
+            assert "value" in txinput
+            assert "operation" in txinput
+
+            tx = make_multisendtx(**txinput)
+            if txinput["operation"] == SafeOperation.DELEGATECALL.value:
+                if not delegatecall:
+                    raise click.ClickException(
+                        "Processing DELEGATECALL transaction but --delegatecall not set."
+                    )
+                batch_info.delegatecalls += 1
+        except Exception as exc:
+            message = f"Row {1 + i}: " + (
+                f"{type(exc).__name__}: {exc}."
+                if not isinstance(exc, click.ClickException)
+                else str(exc)
+            )
+            raise click.ClickException(message) from exc
+        batch_info.to_addresses.add(txinput["to"])
+        batch_info.count += 1
+        batch_info.total_value += txinput["value"]
+        logger.info(f"Row {1 + i}: {to_json(txinput)} -> '0x{tx.hex()}'")
+        txs.append(tx)
+
+    if multisend:
+        batch_info.contract_address = to_checksum_address(multisend)
+    else:
+        batch_info.contract_address = to_checksum_address(
+            DEFAULT_MULTISEND_ADDRESS
+            if batch_info.delegatecalls > 0
+            else DEFAULT_MULTISEND_CALLONLY_ADDRESS
+        )
+
+    logger.info(f"Batch Stats: {to_json(asdict(batch_info))}")
+
+    multisend_data = b"".join(txs)
+    logger.info(f"MultiSend Payload: '0x{multisend_data.hex()}'")
+
+    contract = get_multi_send_contract(w3, batch_info.contract_address)
+    calldata = HexBytes(contract.encode_abi("multiSend(bytes)", [multisend_data]))
+    logger.info(f"MultiSend Call Data: '0x{calldata.hex()}'")
+
+    safetx = SafeTx(
+        to=contract.address,
+        value=0,
+        data=calldata,
+        operation=SafeOperation.DELEGATECALL.value,
+        safe_tx_gas=0,
+        base_gas=0,
+        gas_price=0,
+        gas_token=CHECKSUM_ADDRESSS_ZERO,
+        refund_receiver=CHECKSUM_ADDRESSS_ZERO,
+    )
+
+    console = rich.get_console()
+    if not params.quiet_mode:
+        console.line()
+        print_batch_safetx(batch_info, multisend_data, chaindata)
+
+    if batch_info.delegatecalls > 0:
+        if not params.quiet_mode:
+            console.line()
+        logger.warning(
+            f"{SYMBOL_WARNING} Batch Safe transaction contains "
+            "DELEGATECALLs with unrestricted access to the Safe"
+        )
+    return safetx
 
 
 def handle_function_match_failure(

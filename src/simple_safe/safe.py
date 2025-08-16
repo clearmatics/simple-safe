@@ -10,6 +10,7 @@ from importlib.resources import files
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
+    Any,
     Optional,
     cast,
 )
@@ -44,6 +45,7 @@ from .constants import DEFAULT_CREATECALL_ADDRESS, SALT_SENTINEL
 from .params import optgroup
 from .types import (
     ContractCall,
+    MultiSendTxInput,
     SafeInfo,
     SafeOperation,
     SafeTx,
@@ -52,6 +54,7 @@ from .util import (
     compute_safe_address,
     format_native_value,
     hash_eip712_data,
+    load_csv_file,
     make_offline_web3,
     parse_signatures,
     query_safe_info,
@@ -61,6 +64,8 @@ from .util import (
     to_json,
 )
 from .validation import (
+    CLIOption,
+    validate_batch_options,
     validate_decimal_value,
     validate_deploy_options,
     validate_rpc_option,
@@ -69,6 +74,7 @@ from .validation import (
     validate_web3tx_options,
 )
 from .workflows import (
+    build_batch_safetx,
     build_contract_call_safetx,
     handle_function_match_failure,
     process_contract_call_web3tx,
@@ -268,18 +274,29 @@ def build_call(
 @build.command(name="custom")
 @params.make_option(params.safe_address_option_info)
 @optgroup.group("Safe transaction")
-@optgroup.option(
-    "--to", "to_str", metavar="ADDRESS", required=True, help="destination address"
-)
+@optgroup.option("--to", "to_str", metavar="ADDRESS", help="destination address")
 @optgroup.option("--data", default="0x", help="call data payload")
 @params.make_option(params.value_option_info, cls=optgroup.option)
 @params.make_option(params.operation_option_info, cls=optgroup.option)
+@params.build_batch_safetx
+@optgroup.option(
+    "--delegatecall",
+    type=bool,
+    default=False,
+    is_flag=True,
+    help="allow executing DELEGATECALL transactions",
+)
 @params.build_safetx
 @params.output_file
 @params.common
+@click.pass_context
 def build_custom(
+    context: click.Context,
+    batch: Optional[str],
     chain_id: Optional[int],
     data: str,
+    delegatecall: bool,
+    multisend: Optional[str],
     operation: int,
     output: Optional[typing.TextIO],
     pretty: bool,
@@ -287,13 +304,29 @@ def build_custom(
     safe_address: str,
     safe_nonce: Optional[int],
     safe_version: Optional[str],
-    to_str: str,
+    to_str: Optional[str],
     value_str: str,
 ) -> None:
-    """Build a custom Safe transaction."""
-    with status("Building Safe transaction..."):
+    """Build a custom Safe transaction.
+
+    This command supports batch transactions using Safe's MultiSend and
+    MultiSendCallOnly contracts. Activate batch mode by passing the --batch
+    option to specify a CSV file of transaction data. The CSV file must
+    start with a header row, with each subsequent row representing a discrete
+    transaction.
+
+    Values for all the `Safe transaction` parameters must be provided, either as
+    options on the command line, or as values in CSV file columns matching the
+    option name, or as the default value in the case of options with defaults.
+    When parameters are passed as command line options, they apply to each of
+    batched transactions. The order of CSV columns is not important because
+    fields are matched by column name. Any other columns are ignored.
+    """
+    with status(f"Building Safe{' batch' if batch else ''} transaction..."):
+        import rich
         from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
+        console = rich.get_console()
         offline = rpc is None
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
         safe, _ = validate_safe(
@@ -306,19 +339,72 @@ def build_custom(
         )
         chaindata = fetch_chaindata(safe.chain_id)
         decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
-        value = validate_decimal_value(value_str)
-        safetx = SafeTx(
-            to=to_checksum_address(to_str),
-            value=scale_decimal_value(value, decimals),
-            data=HexBytes(data),
-            operation=SafeOperation(operation).value,
-            safe_tx_gas=0,
-            base_gas=0,
-            gas_price=0,
-            gas_token=CHECKSUM_ADDRESSS_ZERO,
-            refund_receiver=CHECKSUM_ADDRESSS_ZERO,
-        )
+
+        if batch:
+            colnames, rows = load_csv_file(batch)
+            cli_options = [
+                CLIOption(
+                    "to",
+                    to_str,
+                    context.get_parameter_source("to_str"),
+                ),
+                CLIOption(
+                    "data",
+                    data,
+                    context.get_parameter_source("data"),
+                ),
+                CLIOption(
+                    "value",
+                    value_str,
+                    context.get_parameter_source("value_str"),
+                ),
+                CLIOption(
+                    "operation",
+                    operation,
+                    context.get_parameter_source("operation"),
+                ),
+            ]
+            validate_batch_options(cli_options, colnames)
+
+            def row_parser(i: int, row: dict[str, Any]) -> MultiSendTxInput:
+                return MultiSendTxInput(
+                    to=to_checksum_address(row.get("to", to_str)),
+                    data=HexBytes(row.get("data", data)),
+                    value=scale_decimal_value(
+                        validate_decimal_value(row.get("value", value_str)), decimals
+                    ),
+                    operation=SafeOperation(int(row.get("operation", operation))).value,
+                )
+
+            safetx = build_batch_safetx(
+                w3=w3,
+                safe=safe,
+                multisend=multisend,
+                delegatecall=delegatecall,
+                chaindata=chaindata,
+                row_parser=row_parser,
+                rows=rows,
+            )
+
+        else:
+            if to_str is None:
+                raise click.ClickException("Missing option '--to'.")
+            safetx = SafeTx(
+                to=to_checksum_address(to_str),
+                value=scale_decimal_value(validate_decimal_value(value_str), decimals),
+                data=HexBytes(data),
+                operation=SafeOperation(operation).value,
+                safe_tx_gas=0,
+                base_gas=0,
+                gas_price=0,
+                gas_token=CHECKSUM_ADDRESSS_ZERO,
+                refund_receiver=CHECKSUM_ADDRESSS_ZERO,
+            )
+
         eip712_data = safetx.to_eip712_message(safe)
+
+    if not params.quiet_mode:
+        print_line_if_tty(console, output)
     output_console = get_output_console(output)
     output_console.print(get_json_data_renderable(eip712_data, pretty))
 

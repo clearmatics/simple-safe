@@ -183,6 +183,24 @@ def build_safetx(f: FC) -> FC:
     return f
 
 
+def build_batch_safetx(f: FC) -> FC:
+    for option in reversed(
+        [
+            optgroup.group("Batch transaction"),
+            optgroup.option(
+                "--batch", type=click.Path(exists=True), help="CSV file of transactions"
+            ),
+            optgroup.option(
+                "--multisend",
+                metavar="ADDRESS",
+                help=f"use a non-canonical MultiSend or MultiSendCallOnly {DEPLOY_SAFE_VERSION}",
+            ),
+        ]
+    ):
+        f = option(f)
+    return f
+
+
 def common(f: FC) -> FC:
     for option in reversed(
         [

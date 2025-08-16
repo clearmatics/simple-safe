@@ -1,3 +1,4 @@
+import csv
 import json
 import logging
 from contextlib import contextmanager
@@ -154,8 +155,10 @@ def format_hexbytes(data: HexBytes) -> str:
     )
 
 
-def hexbytes_json_encoder(obj: Any):
-    if isinstance(obj, HexBytes):
+def custom_json_encoder(obj: Any) -> str | list[Any]:
+    if isinstance(obj, set):
+        return list(obj)  # pyright: ignore[reportUnknownArgumentType]
+    elif isinstance(obj, HexBytes):
         return obj.to_0x_hex()
     raise TypeError(f"Cannot serialize object of {type(obj)}.")
 
@@ -175,11 +178,47 @@ def hash_eip712_data(data: Any) -> HexBytes:  # using eth_account
     return HexBytes(_hash_eip191_message(encoded))
 
 
+def load_csv_file(filename: str) -> tuple[list[str], list[dict[str, str]]]:
+    with open(filename) as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        reader = csv.DictReader(f, fieldnames=header)
+        logger.debug(f"CSV Columns: {header}")
+        return (header, [row for row in reader])
+
+
 def make_offline_web3() -> "Web3":
     from web3 import Web3
     from web3.providers.base import BaseProvider
 
     return Web3(provider=BaseProvider())
+
+
+def make_multisendtx(
+    to: "ChecksumAddress",
+    data: bytes,
+    value: int,
+    operation: int,
+) -> bytes:
+    from eth_abi.packed import encode_packed
+
+    tx = encode_packed(
+        (
+            "uint8",
+            "address",
+            "uint256",
+            "uint256",
+            "bytes",
+        ),
+        (
+            operation,
+            to,
+            value,
+            len(data),
+            data,
+        ),
+    )
+    return tx
 
 
 def make_web3tx(
@@ -323,7 +362,7 @@ def to_checksum_address(address: str) -> "ChecksumAddress":
 
 
 def to_json(val: Any) -> str:
-    return json.dumps(val, default=hexbytes_json_encoder)
+    return json.dumps(val, default=custom_json_encoder)
 
 
 def web3tx_receipt_json_encoder(

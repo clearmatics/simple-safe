@@ -5,6 +5,7 @@ from typing import (
     Any,
     NamedTuple,
     Optional,
+    TypedDict,
     cast,
 )
 
@@ -40,6 +41,15 @@ class ContractCall:
         )
 
 
+@dataclasses.dataclass
+class BatchTxInfo:
+    contract_address: Optional["ChecksumAddress"] = None
+    count: int = 0
+    delegatecalls: int = 0
+    to_addresses: set["ChecksumAddress"] = dataclasses.field(default_factory=set)
+    total_value: int = 0
+
+
 @dataclasses.dataclass(kw_only=True)
 class DeployParams:
     # deployment
@@ -52,6 +62,13 @@ class DeployParams:
     owners: list["ChecksumAddress"]
     threshold: int
     fallback: "ChecksumAddress"
+
+
+class MultiSendTxInput(TypedDict, total=False):
+    to: "ChecksumAddress"
+    data: HexBytes
+    value: int
+    operation: int
 
 
 class SafeOperation(Enum):
