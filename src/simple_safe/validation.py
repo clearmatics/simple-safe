@@ -8,6 +8,7 @@ from typing import (
     Iterable,
     NamedTuple,
     Optional,
+    Sequence,
     TextIO,
     cast,
 )
@@ -148,6 +149,40 @@ def validate_deploy_options(
         fallback=to_checksum_address(
             DEFAULT_FALLBACK_ADDRESS if not fallback else fallback
         ),
+    )
+
+
+def validate_funcarg_columns(colnames: Iterable[str], argnames: Sequence[str]):
+    """Check every argname (or its variant) appears in `colnames` exactly once."""
+    arglen = len(argnames)
+    _argnames = ["arg:" + name for name in argnames]
+    _altnames = ["arg:" + str(1 + i) for i in range(arglen)]
+    matched = [False] * arglen
+    done: set[str] = set()
+    used: dict[str, str] = {}
+    for field in colnames:
+        if field in done:
+            raise click.ClickException(
+                f"Duplicate function argument column '{field}' in CSV file."
+            )
+        elif (in_arg := (field in _argnames)) or (field in _altnames):
+            index = _argnames.index(field) if in_arg else _altnames.index(field)
+            matched[index] = True
+            done.add(_argnames[index])
+            done.add(_altnames[index])
+            used[field] = argnames[index]
+
+    if not all(matched):
+        missing = set(
+            [name for (name, match) in zip(argnames, matched) if match is False]
+        )
+        raise click.ClickException(
+            f"Missing {arglen - sum(matched)} function arguments: {missing}."
+        )
+
+    logger.info(
+        f"Mapping CSV columns {tuple(used.keys())} "
+        f"to function arguments {tuple(used.values())}"
     )
 
 

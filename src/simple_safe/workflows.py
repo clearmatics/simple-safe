@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Sequence,
     TextIO,
+    Type,
     cast,
 )
 
@@ -52,6 +53,7 @@ from .types import (
     Web3TxOptions,
 )
 from .util import (
+    load_csv_file,
     make_multisendtx,
     make_web3tx,
     scale_decimal_value,
@@ -59,6 +61,11 @@ from .util import (
     to_checksum_address,
     to_json,
     web3tx_receipt_json_encoder,
+)
+from .validation import (
+    CLIOption,
+    validate_batch_options,
+    validate_funcarg_columns,
 )
 
 if TYPE_CHECKING:
@@ -74,15 +81,26 @@ status = make_status_logger(logger)
 def build_contract_call_safetx(
     *,
     w3: "Web3",
-    contract: "Contract",
+    contract: "Contract | Type[Contract]",
+    address: Optional["ChecksumAddress"],
     fn_identifier: str,
     str_args: list[str],
     safe: Safe,
     value: Decimal,
     operation: int,
+    batch: Optional[str] = None,
+    cli_options: Optional[list[CLIOption]] = None,
+    multisend: Optional[str] = None,
+    parent_row_parser: Optional[
+        Callable[[int, dict[str, str]], MultiSendTxInput]
+    ] = None,
 ) -> SafeTx:
     """Print a SafeTx that represents a contract call."""
     import rich
+    from eth_typing import ABIFunction
+    from eth_utils.abi import (
+        get_abi_input_names,
+    )
     from web3.constants import CHECKSUM_ADDRESSS_ZERO
 
     match, partials = find_function(contract.abi, fn_identifier)
@@ -91,29 +109,95 @@ def build_contract_call_safetx(
     assert match is not None
 
     fn_obj = contract.get_function_by_selector(match.selector)
-    args = parse_args(fn_obj.abi, str_args)
-    calldata = HexBytes(contract.encode_abi(match.sig, args))
 
     chaindata = fetch_chaindata(safe.chain_id)
     decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+    value_scaled = scale_decimal_value(value, decimals)
 
-    console = rich.get_console()
-    if not params.quiet_mode:
-        console.line()
-        print_web3_call_data(ContractCall(fn_obj.abi, args), calldata)
-        console.line()
+    argnames = list(map(str, get_abi_input_names(cast("ABIFunction", match.abi))))
+    if str_args and len(str_args) != len(argnames):
+        raise click.ClickException(
+            f"Function '{match.sig}' takes {len(argnames)} "
+            f"arguments but {len(str_args)} " + "argument was"
+            if len(str_args) == 1
+            else "arguments were" + " provided."
+        )
 
-    return SafeTx(
-        to=contract.address,
-        value=scale_decimal_value(value, decimals),
-        data=calldata,
-        operation=SafeOperation(operation).value,
-        safe_tx_gas=0,
-        base_gas=0,
-        gas_price=0,
-        gas_token=CHECKSUM_ADDRESSS_ZERO,
-        refund_receiver=CHECKSUM_ADDRESSS_ZERO,
-    )
+    if batch:
+        assert cli_options is not None
+        assert parent_row_parser is not None
+
+        colnames, rows = load_csv_file(batch)
+
+        validate_batch_options(cli_options, colnames)
+
+        if not str_args:
+            validate_funcarg_columns(colnames, argnames)
+            for arg_i, name in enumerate(argnames):
+                iform, nform = f"arg:{1 + arg_i}", f"arg:{name}"
+                if (iform in colnames) and (nform in colnames):
+                    raise click.ClickException(
+                        f"Duplicate columns '{iform}' and '{nform}' refer to the same argument."
+                    )
+
+        def row_parser(row_i: int, row: dict[str, str]) -> MultiSendTxInput:
+            argvals = list(str_args)
+            if not argvals:
+                for arg_i, name in enumerate(argnames):
+                    iform, nform = f"arg:{1 + arg_i}", f"arg:{name}"
+                    argval = str(
+                        row.get(iform) if (iform in colnames) else row.get(nform)
+                    )
+                    assert argval is not None, f"missing {name}"
+                    argvals.append(argval)
+            args = parse_args(fn_obj.abi, argvals)
+            txdata = HexBytes(contract.encode_abi(match.sig, args))
+
+            logger.info(
+                f"Row {1 + row_i} Data: func={match.name} args={to_json(args)} -> {txdata.to_0x_hex()}"
+            )
+            return cast(
+                MultiSendTxInput,
+                {
+                    "value": value_scaled,
+                    "operation": operation,
+                    **parent_row_parser(row_i, row),
+                    "data": txdata,
+                },
+            )
+
+        return build_batch_safetx(
+            w3=w3,
+            safe=safe,
+            multisend=multisend,
+            delegatecall=False,
+            chaindata=chaindata,
+            row_parser=row_parser,
+            rows=rows,
+        )
+
+    else:
+        assert address is not None
+
+        args = parse_args(fn_obj.abi, str_args)
+        calldata = HexBytes(contract.encode_abi(match.sig, args))
+
+        console = rich.get_console()
+        if not params.quiet_mode:
+            console.line()
+            print_web3_call_data(ContractCall(fn_obj.abi, args), calldata)
+
+        return SafeTx(
+            to=address,
+            value=value_scaled,
+            data=calldata,
+            operation=SafeOperation(operation).value,
+            safe_tx_gas=0,
+            base_gas=0,
+            gas_price=0,
+            gas_token=CHECKSUM_ADDRESSS_ZERO,
+            refund_receiver=CHECKSUM_ADDRESSS_ZERO,
+        )
 
 
 def build_batch_safetx(
