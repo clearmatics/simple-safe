@@ -80,7 +80,7 @@ def parse_args(
             arg = parse_abi_type(abi_type, str_arg)
         except Exception as exc:
             raise Exception(
-                f"{exc.__class__.__name__}: {exc} [argument: index={i} name={arg_name} type={abi_type} value='{str_arg}']"
+                f"{exc.__class__.__name__}: {exc} [argument: index={i} name={arg_name} type={abi_type} value='{str_arg}']."
             ) from exc
         args.append(arg)
     return get_aligned_abi_inputs(fn_abi, tuple(args))[1]
@@ -103,7 +103,7 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
     from web3._utils.abi import is_array_type
 
     if not isinstance(val_str, str):  # pyright: ignore[reportUnnecessaryIsInstance]
-        raise TypeError("Values passed in value_str must be strings")
+        raise TypeError("Values passed in value_str must be strings.")
 
     if abi_type.startswith("uint") or abi_type.startswith("int"):
         return int(val_str)
@@ -112,12 +112,12 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
     elif abi_type == "bool":
         if val_str not in ("true", "false"):
             raise ValueError(
-                f"Boolean value must be 'true' or 'false' (not '{val_str}')"
+                f"Boolean value must be 'true' or 'false' (not '{val_str}')."
             )
         return True if val_str == "true" else False
     elif abi_type.startswith("bytes") or abi_type == "function":
         if not val_str.lower().startswith("0x"):
-            raise ValueError("Bytes value must be prefixed with 0x")
+            raise ValueError("Bytes value must be prefixed with '0x'.")
         return HexBytes(val_str)
     elif abi_type == "string":
         return val_str
@@ -127,4 +127,4 @@ def parse_abi_type(abi_type: str, val_str: str) -> Any:
             return tuple(val)
         return val
     else:
-        raise NotImplementedError(f"Unknown ABI Type '{abi_type}'")
+        raise NotImplementedError(f"Unknown ABI Type '{abi_type}'.")

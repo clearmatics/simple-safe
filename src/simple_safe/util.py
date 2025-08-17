@@ -156,7 +156,7 @@ def format_hexbytes(data: HexBytes) -> str:
 def hexbytes_json_encoder(obj: Any):
     if isinstance(obj, HexBytes):
         return obj.to_0x_hex()
-    raise TypeError(f"Cannot serialize object of {type(obj)}")
+    raise TypeError(f"Cannot serialize object of {type(obj)}.")
 
 
 def hash_eip712_data(data: Any) -> HexBytes:  # using eth_account

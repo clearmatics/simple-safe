@@ -130,7 +130,7 @@ def validate_safe(
         ("--safe-version", safe_version),
     ]:
         if offline and optval is None:
-            raise click.ClickException(f"Missing {optname} for offline SafeTx")
+            raise click.ClickException(f"Missing {optname} for offline SafeTx.")
         elif (not offline) and (optval is not None):
             raise click.ClickException(f"Invalid option {optname} in online mode.")
 
