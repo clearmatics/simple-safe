@@ -231,6 +231,8 @@ def build_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
+        import rich
+
         offline = rpc is None
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
         safe, _ = validate_safe(
@@ -245,16 +247,21 @@ def build_call(
             abi = json.load(f)
         contract = w3.eth.contract(address=to_checksum_address(contract_str), abi=abi)
         value = validate_decimal_value(value_str)
-    build_contract_call_safetx(
-        w3=w3,
-        contract=contract,
-        fn_identifier=function,
-        str_args=str_args,
-        safe=safe,
-        value=value,
-        operation=SafeOperation(operation).value,
-        output=output,
-        pretty=pretty,
+        safetx = build_contract_call_safetx(
+            w3=w3,
+            contract=contract,
+            fn_identifier=function,
+            str_args=str_args,
+            safe=safe,
+            value=value,
+            operation=SafeOperation(operation).value,
+        )
+    if not params.quiet_mode:
+        console = rich.get_console()
+        print_line_if_tty(console, output)
+    output_console = get_output_console(output)
+    output_console.print(
+        get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
     )
 
 
@@ -588,6 +595,7 @@ def build_erc20_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
+        import rich
         from safe_eth.eth.contracts import get_erc20_contract
 
         offline = rpc is None
@@ -602,16 +610,21 @@ def build_erc20_call(
         )
         token_address = to_checksum_address(token_str)
         ERC20 = get_erc20_contract(w3, address=token_address)
-    build_contract_call_safetx(
-        w3=w3,
-        contract=ERC20,
-        fn_identifier=function,
-        str_args=str_args,
-        safe=safe,
-        value=Decimal(0),
-        operation=SafeOperation.CALL.value,
-        output=output,
-        pretty=pretty,
+        safetx = build_contract_call_safetx(
+            w3=w3,
+            contract=ERC20,
+            fn_identifier=function,
+            str_args=str_args,
+            safe=safe,
+            value=Decimal(0),
+            operation=SafeOperation.CALL.value,
+        )
+    if not params.quiet_mode:
+        console = rich.get_console()
+        print_line_if_tty(console, output)
+    output_console = get_output_console(output)
+    output_console.print(
+        get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
     )
 
 
@@ -641,6 +654,8 @@ def build_safe_call(
     FUNCTION is the function's name, 4-byte selector, or full signature.
     """
     with status("Building Safe transaction..."):
+        import rich
+
         offline = rpc is None
         w3: "Web3" = validate_rpc_option(rpc) if not offline else make_offline_web3()
         safe, contract = validate_safe(
@@ -652,16 +667,21 @@ def build_safe_call(
             w3=w3,
         )
         value = validate_decimal_value(value_str)
-    build_contract_call_safetx(
-        w3=w3,
-        contract=contract,
-        fn_identifier=function,
-        str_args=str_args,
-        safe=safe,
-        value=value,
-        operation=SafeOperation.CALL.value,
-        output=output,
-        pretty=pretty,
+        safetx = build_contract_call_safetx(
+            w3=w3,
+            contract=contract,
+            fn_identifier=function,
+            str_args=str_args,
+            safe=safe,
+            value=value,
+            operation=SafeOperation.CALL.value,
+        )
+    if not params.quiet_mode:
+        console = rich.get_console()
+        print_line_if_tty(console, output)
+    output_console = get_output_console(output)
+    output_console.print(
+        get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
     )
 
 

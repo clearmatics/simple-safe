@@ -67,9 +67,7 @@ def build_contract_call_safetx(
     safe: Safe,
     value: Decimal,
     operation: int,
-    output: Optional[TextIO],
-    pretty: bool,
-):
+) -> SafeTx:
     """Print a SafeTx that represents a contract call."""
     import rich
     from web3.constants import CHECKSUM_ADDRESSS_ZERO
@@ -85,14 +83,14 @@ def build_contract_call_safetx(
 
     chaindata = fetch_chaindata(safe.chain_id)
     decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+
     console = rich.get_console()
     if not params.quiet_mode:
         console.line()
         print_web3_call_data(ContractCall(fn_obj.abi, args), calldata)
         console.line()
-        print_line_if_tty(console, output)
 
-    safetx = SafeTx(
+    return SafeTx(
         to=contract.address,
         value=scale_decimal_value(value, decimals),
         data=calldata,
@@ -102,10 +100,6 @@ def build_contract_call_safetx(
         gas_price=0,
         gas_token=CHECKSUM_ADDRESSS_ZERO,
         refund_receiver=CHECKSUM_ADDRESSS_ZERO,
-    )
-    output_console = get_output_console(output)
-    output_console.print(
-        get_json_data_renderable(safetx.to_eip712_message(safe), pretty),
     )
 
 
