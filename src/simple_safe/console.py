@@ -77,6 +77,18 @@ def activate_logging():
     )
 
 
+def confirm(message: str, default: bool):
+    """Convenience function to call Confirm.ask and set the stream.
+
+    By not setting the stream, there is an issue where, at a prompt, typing `n`
+    characters and then pressing backspace `n` times ends up clearing the entire
+    row of text (including the prompt).
+    """
+    from rich.prompt import Confirm
+
+    return Confirm.ask(message, default=default, stream=sys.stdin)
+
+
 def parse_argdata(
     args: tuple[Any, ...], argtypes: list[str], argnames: list[str]
 ) -> dict[str, "RenderableType"]:

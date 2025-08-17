@@ -26,6 +26,7 @@ from .click import Group
 from .console import (
     SAFE_DEBUG,
     activate_logging,
+    confirm,
     get_json_data_renderable,
     get_output_console,
     make_status_logger,
@@ -699,7 +700,6 @@ def deploy(
     offline = rpc is None
     with status("Checking Safe deployment parameters..."):
         import rich
-        from rich.prompt import Confirm
         from safe_eth.eth.contracts import get_proxy_factory_V1_4_1_contract
 
         console = rich.get_console()
@@ -758,7 +758,7 @@ def deploy(
         print_safe_deploy_info(data, address)
         console.line()
 
-    if not force and not Confirm.ask("Prepare Web3 transaction?", default=False):
+    if not force and not confirm("Prepare Web3 transaction?", default=False):
         raise click.Abort()
 
     with authenticator(keyfile, trezor) as auth:
@@ -856,7 +856,6 @@ def exec(
     """
     with status("Loading Safe transaction..."):
         import rich
-        from rich.prompt import Confirm
         from safe_eth.safe.safe_signature import SafeSignature
 
         console = rich.get_console()
@@ -932,7 +931,7 @@ def exec(
     if not params.quiet_mode:
         console.line()
     if not force:
-        if not Confirm.ask("Prepare Web3 transaction?", default=False):
+        if not confirm("Prepare Web3 transaction?", default=False):
             raise click.Abort()
 
     exec_call = ContractCall(
@@ -1176,7 +1175,6 @@ def sign(
     """Sign a Safe transaction."""
     with status("Loading Safe transaction..."):
         import rich
-        from rich.prompt import Confirm
         from safe_eth.safe.safe_signature import SafeSignature
 
         console = rich.get_console()
@@ -1199,7 +1197,7 @@ def sign(
         print_safetxdata(safe, safetx, safetx_hash, chaindata)
         console.line()
 
-    if not force and not Confirm.ask("Sign Safe transaction?", default=False):
+    if not force and not confirm("Sign Safe transaction?", default=False):
         raise click.Abort()
 
     data = safetx.to_eip712_message(safe)

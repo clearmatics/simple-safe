@@ -21,6 +21,7 @@ from .abi import Function, find_function, parse_args
 from .auth import Authenticator
 from .chaindata import FALLBACK_DECIMALS, fetch_chaindata
 from .console import (
+    confirm,
     get_json_data_renderable,
     get_output_console,
     make_status_logger,
@@ -144,7 +145,6 @@ def process_contract_call_web3tx(
 ):
     with status("Building Web3 transaction..."):
         import rich
-        from rich.prompt import Confirm
         from web3._utils.contracts import prepare_transaction
 
         console = rich.get_console()
@@ -202,7 +202,7 @@ def process_contract_call_web3tx(
     if not params.quiet_mode:
         console.line()
     prompt = ("Sign" if sign_only else "Execute") + " Web3 transaction?"
-    if not force and not Confirm.ask(prompt, default=False):
+    if not force and not confirm(prompt, default=False):
         raise click.Abort()
 
     signed_tx = auth.sign_transaction(tx)
