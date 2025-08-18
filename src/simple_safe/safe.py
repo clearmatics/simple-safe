@@ -475,6 +475,10 @@ def build_deploy(
                 salt = HexBytes(secrets.token_bytes(32))
             else:
                 salt = HexBytes(salt_str)
+                if len(salt) != 32:
+                    raise click.ClickException(
+                        f"Invalid salt value. Need exactly 32 bytes but received {len(salt)} bytes instead."
+                    )
             createcall_args = (value_scaled, init_code, salt)
 
         # CreateCall call
