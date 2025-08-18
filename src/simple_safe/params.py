@@ -183,22 +183,35 @@ def build_safetx(f: FC) -> FC:
     return f
 
 
-def build_batch_safetx(f: FC) -> FC:
-    for option in reversed(
-        [
-            optgroup.group("Batch transaction"),
-            optgroup.option(
-                "--batch", type=click.Path(exists=True), help="CSV file of transactions"
-            ),
-            optgroup.option(
-                "--multisend",
-                metavar="ADDRESS",
-                help=f"use a non-canonical MultiSend or MultiSendCallOnly {DEPLOY_SAFE_VERSION}",
-            ),
-        ]
-    ):
-        f = option(f)
-    return f
+def build_batch_safetx(delegatecall: bool = False) -> Decorator[FC]:
+    def decorator(f: FC) -> FC:
+        if delegatecall:
+            f = optgroup.option(
+                "--delegatecall",
+                type=bool,
+                default=False,
+                is_flag=True,
+                help="allow executing DELEGATECALL transactions",
+            )(f)
+        for option in reversed(
+            [
+                optgroup.option(
+                    "--batch",
+                    type=click.Path(exists=True),
+                    help="CSV file of transactions",
+                ),
+                optgroup.option(
+                    "--multisend",
+                    metavar="ADDRESS",
+                    help=f"use a non-canonical MultiSend or MultiSendCallOnly {DEPLOY_SAFE_VERSION}",
+                ),
+            ]
+        ):
+            f = option(f)
+        f = optgroup.group("Batch transaction")(f)
+        return f
+
+    return decorator
 
 
 def common(f: FC) -> FC:

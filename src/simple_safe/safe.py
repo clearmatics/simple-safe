@@ -279,14 +279,7 @@ def build_call(
 @optgroup.option("--data", default="0x", help="call data payload")
 @params.make_option(params.value_option_info, cls=optgroup.option)
 @params.make_option(params.operation_option_info, cls=optgroup.option)
-@params.build_batch_safetx
-@optgroup.option(
-    "--delegatecall",
-    type=bool,
-    default=False,
-    is_flag=True,
-    help="allow executing DELEGATECALL transactions",
-)
+@params.build_batch_safetx(delegatecall=True)
 @params.build_safetx
 @params.output_file
 @params.common
@@ -663,7 +656,7 @@ def build_deploy(
     metavar="ADDRESS",
     help="ERC-20 token address",
 )
-@params.build_batch_safetx
+@params.build_batch_safetx(delegatecall=False)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
