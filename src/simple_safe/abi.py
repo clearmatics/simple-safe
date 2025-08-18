@@ -79,8 +79,8 @@ def parse_args(
         try:
             arg = parse_abi_type(abi_type, str_arg)
         except Exception as exc:
-            raise Exception(
-                f"{exc.__class__.__name__}: {exc} [argument: index={i} name={arg_name} type={abi_type} value='{str_arg}']."
+            raise ValueError(
+                f"{exc} [argument: index={i} name={arg_name} type={abi_type} value='{str_arg}']."
             ) from exc
         args.append(arg)
     return get_aligned_abi_inputs(fn_abi, tuple(args))[1]
