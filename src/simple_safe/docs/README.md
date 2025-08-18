@@ -76,7 +76,7 @@ Commands:
   deploy      Deploy a new Safe account.
   encode      Encode contract call data.
   exec        Execute a signed Safe transaction.
-  hash        Compute hash of Safe transaction.
+  hash        Compute a Safe transaction hash.
   help        Browse the documentation.
   inspect     Inspect a Safe account.
   precompute  Compute a Safe address offline.

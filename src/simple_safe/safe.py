@@ -1124,7 +1124,7 @@ def exec(
 @click.argument("txfile", type=click.File("r"), required=True)
 @params.common
 def hash(txfile: typing.TextIO) -> None:
-    """Compute hash of Safe transaction."""
+    """Compute a Safe transaction hash."""
     safetx_json = txfile.read()
     safetx_data = json.loads(safetx_json)
     safetx_hash = hash_eip712_data(safetx_data)
