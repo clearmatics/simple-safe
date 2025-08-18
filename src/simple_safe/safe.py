@@ -207,21 +207,26 @@ def build():
     "--contract",
     "contract_str",
     metavar="ADDRESS",
-    required=True,
     help="contract call address",
 )
 @params.make_option(params.value_option_info, cls=optgroup.option)
 @params.make_option(params.operation_option_info, cls=optgroup.option)
+@params.build_batch_safetx(delegatecall=True)
 @params.build_safetx
 @params.output_file
 @click.argument("function", metavar="FUNCTION")
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
 @params.common
+@click.pass_context
 def build_call(
+    context: click.Context,
     abi_file: str,
+    batch: Optional[str],
     chain_id: Optional[int],
-    contract_str: str,
+    contract_str: Optional[str],
+    delegatecall: bool,
     function: str,
+    multisend: Optional[str],
     operation: int,
     output: Optional[typing.TextIO],
     pretty: bool,
@@ -234,7 +239,22 @@ def build_call(
 ) -> None:
     """Build a contract call Safe transaction.
 
-    FUNCTION is the function's name, 4-byte selector, or full signature.
+    This command supports batch transactions using Safe's MultiSend and
+    MultiSendCallOnly contracts. Activate batch mode by passing the --batch
+    option to specify a CSV file of transaction data. The CSV file must
+    start with a header row, with each subsequent row representing a discrete
+    transaction.
+
+    Values for all the `Safe transaction` parameters and the ARGUMENTs to the
+    named FUNCTION must be provided, as either as options on the command line,
+    or as values in CSV file columns matching the option name, or as the default
+    value in the case of options with defaults. When parameters are passed as
+    command line options, they apply to each of batched transactions. To specify
+    ARGUMENTs in the CSV file, use the column name `arg:INDEX` (example:
+    `arg:1`) or `arg:NAME` (example: `arg:to`), where `INDEX` is the 1-based
+    index of the argument and `NAME` is the corresponding ARGUMENT name as
+    it appears in the contract ABI. The order of CSV columns is not important
+    because fields are matched by column name. Any other columns are ignored.
     """
     with status("Building Safe transaction..."):
         import rich
@@ -249,20 +269,60 @@ def build_call(
             safe_version=safe_version,
             w3=w3,
         )
+        value = validate_decimal_value(value_str)
+        chaindata = fetch_chaindata(safe.chain_id)
+        decimals = chaindata.decimals if chaindata else FALLBACK_DECIMALS
+
+        if (not batch) and (contract_str is None):
+            raise click.ClickException("Missing option '--contract'.")
+
+        cli_options = [
+            CLIOption(
+                "contract",
+                contract_str,
+                context.get_parameter_source("contract_str"),
+            ),
+            CLIOption(
+                "value",
+                value_str,
+                context.get_parameter_source("value_str"),
+            ),
+            CLIOption(
+                "operation",
+                operation,
+                context.get_parameter_source("operation"),
+            ),
+        ]
+
+        def row_parser(_: int, row: dict[str, Any]) -> MultiSendTxInput:
+            return MultiSendTxInput(
+                to=to_checksum_address(row.get("contract", contract_str)),
+                value=scale_decimal_value(
+                    validate_decimal_value(row.get("value", value)), decimals
+                ),
+                operation=SafeOperation(int(row.get("operation", operation))).value,
+            )
+
         with open(abi_file, "r") as f:
             abi = json.load(f)
         contract = w3.eth.contract(abi=abi)
-        value = validate_decimal_value(value_str)
+
         safetx = build_contract_call_safetx(
             w3=w3,
             contract=contract,
-            address=to_checksum_address(contract_str),
+            address=to_checksum_address(contract_str) if contract_str else None,
             fn_identifier=function,
             str_args=str_args,
             safe=safe,
             value=value,
             operation=SafeOperation(operation).value,
+            batch=batch,
+            delegatecall=delegatecall,
+            cli_options=cli_options,
+            multisend=multisend,
+            parent_row_parser=row_parser if batch else None,
         )
+
     if not params.quiet_mode:
         console = rich.get_console()
         print_line_if_tty(console, output)

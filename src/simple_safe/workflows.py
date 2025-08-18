@@ -89,6 +89,7 @@ def build_contract_call_safetx(
     value: Decimal,
     operation: int,
     batch: Optional[str] = None,
+    delegatecall: bool = False,
     cli_options: Optional[list[CLIOption]] = None,
     multisend: Optional[str] = None,
     parent_row_parser: Optional[
@@ -170,7 +171,7 @@ def build_contract_call_safetx(
             w3=w3,
             safe=safe,
             multisend=multisend,
-            delegatecall=False,
+            delegatecall=delegatecall,
             chaindata=chaindata,
             row_parser=row_parser,
             rows=rows,
