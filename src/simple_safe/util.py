@@ -1,3 +1,4 @@
+import json
 import logging
 from contextlib import contextmanager
 from decimal import Decimal, localcontext
@@ -319,6 +320,10 @@ def to_checksum_address(address: str) -> "ChecksumAddress":
     from eth_utils.address import to_checksum_address
 
     return to_checksum_address(address)
+
+
+def to_json(val: Any) -> str:
+    return json.dumps(val, default=hexbytes_json_encoder)
 
 
 def web3tx_receipt_json_encoder(

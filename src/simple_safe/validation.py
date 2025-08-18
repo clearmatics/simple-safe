@@ -33,7 +33,7 @@ from .types import (
     SafeVariant,
     Web3TxOptions,
 )
-from .util import hash_eip712_data, hexbytes_json_encoder, to_checksum_address
+from .util import hash_eip712_data, to_checksum_address, to_json
 
 if TYPE_CHECKING:
     from eth_typing import URI, ChecksumAddress
@@ -234,9 +234,7 @@ def validate_safetxfile(
         gas_token=message["message"]["gasToken"],
         refund_receiver=message["message"]["refundReceiver"],
     )
-    logger.info(
-        f"SafeTx: {json.dumps(safetx._asdict(), default=hexbytes_json_encoder)}"
-    )
+    logger.info(f"SafeTx: {to_json(safetx._asdict())}")
 
     if safetx_hash != safetx.hash(safe):
         abort_invalid()

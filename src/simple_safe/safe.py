@@ -52,13 +52,13 @@ from .util import (
     compute_safe_address,
     format_native_value,
     hash_eip712_data,
-    hexbytes_json_encoder,
     make_offline_web3,
     parse_signatures,
     query_safe_info,
     scale_decimal_value,
     silence_logging,
     to_checksum_address,
+    to_json,
 )
 from .validation import (
     validate_decimal_value,
@@ -1232,7 +1232,7 @@ def sign(
         raise click.Abort()
 
     data = safetx.to_eip712_message(safe)
-    logger.info(f"EIP-712 Data: {json.dumps(data, default=hexbytes_json_encoder)}")
+    logger.info(f"EIP-712 Data: {to_json(data)}")
     with authenticator(keyfile, trezor) as auth:
         sigbytes = auth.sign_typed_data(data)
     sigobj = SafeSignature.parse_signature(sigbytes, safetx_hash)[0]
