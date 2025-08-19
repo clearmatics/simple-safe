@@ -3,6 +3,19 @@ name = "simple-safe"
 version = "0.2.7"
 description = "A simple Web3-native CLI for Safe accounts"
 readme = "README.md"
+license = "MIT"
+keywords = ["ethereum", "safe", "web3"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Office/Business :: Financial",
+  "Topic :: Utilities",
+]
 requires-python = ">=3.11"
 dependencies = [
   "click>=8.1.8",
@@ -19,6 +32,12 @@ dependencies = [
 
 [project.scripts]
 safe = "simple_safe.safe:main"
+
+[project.urls]
+Homepage = "https://github.com/clearmatics/simple-safe"
+Source = "https://github.com/clearmatics/simple-safe"
+Issues = "https://github.com/clearmatics/simple-safe/issues"
+Changes = "https://github.com/clearmatics/simple-safe/blob/master/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
