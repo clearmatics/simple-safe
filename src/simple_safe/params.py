@@ -194,7 +194,7 @@ def build_batch_safetx(delegatecall: bool = False) -> Decorator[FC]:
                 type=bool,
                 default=False,
                 is_flag=True,
-                help="allow executing DELEGATECALL transactions",
+                help="allow potentially risky DELEGATECALL transactions",
             )(f)
         for option in reversed(
             [
@@ -206,7 +206,7 @@ def build_batch_safetx(delegatecall: bool = False) -> Decorator[FC]:
                 optgroup.option(
                     "--multisend",
                     metavar="ADDRESS",
-                    help=f"use a non-canonical MultiSend or MultiSendCallOnly {DEPLOY_SAFE_VERSION}",
+                    help="use a non-canonical MultiSend or MultiSendCallOnly",
                 ),
             ]
         ):
