@@ -26,7 +26,6 @@ from .auth import authenticator
 from .chaindata import FALLBACK_DECIMALS, fetch_chaindata
 from .click import Group
 from .console import (
-    SAFE_DEBUG,
     activate_logging,
     confirm,
     get_json_data_renderable,
@@ -41,7 +40,7 @@ from .console import (
     print_version,
     print_web3_call_data,
 )
-from .constants import DEFAULT_CREATECALL_ADDRESS, SALT_SENTINEL
+from .constants import DEFAULT_CREATECALL_ADDRESS, SAFE_DEBUG, SALT_SENTINEL
 from .params import optgroup
 from .types import (
     ContractCall,

@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 import typing
 from datetime import datetime, timezone
@@ -19,6 +18,7 @@ from .constants import (
     DEFAULT_PROXYFACTORY_ADDRESS,
     DEFAULT_SAFE_SINGLETON_ADDRESS,
     DEFAULT_SAFEL2_SINGLETON_ADDRESS,
+    SAFE_DEBUG,
     SYMBOL_CAUTION,
     SYMBOL_CHECK,
     SYMBOL_CROSS,
@@ -56,7 +56,6 @@ logger = logging.getLogger(__name__)
 
 # Constants
 JSON_INDENT_LEVEL = 2
-SAFE_DEBUG = True if "SAFE_DEBUG" in os.environ else False
 
 
 # ┌─────────┐

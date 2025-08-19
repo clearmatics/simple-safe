@@ -1,3 +1,5 @@
+import os
+
 DEPLOY_SAFE_VERSION = "1.4.1"
 SAFE_CONTRACT_VERSIONS = (
     "0.0.1",
@@ -7,6 +9,7 @@ SAFE_CONTRACT_VERSIONS = (
     "1.3.0",
     "1.4.1",
 )
+SAFE_DEBUG = True if "SAFE_DEBUG" in os.environ else False
 SALT_SENTINEL = "random"
 TRUNCATE_DATA_BYTES = 500
 

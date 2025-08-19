@@ -8,11 +8,12 @@ from click_option_group._decorators import (
     _OptGroup,  # pyright: ignore[reportPrivateUsage]
 )
 
-from .console import (
+from .constants import (
+    DEPLOY_SAFE_VERSION,
+    SAFE_CONTRACT_VERSIONS,
     SAFE_DEBUG,
-    activate_logging,
+    SALT_SENTINEL,
 )
-from .constants import DEPLOY_SAFE_VERSION, SAFE_CONTRACT_VERSIONS, SALT_SENTINEL
 
 FC = TypeVar("FC", bound=Callable[..., Any] | Command)
 
@@ -60,6 +61,8 @@ def verbose_callback(
     ctx: click.Context, opt: click.Option, value: Optional[bool]
 ) -> Optional[Any]:
     if value and not SAFE_DEBUG:
+        from .console import activate_logging
+
         activate_logging()
     return None
 
