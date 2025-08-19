@@ -287,17 +287,17 @@ def deployment(precompute: bool) -> Callable[[FC], FC]:
                     "--without-events",
                     is_flag=True,
                     default=False,
-                    help="use implementation that does not emit events",
+                    help="deploy an implementation that does not emit events",
                 ),
                 optgroup.option(
-                    "--custom-singleton",
+                    "--singleton",
                     metavar="ADDRESS",
-                    help=f"use a non-canonical Singleton {DEPLOY_SAFE_VERSION}",
+                    help=f"configure a non-canonical Singleton {DEPLOY_SAFE_VERSION}",
                 ),
                 optgroup.option(
-                    "--custom-proxy-factory",
+                    "--proxy-factory",
                     metavar="ADDRESS",
-                    help=f"use a non-canonical SafeProxyFactory {DEPLOY_SAFE_VERSION}",
+                    help=f"deploy with a non-canonical SafeProxyFactory {DEPLOY_SAFE_VERSION}",
                 ),
                 optgroup.group(
                     "Initialization settings",
@@ -320,7 +320,7 @@ def deployment(precompute: bool) -> Callable[[FC], FC]:
                 optgroup.option(
                     "--fallback",
                     metavar="ADDRESS",
-                    help="custom Fallback Handler address",
+                    help="set a custom Fallback Handler [default: CompatibilityFallbackHandler]",
                 ),
             ]
         ):

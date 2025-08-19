@@ -881,8 +881,8 @@ def build_safe_call(
 def deploy(
     chain_id: Optional[int],
     chain_specific: bool,
-    custom_proxy_factory: Optional[str],
-    custom_singleton: Optional[str],
+    proxy_factory: Optional[str],
+    singleton: Optional[str],
     fallback: Optional[str],
     force: bool,
     gas_limit: Optional[int],
@@ -929,8 +929,8 @@ def deploy(
         data = validate_deploy_options(
             chain_id=chain_id if chain_specific else None,
             chain_specific=chain_specific,
-            custom_proxy_factory=custom_proxy_factory,
-            custom_singleton=custom_singleton,
+            proxy_factory=proxy_factory,
+            singleton=singleton,
             fallback=fallback,
             owners=owners,
             salt_nonce=salt_nonce,
@@ -1263,8 +1263,8 @@ def inspect(address: str, rpc: str):
 def precompute(
     chain_id: Optional[int],
     chain_specific: bool,
-    custom_proxy_factory: Optional[str],
-    custom_singleton: Optional[str],
+    proxy_factory: Optional[str],
+    singleton: Optional[str],
     fallback: Optional[str],
     output: Optional[typing.TextIO],
     owners: list[str],
@@ -1279,8 +1279,8 @@ def precompute(
     data = validate_deploy_options(
         chain_id=chain_id,
         chain_specific=chain_specific,
-        custom_proxy_factory=custom_proxy_factory,
-        custom_singleton=custom_singleton,
+        proxy_factory=proxy_factory,
+        singleton=singleton,
         fallback=fallback,
         owners=owners,
         salt_nonce=salt_nonce,

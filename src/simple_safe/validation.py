@@ -100,20 +100,20 @@ def validate_deploy_options(
     *,
     chain_id: Optional[int],
     chain_specific: bool,
-    custom_proxy_factory: Optional[str],
-    custom_singleton: Optional[str],
+    proxy_factory: Optional[str],
+    singleton: Optional[str],
     fallback: Optional[str],
     owners: list[str],
     salt_nonce: str,
     threshold: int,
     without_events: bool,
 ) -> DeployParams:
-    if custom_singleton is not None:
+    if singleton is not None:
         if without_events:
             raise click.ClickException(
-                "Option --without-events incompatible with --custom-singleton. "
+                "Option --without-events incompatible with custom --singleton. "
             )
-        singleton_address = custom_singleton
+        singleton_address = singleton
         variant = SafeVariant.UNKNOWN
     elif without_events:
         singleton_address = DEFAULT_SAFE_SINGLETON_ADDRESS
@@ -136,9 +136,7 @@ def validate_deploy_options(
         chain_id = None
     return DeployParams(
         proxy_factory=to_checksum_address(
-            DEFAULT_PROXYFACTORY_ADDRESS
-            if custom_proxy_factory is None
-            else custom_proxy_factory
+            DEFAULT_PROXYFACTORY_ADDRESS if proxy_factory is None else proxy_factory
         ),
         singleton=to_checksum_address(singleton_address),
         chain_id=chain_id,
