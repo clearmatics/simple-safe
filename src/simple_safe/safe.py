@@ -153,7 +153,7 @@ sys.excepthook = handle_crash
     help="print version info and exit",
 )
 def safe():
-    """A simple Web3-native CLI for Safe accounts."""
+    """A simple Web3-native CLI for Safe multisig wallets."""
     import rich
     from rich.theme import Theme
 

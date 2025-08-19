@@ -1,6 +1,6 @@
 # Simple Safe
 
-A simple Web3-native CLI for Safe accounts.
+A simple Web3-native CLI for Safe multisig wallets.
 
 Functionality:
 
@@ -65,7 +65,7 @@ $ safe --help
 
 Usage: safe [OPTIONS] COMMAND [ARGS]...
 
-  A simple Web3-native CLI for Safe accounts.
+  A simple Web3-native CLI for Safe multisig wallets.
 
 Options:
   --version   print version info and exit

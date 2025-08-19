@@ -1,7 +1,7 @@
 [project]
 name = "simple-safe"
 version = "0.2.7"
-description = "A simple Web3-native CLI for Safe accounts"
+description = "A simple Web3-native CLI for Safe multisig wallets"
 readme = "README.md"
 license = "MIT"
 keywords = ["ethereum", "safe", "web3"]
