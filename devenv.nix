@@ -34,6 +34,15 @@
     uv run -q ruff check --fix --select I $SOURCE_DIRS
   '';
 
+  scripts.build.exec = ''
+    rm -f ./dist/*.whl ./dist/*.tar.gz
+    uv build
+    echo -e "\n$(ls ./dist/*.tar.gz)" \
+      && tar -ztf ./dist/*.tar.gz | sort
+    echo -e "\n$(ls ./dist/*.whl)" \
+      && wheel2json ./dist/*.whl | jq -r '.dist_info.record.[].path' | sort
+  '';
+
   scripts.check.exec = ''
     uv run -q ruff check $SOURCE_DIRS
     uv run -q pyright $SOURCE_DIRS
