@@ -2,9 +2,10 @@
 
 A simple Web3-native CLI for Safe multisig wallets.
 
-Functionality:
+Main functionality:
 
-- `🚀` deploy a Safe account
+- `🚀` deploy a new Safe account
+- `🔍` inspect a Safe account
 - `📝` build a Safe transaction
 - `🔏` sign a Safe transaction
 - `🌐` execute a Safe transaction
@@ -12,43 +13,58 @@ Functionality:
 - `🪪` authenticate with a Trezor
 - `🪪` authenticate with a keyfile
 
+Safe transaction types:
+
+- `📐` custom transactions
+- `📡` smart contract call
+- `🪙` ERC-20 token call
+- `📦` batch transactions (via MultiSend)
+- `✨` contract deployment (via CreateCall)
+
 Benefits:
 
-- ✅ runs in the terminal
-- ✅ no Terms of Use to accept
-- ✅ no Privacy Policy to accept
-- ✅ all commands can be scripted
-- ✅ not reliant on centralized services
-- ✅ no need for chain to be officially supported
+- `💻` runs in the terminal
+- `🤖` all commands can be scripted
+- `✅` works with any EIP-1559 EVM chain
+- `🚫` does not collect your data
+- `🚫` does not impose any Terms of Use
+- `🚫` does not require centralized services
 
 ## Getting started
 
-To get the most out of Simple Safe:
+👉 _To get the most out of Simple Safe, familiarize yourself with the
+[Safe Protocol](https://github.com/safe-global/safe-smart-account/blob/v1.4.1/docs/overview.md)
+summary and Safe's extensive
+[Safe Smart Accounts](https://docs.safe.global/advanced/smart-account-overview)
+documentation._
 
-- familiarize yourself with the
-  [Safe Protocol](https://github.com/safe-global/safe-smart-account/blob/v1.4.1/docs/overview.md)
-  and
-  [Safe Smart Accounts](https://docs.safe.global/advanced/smart-account-overview)
-  documentation
+Before you get started, you will need:
 
-To get started, you will need:
-
-1. an EVM-compatible chain that supports EIP-1559
-2. a JSON-RPC endpoint over HTTP (not Websocket)
-3. the [Safe Smart Account](https://github.com/safe-global/safe-smart-account)
-   contracts deployed (preferably at
-   [canonical addresses](https://github.com/safe-global/safe-singleton-factory?tab=readme-ov-file#how-to-get-the-singleton-deployed-to-your-network))
+- Python 3.11 or later
+- the [pipx package manager](https://pipx.pypa.io/stable/installation/)
+- an EVM-compatible chain that supports EIP-1559
+- an Ethereum JSON-RPC endpoint over HTTP (not Websocket)
+- [Safe Smart Account](https://github.com/safe-global/safe-smart-account)
+  contracts deployed (preferably at
+  [canonical addresses](https://github.com/safe-global/safe-singleton-factory?tab=readme-ov-file#how-to-get-the-singleton-deployed-to-your-network))
 
 Install Simple Safe using `pipx`:
 
 ```sh
-pipx install git+ssh://git@github.com/clearmatics/simple-safe.git
+pipx install simple-safe
 ```
 
 Upgrade Simple Safe to the latest version using `pipx`:
 
 ```sh
 pipx upgrade simple-safe
+```
+
+⚠️ If upgrading from an earlier version installed from Github (pre-`0.3.0`),
+switch to PyPI releases with:
+
+```sh
+pipx install --force simple-safe
 ```
 
 For convenience, set the environment variable `SAFE_RPC` to the JSON-RPC node
@@ -58,7 +74,7 @@ URL:
 export SAFE_RPC=http://localhost:8545
 ```
 
-Use the `--help` option to explore the tool's subcommands:
+Use the `--help` option to explore Simple Safe commands:
 
 ```console
 $ safe --help
