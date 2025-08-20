@@ -218,22 +218,25 @@ def print_batch_safetx(
 
     count_breakdown: list[str] = []
     if stats.count != stats.delegatecalls:
-        count_breakdown.append(f"{stats.count - stats.delegatecalls}x CALLs")
+        count_breakdown.append(f"{stats.count - stats.delegatecalls} CALLs")
     if stats.delegatecalls > 0:
         count_breakdown.append(
-            f"[caution]{stats.delegatecalls}x DELEGATECALLs[/caution]"
+            f"[caution]{stats.delegatecalls} DELEGATECALLs[/caution]"
         )
     breakdown = ", ".join(count_breakdown)
+    discrete_to_addr = len(stats.to_addresses) == 1
     print_kvtable(
         "Safe Batch Transaction",
         "",
         {
             "MultiSend": f"{stats.contract_address} " + contract,
-            "To Addresses": next(iter(stats.to_addresses))
-            if len(stats.to_addresses) == 1
-            else f"{len(stats.to_addresses)} unique addresses",
             "Transactions": f"{stats.count} total ({breakdown})",
-            "Total Data": f"{len(multisend_data)} bytes",
+            "To Address" + ("es" if not discrete_to_addr else ""): next(
+                iter(stats.to_addresses)
+            )
+            if discrete_to_addr
+            else f"{len(stats.to_addresses)} unique addresses",
+            "Data Payload": f"{len(multisend_data)} bytes total (average: {int(len(multisend_data) / stats.count)} bytes/tx)",
             "Total Value": format_native_value(Wei(stats.total_value), chaindata),
         },
     )
