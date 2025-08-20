@@ -20,6 +20,35 @@ Template:
 ### Fixed
 -->
 
+## [v0.3.0] - 2025-08-20
+
+### Changed
+
+- Rename `build abi-call` to `build call` ([`2f21855`](https://github.com/clearmatics/simple-safe/commit/2f21855))
+- Print JSON without additional indentation by default ([`c8ab382`](https://github.com/clearmatics/simple-safe/commit/c8ab382))
+- Rename command options in `deploy` and `precompute` ([`50f3957`](https://github.com/clearmatics/simple-safe/commit/50f3957))
+- Group `build` Safe transaction options consistently ([`28a3741`](https://github.com/clearmatics/simple-safe/commit/28a3741))
+- Reduce default data truncation limit to 500 bytes ([`3aef2b1`](https://github.com/clearmatics/simple-safe/commit/3aef2b1))
+
+### Added
+
+- Support building `--batch` Safe transactions (REF)
+- Add `build deploy` command to deploy smart contracts ([`2656b7a`](https://github.com/clearmatics/simple-safe/commit/2656b7a))
+- Allow sending value in a Web3 `execTransaction` ([`217e1ad`](https://github.com/clearmatics/simple-safe/commit/217e1ad))
+- Add a `--quiet` option to skip information panels ([`71e9c86`](https://github.com/clearmatics/simple-safe/commit/71e9c86))
+- Add a `--pretty` option to print JSON with indentation ([`c8ab382`](https://github.com/clearmatics/simple-safe/commit/c8ab382))
+- Add an `--expand` option to control data ellipsing ([`a1f127f`](https://github.com/clearmatics/simple-safe/commit/a1f127f))
+- Show Call Data Encoder for contract call SafeTxs ([`3867f6e`](https://github.com/clearmatics/simple-safe/commit/3867f6e))
+
+### Removed
+
+- Drop the `--value` option from `build erc20-call` ([`823b6ad`](https://github.com/clearmatics/simple-safe/commit/823b6ad))
+
+### Fixed
+
+- Fix a UI issue where prompt was cleared on backspace ([`0855916`](https://github.com/clearmatics/simple-safe/issues/0855916))
+- Fix an error when parsing ABI call string arguments ([`0683f70`](https://github.com/clearmatics/simple-safe/commit/0683f70))
+
 ## [v0.2.7] - 2025-08-12
 
 ### Fixed
@@ -90,6 +119,7 @@ Template:
 
 _First internal release._
 
+[v0.3.0]: https://github.com/clearmatics/simple-safe/releases/tag/v0.3.0
 [v0.2.7]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.7
 [v0.2.6]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.6
 [v0.2.5]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.5
