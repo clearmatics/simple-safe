@@ -1,6 +1,6 @@
 [project]
 name = "simple-safe"
-version = "0.2.7"
+version = "0.3.0"
 description = "A simple Web3-native CLI for Safe multisig wallets"
 readme = "README.md"
 license = "MIT"
