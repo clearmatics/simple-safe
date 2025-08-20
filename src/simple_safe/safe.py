@@ -484,6 +484,9 @@ def build_custom(
     metavar="ADDRESS",
     help="use a non-canonical CreateCall address",
 )
+@optgroup.group("Safe transaction")
+@params.make_option(params.value_option_info, cls=optgroup.option)
+@params.make_option(params.operation_option_info, cls=optgroup.option)
 @optgroup.group("CREATE deployment")
 @optgroup.option(
     "--deployer-nonce",
@@ -500,9 +503,6 @@ def build_custom(
     default=SALT_SENTINEL,
     help="CREATE2 salt value",
 )
-@optgroup.group("Safe transaction")
-@params.make_option(params.value_option_info, cls=optgroup.option)
-@params.make_option(params.operation_option_info, cls=optgroup.option)
 @params.build_safetx
 @params.output_file
 @click.argument("str_args", metavar="[ARGUMENT]...", nargs=-1)
