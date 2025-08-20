@@ -242,18 +242,18 @@ def build_call(
     MultiSendCallOnly contracts. Activate batch mode by passing the --batch
     option to specify a CSV file of transaction data. The CSV file must
     start with a header row, with each subsequent row representing a discrete
-    transaction.
+    transaction. The order of CSV columns is not important because fields are
+    matched by column name. Any other columns are ignored.
 
     Values for all the `Safe transaction` parameters and the ARGUMENTs to the
     named FUNCTION must be provided, as either as options on the command line,
     or as values in CSV file columns matching the option name, or as the default
-    value in the case of options with defaults. When parameters are passed as
-    command line options, they apply to each of batched transactions. To specify
-    ARGUMENTs in the CSV file, use the column name `arg:INDEX` (example:
-    `arg:1`) or `arg:NAME` (example: `arg:to`), where `INDEX` is the 1-based
-    index of the argument and `NAME` is the corresponding ARGUMENT name as
-    it appears in the contract ABI. The order of CSV columns is not important
-    because fields are matched by column name. Any other columns are ignored.
+    value in the case of options with defaults. In --batch mode, if parameters
+    are passed as command line options, they apply to each one of the batched
+    transactions. To specify ARGUMENTs in the CSV file, use the column name
+    `arg:INDEX` (example: `arg:1`) or `arg:NAME` (example: `arg:to`), where
+    `INDEX` is the 1-based index of the argument and `NAME` is the corresponding
+    ARGUMENT name as it appears in the contract ABI.
     """
     with status("Building Safe transaction..."):
         import rich
@@ -366,14 +366,14 @@ def build_custom(
     MultiSendCallOnly contracts. Activate batch mode by passing the --batch
     option to specify a CSV file of transaction data. The CSV file must
     start with a header row, with each subsequent row representing a discrete
-    transaction.
+    transaction. The order of CSV columns is not important because fields are
+    matched by column name. Any other columns are ignored.
 
     Values for all the `Safe transaction` parameters must be provided, either as
     options on the command line, or as values in CSV file columns matching the
     option name, or as the default value in the case of options with defaults.
-    When parameters are passed as command line options, they apply to each of
-    batched transactions. The order of CSV columns is not important because
-    fields are matched by column name. Any other columns are ignored.
+    In --batch mode, if parameters are passed as command line options, they
+    apply to each one of the batched transactions.
     """
     with status(f"Building Safe{' batch' if batch else ''} transaction..."):
         import rich
@@ -745,18 +745,18 @@ def build_erc20_call(
     MultiSendCallOnly contracts. Activate batch mode by passing the --batch
     option to specify a CSV file of transaction data. The CSV file must
     start with a header row, with each subsequent row representing a discrete
-    transaction.
+    transaction. The order of CSV columns is not important because fields are
+    matched by column name. Any other columns are ignored.
 
     Values for all the `Safe transaction` parameters and the ARGUMENTs to the
     named FUNCTION must be provided, as either as options on the command line,
     or as values in CSV file columns matching the option name, or as the default
-    value in the case of options with defaults. When parameters are passed as
-    command line options, they apply to each of batched transactions. To specify
-    ARGUMENTs in the CSV file, use the column name `arg:INDEX` (example:
-    `arg:1`) or `arg:NAME` (example: `arg:to`), where `INDEX` is the 1-based
-    index of the argument and `NAME` is the corresponding ARGUMENT name as
-    it appears in the contract ABI. The order of CSV columns is not important
-    because fields are matched by column name. Any other columns are ignored.
+    value in the case of options with defaults. In --batch mode, if parameters
+    are passed as command line options, they apply to each one of the batched
+    transactions. To specify ARGUMENTs in the CSV file, use the column name
+    `arg:INDEX` (example: `arg:1`) or `arg:NAME` (example: `arg:to`), where
+    `INDEX` is the 1-based index of the argument and `NAME` is the corresponding
+    ARGUMENT name as it appears in the contract ABI.
     """
     with status("Building Safe transaction..."):
         import rich
