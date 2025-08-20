@@ -32,7 +32,7 @@ Template:
 
 ### Added
 
-- Support building `--batch` Safe transactions (REF)
+- Support building `--batch` Safe transactions ([#7](https://github.com/clearmatics/simple-safe/issues/7))
 - Add `build deploy` command to deploy smart contracts ([`2656b7a`](https://github.com/clearmatics/simple-safe/commit/2656b7a))
 - Allow sending value in a Web3 `execTransaction` ([`217e1ad`](https://github.com/clearmatics/simple-safe/commit/217e1ad))
 - Add a `--quiet` option to skip information panels ([`71e9c86`](https://github.com/clearmatics/simple-safe/commit/71e9c86))
