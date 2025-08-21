@@ -102,7 +102,7 @@ Commands:
 
 ## Authentication
 
-For signing messages and transactions, Simple Safe currently supports
+For signing Safe and Web3 transactions, Simple Safe currently supports
 authenticating with a Trezor device (more secure) or a local encrypted keyfile
 (less secure).
 
