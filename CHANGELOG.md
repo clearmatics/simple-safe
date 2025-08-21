@@ -46,7 +46,7 @@ Template:
 
 ### Fixed
 
-- Fix a UI issue where prompt was cleared on backspace ([`0855916`](https://github.com/clearmatics/simple-safe/issues/0855916))
+- Fix a UI issue where prompt was cleared on backspace ([`0855916`](https://github.com/clearmatics/simple-safe/commit/0855916))
 - Fix an error when parsing ABI call string arguments ([`0683f70`](https://github.com/clearmatics/simple-safe/commit/0683f70))
 
 ## [v0.2.7] - 2025-08-12
