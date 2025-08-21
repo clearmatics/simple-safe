@@ -11,6 +11,7 @@ from typing import (
     cast,
 )
 
+import click
 from hexbytes import (
     HexBytes,
 )
@@ -278,10 +279,19 @@ def parse_signatures(
     from safe_eth.safe.safe_signature import SafeSignature
     from web3.constants import ADDRESS_ZERO
 
+    all_sigbytes: set[HexBytes] = set()
+
     for sigfile in sigfiles:
         with open(sigfile, "r") as sf:
             sigtext = sf.read().rstrip()
             sigbytes = HexBytes(sigtext)
+
+        if sigbytes in all_sigbytes:
+            raise click.ClickException(
+                f"Duplicate signature in '{sigfile}': {sigbytes.to_0x_hex()}."
+            )
+        all_sigbytes.add(sigbytes)
+
         siglist = SafeSignature.parse_signature(sigbytes, safetx_hash, safetx_preimage)
         if len(siglist) != 1:
             address = None
