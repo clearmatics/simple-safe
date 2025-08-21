@@ -1,6 +1,5 @@
 import json
 import logging
-import pdb
 import secrets
 import shutil
 import sys
@@ -118,6 +117,8 @@ def handle_crash(
                 message = format_error(exc_type.__name__, str(exc_value))
         console.print(message)
     else:
+        import pdb
+
         rich_traceback = Traceback.from_exception(
             exc_type,
             exc_value,
