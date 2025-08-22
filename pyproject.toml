@@ -42,7 +42,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["pytest>=8.4.0", "ruff>=0.12.2", "tuna>=0.5.11"]
+dev = ["pytest>=8.4.0", "ruff>=0.12.2", "tuna>=0.5.11", "wheel-inspect>=1.7.2"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
