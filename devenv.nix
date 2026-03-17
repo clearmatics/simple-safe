@@ -13,8 +13,6 @@
     pkgs.taplo
   ];
 
-  env.UV_PYTHON = "${config.env.DEVENV_PROFILE}/bin/python";
-
   env.LD_LIBRARY_PATH = lib.makeLibraryPath [
     pkgs.libusb1
   ];
