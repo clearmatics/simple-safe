@@ -17,14 +17,14 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-  "click>=8.1.8",
+  "click~=8.1.8",
   "click-option-group>=0.5.7",
   "platformdirs>=4.3.8",
   "requests>=2.32.4",
   "rich>=14.0.0",
   "safe-eth-py>=7.3.0",
   "tomli-w>=1.2.0",
-  "trezor[ethereum]>=0.13.10",
+  "trezor[ethereum]~=0.13.10",
 ]
 
 [project.scripts]
