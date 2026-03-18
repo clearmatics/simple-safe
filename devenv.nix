@@ -33,6 +33,7 @@
   '';
 
   scripts.build.exec = ''
+    set -ex
     rm -f ./dist/*.whl ./dist/*.tar.gz
     uv build
     echo -e "\n$(ls ./dist/*.tar.gz)" \
