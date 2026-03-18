@@ -28,12 +28,13 @@
   env.SOURCE_DIRS = "src/simple_safe tests";
 
   scripts.autofix.exec = ''
+    set -eux
     uv run -q ruff check --fix
     uv run -q ruff check --fix --select I $SOURCE_DIRS
   '';
 
   scripts.build.exec = ''
-    set -ex
+    set -eux
     rm -f ./dist/*.whl ./dist/*.tar.gz
     uv build
     echo -e "\n$(ls ./dist/*.tar.gz)" \
@@ -43,25 +44,27 @@
   '';
 
   scripts.check.exec = ''
+    set -eux
     uv run -q ruff check $SOURCE_DIRS
     uv run -q pyright $SOURCE_DIRS
   '';
 
   scripts.format.exec = ''
-    set -ux
+    set -eux
     uv run -q ruff check --fix --select I $SOURCE_DIRS
     uv run -q ruff format $SOURCE_DIRS
     RUST_LOG=warn taplo fmt pyproject.toml
   '';
 
   scripts.lint.exec = ''
+    set -eux
     uv run -q ruff check --diff --select I $SOURCE_DIRS
     uv run -q ruff format --check --diff $SOURCE_DIRS
     RUST_LOG=warn taplo fmt --check --diff pyproject.toml
   '';
 
   scripts.profile.exec = ''
-    set -ux
+    set -eux
     IMPORT_LOG=$(mktemp)
     uv run -q python -X importtime -m simple_safe.safe 2>$IMPORT_LOG
     uv run -q tuna $IMPORT_LOG
