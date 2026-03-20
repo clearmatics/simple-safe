@@ -1243,7 +1243,7 @@ def inspect(address: str, print_json: bool, rpc: str):
 
     native_balance = format_native_value(Wei(balance), chaindata)
 
-    if not print_json:
+    if not print_json and not params.quiet_mode:
         console.line()
         print_kvtable(
             "Safe Account",
@@ -1263,7 +1263,7 @@ def inspect(address: str, print_json: bool, rpc: str):
                 "Balance": native_balance,
             },
         )
-    else:
+    elif not params.quiet_mode:
         scaled_balance, symbol = native_balance.split(" ")
         data = {
             "Safe Address": info.address,
