@@ -46,7 +46,9 @@ class BatchTxInfo:
     contract_address: Optional["ChecksumAddress"] = None
     count: int = 0
     delegatecalls: int = 0
-    to_addresses: set["ChecksumAddress"] = dataclasses.field(default_factory=set)
+    to_addresses: set["ChecksumAddress"] = dataclasses.field(
+        default_factory=set["ChecksumAddress"]
+    )
     total_value: int = 0
 
 
