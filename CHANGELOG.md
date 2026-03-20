@@ -20,6 +20,17 @@ Template:
 ### Fixed
 -->
 
+## [v0.3.1] - 2026-03-20
+
+### Added
+
+- Support JSON output for `safe inspect` ([`698f17e`](https://github.com/clearmatics/simple-safe/commit/698f17e))
+- Support `--quiet` option for `safe inspect` ([`c4964ae`](https://github.com/clearmatics/simple-safe/commit/c4964ae))
+
+### Fixed
+
+- Fix issue with incompatible dependencies ([`3ea2027`](https://github.com/clearmatics/simple-safe/commit/3ea2027))
+
 ## [v0.3.0] - 2025-08-20
 
 ### Changed
@@ -119,6 +130,7 @@ Template:
 
 _First internal release._
 
+[v0.3.1]: https://github.com/clearmatics/simple-safe/releases/tag/v0.3.1
 [v0.3.0]: https://github.com/clearmatics/simple-safe/releases/tag/v0.3.0
 [v0.2.7]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.7
 [v0.2.6]: https://github.com/clearmatics/simple-safe/releases/tag/v0.2.6
