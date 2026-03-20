@@ -1208,9 +1208,15 @@ def help():
 
 @safe.command()
 @params.rpc(click.option, required=True)
+@click.option(
+    "--json",
+    "print_json",
+    is_flag=True,
+    help="print Safe state in JSON format",
+)
 @click.argument("address")
 @params.common
-def inspect(address: str, rpc: str):
+def inspect(address: str, print_json: bool, rpc: str):
     """Inspect a Safe account."""
     with status("Retrieving Safe account data..."):
         import rich
@@ -1235,12 +1241,31 @@ def inspect(address: str, rpc: str):
     with status("Retrieving chainlist data..."):
         chaindata = fetch_chaindata(client.w3.eth.chain_id)
 
-    console.line()
+    native_balance = format_native_value(Wei(balance), chaindata)
 
-    print_kvtable(
-        "Safe Account",
-        f"[Block {str(block)}]",
-        {
+    if not print_json:
+        console.line()
+        print_kvtable(
+            "Safe Account",
+            f"[Block {str(block)}]",
+            {
+                "Safe Address": info.address,
+                "Version": info.version,
+                f"Owners({len(info.owners)})": ", ".join(info.owners),
+                "Threshold": str(info.threshold),
+                "Safe Nonce": str(info.nonce),
+                "Fallback Handler": info.fallback_handler,
+                "Singleton": info.master_copy,
+                "Guard": info.guard,
+                "Modules": ", ".join(info.modules) if info.modules else "<none>",
+            },
+            {
+                "Balance": native_balance,
+            },
+        )
+    else:
+        scaled_balance, symbol = native_balance.split(" ")
+        data = {
             "Safe Address": info.address,
             "Version": info.version,
             f"Owners({len(info.owners)})": ", ".join(info.owners),
@@ -1250,11 +1275,13 @@ def inspect(address: str, rpc: str):
             "Singleton": info.master_copy,
             "Guard": info.guard,
             "Modules": ", ".join(info.modules) if info.modules else "<none>",
-        },
-        {
-            "Balance": format_native_value(Wei(balance), chaindata),
-        },
-    )
+            "Balance": scaled_balance,
+            "Balance Symbol": symbol,
+        }
+        output_console = get_output_console()
+        output_console.print(
+            get_json_data_renderable(data, pretty=True),
+        )
 
 
 @safe.command()
